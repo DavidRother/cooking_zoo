@@ -83,6 +83,7 @@ def initialize_agents(arglist):
     return real_agents
 
 def main_loop(arglist):
+    print(arglist)
     """The main loop for running experiments."""
     print("Initializing environment and agents.")
     env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=arglist)
@@ -102,6 +103,7 @@ def main_loop(arglist):
             action_dict[agent.name] = action
 
         obs, reward, done, info = env.step(action_dict=action_dict)
+        print(reward)
 
         # Agents
         for agent in real_agents:
