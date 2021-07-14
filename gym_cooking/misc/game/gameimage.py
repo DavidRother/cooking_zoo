@@ -2,7 +2,7 @@ import pygame
 import os
 import numpy as np
 from PIL import Image
-from misc.game.game import Game
+from gym_cooking.misc.game.game import Game
 # from misc.game.utils import *
 
 

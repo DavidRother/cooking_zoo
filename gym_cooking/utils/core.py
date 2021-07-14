@@ -1,5 +1,5 @@
 # recipe planning
-import recipe_planner.utils as recipe
+import gym_cooking.recipe_planner.utils as recipe
 
 # helpers
 import numpy as np

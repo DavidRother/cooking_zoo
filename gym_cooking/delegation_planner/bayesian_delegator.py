@@ -1,9 +1,9 @@
-import recipe_planner.utils as recipe
-from delegation_planner.delegator import Delegator
-from delegation_planner.utils import SubtaskAllocDistribution
-from navigation_planner.utils import get_subtask_obj, get_subtask_action_obj, get_single_actions
-from utils.interact import interact
-from utils.utils import agent_settings
+import gym_cooking.recipe_planner.utils as recipe
+from gym_cooking.delegation_planner.delegator import Delegator
+from gym_cooking.delegation_planner.utils import SubtaskAllocDistribution
+from gym_cooking.navigation_planner.utils import get_subtask_obj, get_subtask_action_obj, get_single_actions
+from gym_cooking.utils.interact import interact
+from gym_cooking.utils.utils import agent_settings
 
 from collections import defaultdict, namedtuple
 from itertools import permutations, product, combinations

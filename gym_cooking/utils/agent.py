@@ -1,18 +1,18 @@
 # Recipe planning
-from recipe_planner.stripsworld import STRIPSWorld
-import recipe_planner.utils as recipe_utils
-from recipe_planner.utils import *
+from gym_cooking.recipe_planner.stripsworld import STRIPSWorld
+import gym_cooking.recipe_planner.utils as recipe_utils
+from gym_cooking.recipe_planner.utils import *
 
 # Delegation planning
-from delegation_planner.bayesian_delegator import BayesianDelegator
+from gym_cooking.delegation_planner.bayesian_delegator import BayesianDelegator
 
 # Navigation planner
-from navigation_planner.planners.e2e_brtdp import E2E_BRTDP
-import navigation_planner.utils as nav_utils
+from gym_cooking.navigation_planner.planners.e2e_brtdp import E2E_BRTDP
+import gym_cooking.navigation_planner.utils as nav_utils
 
 # Other core modules
-from utils.core import Counter, Cutboard
-from utils.utils import agent_settings
+from gym_cooking.utils.core import Counter, Cutboard
+from gym_cooking.utils.utils import agent_settings
 
 import numpy as np
 import copy

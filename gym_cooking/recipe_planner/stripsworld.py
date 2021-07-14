@@ -1,7 +1,7 @@
-import recipe_planner.utils as recipe
+import gym_cooking.recipe_planner.utils as recipe
 
 # core modules
-from utils.core import Object
+from gym_cooking.utils.core import Object
 
 # helpers
 import networkx as nx

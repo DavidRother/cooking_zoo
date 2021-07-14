@@ -6,9 +6,9 @@ import copy
 import matplotlib.pyplot as plt
 from functools import lru_cache
 
-import recipe_planner.utils as recipe
-from navigation_planner.utils import manhattan_dist
-from utils.core import Object, GridSquare, Counter
+import gym_cooking.recipe_planner.utils as recipe
+from gym_cooking.navigation_planner.utils import manhattan_dist
+from gym_cooking.utils.core import Object, GridSquare, Counter
 
 
 class World:

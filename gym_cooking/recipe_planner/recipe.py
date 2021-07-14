@@ -1,5 +1,5 @@
-from utils.core import *
-import recipe_planner.utils as recipe
+from gym_cooking.utils.core import *
+import gym_cooking.recipe_planner.utils as recipe
 
 
 class Recipe:
@@ -20,7 +20,7 @@ class Recipe:
 
         if item.state_seq == FoodSequence.FRESH_CHOPPED:
             self.actions.add(recipe.Chop(item.name))
-            self.actions.add(recipe.Merge(item.name, 'Plate',\
+            self.actions.add(recipe.Merge(item.name, 'Plate',
                 [item.state_seq[-1](item.name), recipe.Fresh('Plate')], None))
 
     def add_goal(self):

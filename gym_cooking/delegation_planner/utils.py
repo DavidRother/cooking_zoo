@@ -2,7 +2,7 @@ from collections import namedtuple
 import numpy as np
 import scipy as sp
 import random
-from utils.utils import agent_settings
+from gym_cooking.utils.utils import agent_settings
 
 
 class SubtaskAllocDistribution():

@@ -1,25 +1,28 @@
 # Recipe planning
-from recipe_planner.stripsworld import STRIPSWorld
-import recipe_planner.utils as recipe
-from recipe_planner.recipe import *
+from gym_cooking.recipe_planner.stripsworld import STRIPSWorld
+import gym_cooking.recipe_planner.utils as recipe
+from gym_cooking.recipe_planner.recipe import *
+
 
 # Delegation planning
-from delegation_planner.bayesian_delegator import BayesianDelegator
+from gym_cooking.delegation_planner.bayesian_delegator import BayesianDelegator
 
 # Navigation planning
-import navigation_planner.utils as nav_utils
+import gym_cooking.navigation_planner.utils as nav_utils
 
 # Other core modules
-from utils.interact import interact
-from utils.world import World
-from utils.core import *
-from utils.agent import SimAgent
-from misc.game.gameimage import GameImage
-from utils.agent import COLORS
+from gym_cooking.utils.interact import interact
+from gym_cooking.utils.world import World
+from gym_cooking.utils.core import *
+from gym_cooking.utils.agent import SimAgent
+from gym_cooking.misc.game.gameimage import GameImage
+from gym_cooking.utils.agent import COLORS
 
 import copy
 import networkx as nx
 import numpy as np
+from pathlib import Path
+import os.path
 from itertools import combinations, permutations, product
 from collections import namedtuple
 
@@ -46,6 +49,7 @@ class OvercookedEnvironment(gym.Env):
         self.collisions = []
         self.termination_info = ""
         self.successful = False
+
 
     def get_repr(self):
         return self.world.get_repr() + tuple([agent.get_repr() for agent in self.sim_agents])
@@ -75,7 +79,7 @@ class OvercookedEnvironment(gym.Env):
         return new_env
 
     def set_filename(self):
-        self.filename = "{}_agents{}_seed{}".format(self.arglist.level,\
+        self.filename = "{}_agents{}_seed{}".format(self.arglist.level,
             self.arglist.num_agents, self.arglist.seed)
         model = ""
         if self.arglist.model1 is not None:
@@ -91,7 +95,12 @@ class OvercookedEnvironment(gym.Env):
     def load_level(self, level, num_agents):
         x = 0
         y = 0
-        with open('utils/levels/{}.txt'.format(level), 'r') as file:
+        my_path = os.path.realpath(__file__)
+        dir_name = os.path.dirname(my_path)
+        path = Path(dir_name)
+        parent = path.parent / f"utils/levels/{level}.txt"
+        # print(parent)
+        with parent.open("r") as file:
             # Mark the phases of reading.
             phase = 1
             for line in file:

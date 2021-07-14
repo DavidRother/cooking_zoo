@@ -1,8 +1,11 @@
 import os
 import pygame
 import numpy as np
-from utils.core import *
-from misc.game.utils import *
+from gym_cooking.utils.core import *
+from gym_cooking.misc.game.utils import *
+
+import os.path
+import pathlib
 
 graphics_dir = 'misc/game/graphics'
 _image_library = {}
@@ -35,7 +38,12 @@ class Game:
         self.holding_size = tuple((self.holding_scale * np.asarray(self.tile_size)).astype(int))
         self.container_size = tuple((self.container_scale * np.asarray(self.tile_size)).astype(int))
         self.holding_container_size = tuple((self.container_scale * np.asarray(self.holding_size)).astype(int))
-        #self.font = pygame.font.SysFont('arialttf', 10)
+        # self.font = pygame.font.SysFont('arialttf', 10)
+        my_path = os.path.realpath(__file__)
+        dir_name = os.path.dirname(my_path)
+        path = pathlib.Path(dir_name)
+        root = path.parent.parent
+        self.root_dir = root
 
 
     def on_init(self):
@@ -98,7 +106,7 @@ class Game:
         return
 
     def draw(self, path, size, location):
-        image_path = '{}/{}.png'.format(graphics_dir, path)
+        image_path = f'{self.root_dir}/{graphics_dir}/{path}.png'
         image = pygame.transform.scale(get_image(image_path), size)
         self.screen.blit(image, location)
 

@@ -1,6 +1,6 @@
-from utils.core import *
-import recipe_planner.utils as recipe
-import recipe_planner.recipe
+from gym_cooking.utils.core import *
+import gym_cooking.recipe_planner.utils as recipe
+import gym_cooking.recipe_planner.recipe
 import numpy as np
 import random
 

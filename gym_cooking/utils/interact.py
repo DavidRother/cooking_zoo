@@ -1,4 +1,4 @@
-from utils.core import *
+from gym_cooking.utils.core import *
 import numpy as np
 
 def interact(agent, world):

@@ -5,7 +5,7 @@ setup(name='gym_cooking',
       description='Too Many Cooks: Overcooked environment',
       author='Rose E. Wang',
       email='rewang@stanford.edu',
-      packages=find_packages(),
+      packages=find_packages() + [""],
       install_requires=[
             # 'cloudpickle==1.3.0',
             # 'decorator==4.4.2',

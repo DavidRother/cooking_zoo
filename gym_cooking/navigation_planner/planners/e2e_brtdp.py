@@ -1,14 +1,14 @@
 # Recipe planning
-from recipe_planner.utils import *
+from gym_cooking.recipe_planner.utils import *
 
 # Navigation planning
-import navigation_planner.utils as nav_utils
-from navigation_planner.utils import MinPriorityQueue as mpq
+import gym_cooking.navigation_planner.utils as nav_utils
+from gym_cooking.navigation_planner.utils import MinPriorityQueue as mpq
 
 # Other core modules
-from utils.world import World
-from utils.interact import interact
-from utils.core import *
+from gym_cooking.utils.world import World
+from gym_cooking.utils.interact import interact
+from gym_cooking.utils.core import *
 
 from collections import defaultdict
 import numpy as np

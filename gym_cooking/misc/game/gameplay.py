@@ -1,8 +1,8 @@
 # modules for game
-from misc.game.game import Game
-from misc.game.utils import *
-from utils.core import *
-from utils.interact import interact
+from gym_cooking.misc.game.game import Game
+from gym_cooking.misc.game.utils import *
+from gym_cooking.utils.core import *
+from gym_cooking.utils.interact import interact
 
 # helpers
 import pygame
