@@ -159,7 +159,6 @@ class Game:
         factor = (1-self.holding_scale) + (1-self.container_scale)/2*self.holding_scale
         return tuple((np.asarray(scaled_loc) + self.scale*factor).astype(int))
 
-
     def on_cleanup(self):
         # pygame.display.quit()
         pygame.quit()

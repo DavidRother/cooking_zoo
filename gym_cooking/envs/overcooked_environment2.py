@@ -218,7 +218,6 @@ class OvercookedEnvironment(gym.Env):
 
         # Visualize.
         self.display()
-        self.game.on_render()
         if self.verbose:
             self.print_agents()
         if self.arglist.record:
