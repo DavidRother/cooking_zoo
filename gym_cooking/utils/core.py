@@ -14,6 +14,7 @@ from collections import namedtuple
 # -----------------------------------------------------------
 GridSquareRepr = namedtuple("GridSquareRepr", "name location holding")
 
+GAME_OBJECTS = ['Counter', 'Floor', 'Delivery', 'Cutboard', 'Plate', 'Lettuce', 'Tomato', 'Onion', 'Player']
 
 class Rep:
     FLOOR = ' '

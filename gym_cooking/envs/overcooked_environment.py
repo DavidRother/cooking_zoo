@@ -185,11 +185,13 @@ class OvercookedEnvironment(gym.Env):
 
         # Get an image observation
         image_obs = self.game.get_image_obs()
+        tensor_obs = self.get_tensor_representation()
 
         new_obs = copy.copy(self)
 
         info = {"t": self.t, "obs": new_obs,
                 "image_obs": image_obs,
+                "tensor_obs": tensor_obs,
                 "done": False, "termination_info": self.termination_info}
 
         return copy.copy(self), info
@@ -228,11 +230,13 @@ class OvercookedEnvironment(gym.Env):
         new_obs = copy.copy(self)
         # Get an image observation
         image_obs = self.game.get_image_obs()
+        tensor_obs = self.get_tensor_representation()
 
         done = self.done()
         reward = self.reward()
         info = {"t": self.t, "obs": new_obs,
                 "image_obs": image_obs,
+                "tensor_obs": tensor_obs,
                 "done": done, "termination_info": self.termination_info}
         return new_obs, reward, done, info
 
@@ -265,6 +269,19 @@ class OvercookedEnvironment(gym.Env):
 
     def reward(self):
         return 1 if self.successful else 0
+
+    def get_tensor_representation(self):
+        tensor = np.zeros((self.world.width, self.world.height, len(GAME_OBJECTS)))
+        objects = {"Player": self.sim_agents}
+        objects.update(self.world.objects)
+        for idx, name in enumerate(GAME_OBJECTS):
+            try:
+                for obj in objects[name]:
+                    x, y = obj.location
+                    tensor[x, y, idx] += 1
+            except KeyError:
+                continue
+        return tensor
 
     def print_agents(self):
         for sim_agent in self.sim_agents:

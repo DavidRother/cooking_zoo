@@ -47,6 +47,10 @@ class World:
             self.add_object(obj, obj.location)
         return self.rep
 
+    def get_tensor_representation(self):
+        tensor = np.zeros((self.width, self.height, len(self.objects)))
+
+
     def print_objects(self):
         for k, v in self.objects.items():
             print(k, list(map(lambda o: o.location, v)))
