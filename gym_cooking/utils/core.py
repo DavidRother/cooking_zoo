@@ -397,3 +397,15 @@ RepToClass = {
     Rep.ONION: Onion,
     Rep.PLATE: Plate,
 }
+
+StringToClass = {
+    "Floor": Floor,
+    "Counter": Counter,
+    "Cutboard": Cutboard,
+    "Delivery": Delivery,
+    "Tomato": Tomato,
+    "Lettuce": Lettuce,
+    "Onion": Onion,
+    "Plate": Plate,
+    "Salad": Lettuce
+}

@@ -99,3 +99,11 @@ class OnionSalad(Recipe):
         self.add_ingredient(Onion(state_index=-1))
         self.add_goal()
         self.add_merge_actions()
+
+
+RecipeStore = {
+    "OnionSalad": OnionSalad,
+    "Salad": Salad,
+    "SimpleLettuce": SimpleLettuce,
+    "SimpleTomato": SimpleTomato
+}

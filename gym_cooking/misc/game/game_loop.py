@@ -16,13 +16,16 @@ from datetime import datetime
 
 class GamePlay(Game):
 
-    def __init__(self, env, num_humans, ai_policies):
+    def __init__(self, env, num_humans, ai_policies, max_steps=100):
         Game.__init__(self, env.world, env.sim_agents, play=True)
         self.env = env
         self.save_dir = 'misc/game/screenshots'
-        self.store = {"actions": [], "tensor_obs": []}
+        self.store = {"actions": [], "tensor_obs": [], "agent_states": [], "rewards": [], "done": []}
         self.num_humans = num_humans
         self.ai_policies = ai_policies
+        self.max_steps = max_steps
+        self.current_step = 0
+        self.last_obs = env.get_tensor_representation()
         assert len(ai_policies) == len(env.sim_agents) - num_humans
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
@@ -52,24 +55,33 @@ class GamePlay(Game):
                 reverse_action_translation_dict = {(0, 0): 0, (1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
                 action = KeyToTuple_human1[event.key]
                 self.sim_agents[0].action = action
-                tensor_obs = self.get_tensor_representation()
+                self.store["tensor_obs"].append(self.last_obs)
+                self.store["agent_states"].append([agent.location for agent in self.sim_agents])
                 for idx, agent in enumerate(self.sim_agents):
                     if idx >= self.num_humans:
                         agent = self.ai_policies[idx - self.num_humans].agent
-                        obs = self.ai_policies[idx - self.num_humans].action_state_builder(tensor_obs)
+                        obs = self.ai_policies[idx - self.num_humans].action_state_builder(self.last_obs)
                         ai_action, _, _ = agent.get_action(obs)
                         self.sim_agents[idx].action = action_translation_dict[ai_action.item()]
-                for agent in self.sim_agents:
-                    interact(agent, self.world)
 
-                self.env.step()
+                action_dict = {}
+                for idx, agent in enumerate(self.sim_agents):
+                    action_dict[f"agent-{idx + 1}"] = agent.action
+                obs, reward, done, info = self.env.step(action_dict)
                 self.store["actions"].append([reverse_action_translation_dict[agent.action] for agent in self.sim_agents])
-                self.store["tensor_obs"].append(tensor_obs)
+                self.store["rewards"].append(reward)
+                self.store["done"].append(done)
+                self.last_obs = info["tensor_obs"]
+
+                if done:
+                    self._running = False
+
 
             # if event.key in KeyToTuple_human2 and self.num_humans > 1:
             #     action = KeyToTuple_human2[event.key]
             #     self.sim_agents[1].action = action
             #     interact(self.sim_agents[1], self.world)
+
     def get_tensor_representation(self):
         tensor = np.zeros((self.world.width, self.world.height, len(GAME_OBJECTS)))
         objects = {"Player": self.sim_agents}
@@ -93,5 +105,7 @@ class GamePlay(Game):
                 self.on_event(event)
             self.on_render()
         self.on_cleanup()
+
+        return self.store
 
 

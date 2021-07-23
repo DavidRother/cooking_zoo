@@ -131,7 +131,7 @@ class OvercookedEnvironment(gym.Env):
                     y += 1
                 # Phase 2: Read in recipe list.
                 elif phase == 2:
-                    self.recipes.append(globals()[line]())
+                    self.recipes.append(RecipeStore[line]())
 
                 # Phase 3: Read in agent locations (up to num_agents).
                 elif phase == 3:
@@ -171,7 +171,6 @@ class OvercookedEnvironment(gym.Env):
         self.world.make_loc_to_gridsquare()
         self.world.make_reachability_graph()
         self.cache_distances()
-        self.obs_tm1 = copy.copy(self)
 
         # if self.arglist.record or self.arglist.with_image_obs:
         self.game = GameImage(
@@ -184,14 +183,12 @@ class OvercookedEnvironment(gym.Env):
             self.game.save_image_obs(self.t)
 
         # Get an image observation
-        image_obs = self.game.get_image_obs()
+        # image_obs = self.game.get_image_obs()
         tensor_obs = self.get_tensor_representation()
 
-        new_obs = copy.copy(self)
+        # new_obs = copy.copy(self)
 
-        info = {"t": self.t, "obs": new_obs,
-                "image_obs": image_obs,
-                "tensor_obs": tensor_obs,
+        info = {"t": self.t, "agent_locations": [agent.location for agent in self.sim_agents], "tensor_obs": tensor_obs,
                 "done": False, "termination_info": self.termination_info}
 
         return copy.copy(self), info
@@ -213,7 +210,6 @@ class OvercookedEnvironment(gym.Env):
 
         # Check collisions.
         self.check_collisions()
-        self.obs_tm1 = copy.copy(self)
 
         # Execute.
         self.execute_navigation()
@@ -226,19 +222,16 @@ class OvercookedEnvironment(gym.Env):
         if self.arglist.record:
             self.game.save_image_obs(self.t)
 
-        # Get a plan-representation observation.
-        new_obs = copy.copy(self)
         # Get an image observation
-        image_obs = self.game.get_image_obs()
+        # image_obs = self.game.get_image_obs()
         tensor_obs = self.get_tensor_representation()
 
         done = self.done()
         reward = self.reward()
-        info = {"t": self.t, "obs": new_obs,
-                "image_obs": image_obs,
+        info = {"t": self.t, "agent_locations": [agent.location for agent in self.sim_agents],
                 "tensor_obs": tensor_obs,
                 "done": done, "termination_info": self.termination_info}
-        return new_obs, reward, done, info
+        return tensor_obs, reward, done, info
 
     def done(self):
         # Done if the episode maxes out
@@ -268,6 +261,10 @@ class OvercookedEnvironment(gym.Env):
         return True
 
     def reward(self):
+        reward = 0
+        for subtask in self.all_subtasks:
+            if isinstance(subtask, Chop):
+                subtask.
         return 1 if self.successful else 0
 
     def get_tensor_representation(self):
