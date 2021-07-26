@@ -262,9 +262,9 @@ class OvercookedEnvironment(gym.Env):
 
     def reward(self):
         reward = 0
-        for subtask in self.all_subtasks:
-            if isinstance(subtask, Chop):
-                subtask.
+        # for subtask in self.all_subtasks:
+        #     if isinstance(subtask, Chop):
+        #         subtask.
         return 1 if self.successful else 0
 
     def get_tensor_representation(self):
