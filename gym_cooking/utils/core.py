@@ -406,6 +406,16 @@ StringToClass = {
     "Tomato": Tomato,
     "Lettuce": Lettuce,
     "Onion": Onion,
-    "Plate": Plate,
-    "Salad": Lettuce
+    "Plate": Plate
+}
+
+ClassToString = {
+    Floor: "Floor",
+    Counter: "Counter",
+    Cutboard: "Cutboard",
+    Delivery: "Delivery",
+    Tomato: "Tomato",
+    Lettuce: "Lettuce",
+    Onion: "Onion",
+    Plate: "Plate",
 }
