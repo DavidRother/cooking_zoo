@@ -35,8 +35,10 @@ class Recipe:
     def __init__(self, root_node):
         self.root_node = root_node
 
-    def update_achieved_state(self, node: RecipeNode, world: World):
+    def update_achieved_state(self, node: RecipeNode, world: World, toplevel_world_object=None):
         for obj in world.objects[ClassToString[node.root]]:
+            if not toplevel_world_object or toplevel_world_object.location != obj.location:
+                continue
             # check for all conditions
             condition_flag = self.check_conditions(node, obj)
             # check for all contains

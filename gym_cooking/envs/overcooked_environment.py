@@ -321,7 +321,7 @@ class OvercookedEnvironment(gym.Env):
         # chopped and the cutting board objects.
         if isinstance(subtask, recipe.Chop):
             # A: Object that can be chopped.
-            A_locs = self.world.get_object_locs(obj=start_obj, is_held=False) + list(map(lambda a: a.location,\
+            A_locs = self.world.get_object_locs(obj=start_obj, is_held=False) + list(map(lambda a: a.location,
                 list(filter(lambda a: a.name in subtask_agent_names and a.holding == start_obj, self.sim_agents))))
 
             # B: Cutboard objects.
