@@ -1,12 +1,3 @@
-# Recipe planning
-from gym_cooking.recipe_planner.stripsworld import STRIPSWorld
-import gym_cooking.recipe_planner.utils as recipe
-from gym_cooking.recipe_planner.recipe import *
-
-
-# Delegation planning
-from gym_cooking.delegation_planner.bayesian_delegator import BayesianDelegator
-
 # Navigation planning
 import gym_cooking.navigation_planner.utils as nav_utils
 
@@ -17,18 +8,16 @@ from gym_cooking.utils.core import *
 from gym_cooking.utils.agent import SimAgent
 from gym_cooking.misc.game.gameimage import GameImage
 from gym_cooking.utils.agent import COLORS
+from gym_cooking.cooking_book.recipe_drawer import RECIPES, NUM_GOALS
 
 import copy
-import networkx as nx
 import numpy as np
 from pathlib import Path
 import os.path
-from itertools import combinations, permutations, product
+from itertools import combinations, product
 from collections import namedtuple
 
 import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
 
 
 CollisionRepr = namedtuple("CollisionRepr", "time agent_names agent_locations")
@@ -37,10 +26,23 @@ CollisionRepr = namedtuple("CollisionRepr", "time agent_names agent_locations")
 class OvercookedEnvironment(gym.Env):
     """Environment object for Overcooked."""
 
-    def __init__(self, arglist):
-        self.arglist = arglist
+    def __init__(self, level, num_agents, seed, playable, record, max_num_timesteps, recipes):
+        self.level = level
+        self.num_agents = num_agents
+        self.seed = seed
+        self.playable = playable
+        self.record = record
+        self.max_num_timesteps = max_num_timesteps
         self.t = 0
+        self.filename = ""
         self.set_filename()
+        self.world = None
+        self.recipes = recipes
+        self.sim_agents = []
+        self.agent_actions = {}
+        self.game = None
+        self.distances = {}
+        self.recipe_graphs = [RECIPES[recipe]() for recipe in recipes]
 
         # For visualizing episode.
         self.rep = []
@@ -63,7 +65,8 @@ class OvercookedEnvironment(gym.Env):
         return self.get_repr() == other.get_repr()
 
     def __copy__(self):
-        new_env = OvercookedEnvironment(self.arglist)
+        new_env = OvercookedEnvironment(self.level, self.num_agents, self.seed, self.playable, self.record,
+                                        self.max_num_timesteps, self.recipes)
         new_env.__dict__ = self.__dict__.copy()
         new_env.world = copy.copy(self.world)
         new_env.sim_agents = [copy.copy(a) for a in self.sim_agents]
@@ -79,18 +82,7 @@ class OvercookedEnvironment(gym.Env):
         return new_env
 
     def set_filename(self):
-        self.filename = "{}_agents{}_seed{}".format(self.arglist.level,
-            self.arglist.num_agents, self.arglist.seed)
-        model = ""
-        if self.arglist.model1 is not None:
-            model += "_model1-{}".format(self.arglist.model1)
-        if self.arglist.model2 is not None:
-            model += "_model2-{}".format(self.arglist.model2)
-        if self.arglist.model3 is not None:
-            model += "_model3-{}".format(self.arglist.model3)
-        if self.arglist.model4 is not None:
-            model += "_model4-{}".format(self.arglist.model4)
-        self.filename += model
+        self.filename = f"{self.level}_agents{self.num_agents}_seed{self.seed}"
 
     def load_level(self, level, num_agents):
         x = 0
@@ -131,7 +123,8 @@ class OvercookedEnvironment(gym.Env):
                     y += 1
                 # Phase 2: Read in recipe list.
                 elif phase == 2:
-                    self.recipes.append(RecipeStore[line]())
+                    # self.recipes.append(RecipeStore[line]())
+                    pass
 
                 # Phase 3: Read in agent locations (up to num_agents).
                 elif phase == 3:
@@ -149,7 +142,7 @@ class OvercookedEnvironment(gym.Env):
         self.world.perimeter = 2*(self.world.width + self.world.height)
 
     def reset(self):
-        self.world = World(arglist=self.arglist)
+        self.world = World(self.playable)
         self.recipes = []
         self.sim_agents = []
         self.agent_actions = {}
@@ -165,21 +158,18 @@ class OvercookedEnvironment(gym.Env):
 
         # Load world & distances.
         self.load_level(
-                level=self.arglist.level,
-                num_agents=self.arglist.num_agents)
-        self.all_subtasks = self.run_recipes()
+                level=self.level,
+                num_agents=self.num_agents)
         self.world.make_loc_to_gridsquare()
-        self.world.make_reachability_graph()
-        self.cache_distances()
 
         # if self.arglist.record or self.arglist.with_image_obs:
         self.game = GameImage(
                 filename=self.filename,
                 world=self.world,
                 sim_agents=self.sim_agents,
-                record=self.arglist.record)
+                record=self.record)
         self.game.on_init()
-        if self.arglist.record:
+        if self.record:
             self.game.save_image_obs(self.t)
 
         # Get an image observation
@@ -187,9 +177,10 @@ class OvercookedEnvironment(gym.Env):
         tensor_obs = self.get_tensor_representation()
 
         # new_obs = copy.copy(self)
-
-        info = {"t": self.t, "agent_locations": [agent.location for agent in self.sim_agents], "tensor_obs": tensor_obs,
-                "done": False, "termination_info": self.termination_info}
+        done, rewards, goals = self.compute_rewards()
+        info = {"t": self.t, "agent_locations": [agent.location for agent in self.sim_agents],
+                "tensor_obs": tensor_obs,
+                "done": done, "termination_info": self.termination_info, "rewards": rewards, "goals": goals}
 
         return copy.copy(self), info
 
@@ -219,53 +210,41 @@ class OvercookedEnvironment(gym.Env):
         self.game.on_render()
         if self.verbose:
             self.print_agents()
-        if self.arglist.record:
+        if self.record:
             self.game.save_image_obs(self.t)
 
         # Get an image observation
         # image_obs = self.game.get_image_obs()
         tensor_obs = self.get_tensor_representation()
 
-        done = self.done()
-        reward = self.reward()
+        done, rewards, goals = self.compute_rewards()
         info = {"t": self.t, "agent_locations": [agent.location for agent in self.sim_agents],
                 "tensor_obs": tensor_obs,
-                "done": done, "termination_info": self.termination_info}
-        return tensor_obs, reward, done, info
+                "done": done, "termination_info": self.termination_info, "rewards": rewards, "goals": goals}
+        return tensor_obs, sum(rewards), done, info
 
-    def done(self):
+    def compute_rewards(self):
+        done = False
+        rewards = [0] * len(self.recipes)
+        open_goals = [[0]] * len(self.recipes)
         # Done if the episode maxes out
-        if self.t >= self.arglist.max_num_timesteps and self.arglist.max_num_timesteps:
-            self.termination_info = "Terminating because passed {} timesteps".format(
-                    self.arglist.max_num_timesteps)
+        if self.t >= self.max_num_timesteps and self.max_num_timesteps:
+            self.termination_info = f"Terminating because passed {self.max_num_timesteps} timesteps"
             self.successful = False
-            return True
+            done = True
 
-        assert any([isinstance(subtask, recipe.Deliver) for subtask in self.all_subtasks]), "no delivery subtask"
+        for idx, recipe in enumerate(self.recipe_graphs):
+            goals_before = recipe.goals_completed(NUM_GOALS)
+            recipe.update_recipe_state(self.world)
+            open_goals[idx] = recipe.goals_completed(NUM_GOALS)
+            bonus = recipe.completed() * 10
+            rewards[idx] = sum(goals_before) - sum(open_goals[idx]) + bonus
 
-        # Done if subtask is completed.
-        for subtask in self.all_subtasks:
-            # Double check all goal_objs are at Delivery.
-            if isinstance(subtask, recipe.Deliver):
-                _, goal_obj = nav_utils.get_subtask_obj(subtask)
-
-                delivery_loc = list(filter(lambda o: o.name=='Delivery', self.world.get_object_list()))[0].location
-                goal_obj_locs = self.world.get_all_object_locs(obj=goal_obj)
-                if not any([gol == delivery_loc for gol in goal_obj_locs]):
-                    self.termination_info = ""
-                    self.successful = False
-                    return False
-
-        self.termination_info = "Terminating because all deliveries were completed"
-        self.successful = True
-        return True
-
-    def reward(self):
-        reward = 0
-        # for subtask in self.all_subtasks:
-        #     if isinstance(subtask, Chop):
-        #         subtask.
-        return 1 if self.successful else 0
+        if all((recipe.completed() for recipe in self.recipe_graphs)):
+            self.termination_info = "Terminating because all deliveries were completed"
+            self.successful = True
+            done = True
+        return done, rewards, open_goals
 
     def get_tensor_representation(self):
         tensor = np.zeros((self.world.width, self.world.height, len(GAME_OBJECTS)))
@@ -296,102 +275,8 @@ class OvercookedEnvironment(gym.Env):
             x, y = agent.location
             self.rep[y][x] = str(agent)
 
-
     def get_agent_names(self):
         return [agent.name for agent in self.sim_agents]
-
-    def run_recipes(self):
-        """Returns different permutations of completing recipes."""
-        self.sw = STRIPSWorld(world=self.world, recipes=self.recipes)
-        # [path for recipe 1, path for recipe 2, ...] where each path is a list of actions
-        subtasks = self.sw.get_subtasks(max_path_length=self.arglist.max_num_subtasks)
-        all_subtasks = [subtask for path in subtasks for subtask in path]
-
-        if self.verbose:
-            print('Subtasks:', all_subtasks, '\n')
-        return all_subtasks
-
-    def get_AB_locs_given_objs(self, subtask, subtask_agent_names, start_obj, goal_obj, subtask_action_obj):
-        """Returns list of locations relevant for subtask's Merge operator.
-
-        See Merge operator formalism in our paper, under Fig. 11:
-        https://arxiv.org/pdf/2003.11778.pdf"""
-
-        # For Merge operator on Chop subtasks, we look at objects that can be
-        # chopped and the cutting board objects.
-        if isinstance(subtask, recipe.Chop):
-            # A: Object that can be chopped.
-            A_locs = self.world.get_object_locs(obj=start_obj, is_held=False) + list(map(lambda a: a.location,
-                list(filter(lambda a: a.name in subtask_agent_names and a.holding == start_obj, self.sim_agents))))
-
-            # B: Cutboard objects.
-            B_locs = self.world.get_all_object_locs(obj=subtask_action_obj)
-
-        # For Merge operator on Deliver subtasks, we look at objects that can be
-        # delivered and the Delivery object.
-        elif isinstance(subtask, recipe.Deliver):
-            # B: Delivery objects.
-            B_locs = self.world.get_all_object_locs(obj=subtask_action_obj)
-
-            # A: Object that can be delivered.
-            A_locs = self.world.get_object_locs(
-                    obj=start_obj, is_held=False) + list(
-                            map(lambda a: a.location, list(
-                                filter(lambda a: a.name in subtask_agent_names and a.holding == start_obj, self.sim_agents))))
-            A_locs = list(filter(lambda a: a not in B_locs, A_locs))
-
-        # For Merge operator on Merge subtasks, we look at objects that can be
-        # combined together. These objects are all ingredient objects (e.g. Tomato, Lettuce).
-        elif isinstance(subtask, recipe.Merge):
-            A_locs = self.world.get_object_locs(
-                    obj=start_obj[0], is_held=False) + list(
-                            map(lambda a: a.location, list(
-                                filter(lambda a: a.name in subtask_agent_names and a.holding == start_obj[0], self.sim_agents))))
-            B_locs = self.world.get_object_locs(
-                    obj=start_obj[1], is_held=False) + list(
-                            map(lambda a: a.location, list(
-                                filter(lambda a: a.name in subtask_agent_names and a.holding == start_obj[1], self.sim_agents))))
-
-        else:
-            return [], []
-
-        return A_locs, B_locs
-
-    def get_lower_bound_for_subtask_given_objs(
-            self, subtask, subtask_agent_names, start_obj, goal_obj, subtask_action_obj):
-        """Return the lower bound distance (shortest path) under this subtask between objects."""
-        assert len(subtask_agent_names) <= 2, 'passed in {} agents but can only do 1 or 2'.format(len(agents))
-
-        # Calculate extra holding penalty if the object is irrelevant.
-        holding_penalty = 0.0
-        for agent in self.sim_agents:
-            if agent.name in subtask_agent_names:
-                # Check for whether the agent is holding something.
-                if agent.holding is not None:
-                    if isinstance(subtask, recipe.Merge):
-                        continue
-                    else:
-                        if agent.holding != start_obj and agent.holding != goal_obj:
-                            # Add one "distance"-unit cost
-                            holding_penalty += 1.0
-        # Account for two-agents where we DON'T want to overpenalize.
-        holding_penalty = min(holding_penalty, 1)
-
-        # Get current agent locations.
-        agent_locs = [agent.location for agent in list(filter(lambda a: a.name in subtask_agent_names, self.sim_agents))]
-        A_locs, B_locs = self.get_AB_locs_given_objs(
-                subtask=subtask,
-                subtask_agent_names=subtask_agent_names,
-                start_obj=start_obj,
-                goal_obj=goal_obj,
-                subtask_action_obj=subtask_action_obj)
-
-        # Add together distance and holding_penalty.
-        return self.world.get_lower_bound_between(
-                subtask=subtask,
-                agent_locs=tuple(agent_locs),
-                A_locs=tuple(A_locs),
-                B_locs=tuple(B_locs)) + holding_penalty
 
     def is_collision(self, agent1_loc, agent2_loc, agent1_action, agent2_action):
         """Returns whether agents are colliding.
@@ -472,41 +357,4 @@ class OvercookedEnvironment(gym.Env):
         for agent in self.sim_agents:
             interact(agent=agent, world=self.world)
             self.agent_actions[agent.name] = agent.action
-
-
-    def cache_distances(self):
-        """Saving distances between world objects."""
-        counter_grid_names = [name for name in self.world.objects if "Supply" in name or "Counter" in name or "Delivery" in name or "Cut" in name]
-        # Getting all source objects.
-        source_objs = copy.copy(self.world.objects["Floor"])
-        for name in counter_grid_names:
-            source_objs += copy.copy(self.world.objects[name])
-        # Getting all destination objects.
-        dest_objs = source_objs
-
-        # From every source (Counter and Floor objects),
-        # calculate distance to other nodes.
-        for source in source_objs:
-            self.distances[source.location] = {}
-            # Source to source distance is 0.
-            self.distances[source.location][source.location] = 0
-            for destination in dest_objs:
-                # Possible edges to approach source and destination.
-                source_edges = [(0, 0)] if not source.collidable else World.NAV_ACTIONS
-                destination_edges = [(0, 0)] if not destination.collidable else World.NAV_ACTIONS
-                # Maintain shortest distance.
-                shortest_dist = np.inf
-                for source_edge, dest_edge in product(source_edges, destination_edges):
-                    try:
-                        dist = nx.shortest_path_length(self.world.reachability_graph, (source.location,source_edge), (destination.location, dest_edge))
-                        # Update shortest distance.
-                        if dist < shortest_dist:
-                            shortest_dist = dist
-                    except:
-                        continue
-                # Cache distance floor -> counter.
-                self.distances[source.location][destination.location] = shortest_dist
-
-        # Save all distances under world as well.
-        self.world.distances = self.distances
 

@@ -40,7 +40,7 @@ def interact(agent, world):
                 agent.acquire(obj)
                 world.insert(agent.holding)
                 # if playable version, merge onto counter first
-                if world.arglist.play:
+                if world.play:
                     gs.acquire(agent.holding)
                     agent.release()
 
@@ -48,7 +48,7 @@ def interact(agent, world):
         # if holding something, empty gridsquare in front --> chop or drop
         elif not world.is_occupied(gs.location):
             obj = agent.holding
-            if isinstance(gs, Cutboard) and obj.needs_chopped() and not world.arglist.play:
+            if isinstance(gs, Cutboard) and obj.needs_chopped() and not world.play:
                 # normally chop, but if in playable game mode then put down first
                 obj.chop()
             else:
@@ -63,7 +63,7 @@ def interact(agent, world):
         if world.is_occupied(gs.location) and not isinstance(gs, Delivery):
             obj = world.get_object_at(gs.location, None, find_held_objects = False)
             # if in playable game mode, then chop raw items on cutting board
-            if isinstance(gs, Cutboard) and obj.needs_chopped() and world.arglist.play:
+            if isinstance(gs, Cutboard) and obj.needs_chopped() and world.play:
                 obj.chop()
             else:
                 gs.release()

@@ -1,6 +1,3 @@
-# recipe planning
-import gym_cooking.recipe_planner.utils as recipe
-
 # helpers
 import numpy as np
 import copy

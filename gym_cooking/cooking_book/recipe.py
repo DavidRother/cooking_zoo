@@ -1,49 +1,54 @@
 from gym_cooking.utils.core import *
-# from gym_cooking.cooking_book.recipe_drawer import recipes
 from gym_cooking.utils.world import World
-from copy import deepcopy
 
 
 class RecipeNode:
 
-    def __init__(self, root, id_num, conditions=None, contains=None):
-        self.child_nodes = self.generate_child_nodes()
+    def __init__(self, root_type, id_num, parent=None, conditions=None, contains=None):
+        self.parent = parent
         self.achieved = False
         self.id_num = id_num
-        self.root = root
+        self.root = root_type
         self.conditions = conditions or []
         self.contains = contains or []
+        self.world_objects = []
 
     def is_leaf(self):
-        return not bool(self.child_nodes)
-
-    def generate_child_nodes(self):
-        child_nodes = []
-        if self.conditions:
-            for idx in range(len(self.conditions)):
-                new_node = deepcopy(self)
-                del new_node.conditions[idx]
-                child_nodes.append(new_node)
-        elif self.contains:
-            for item in self.contains:
-                child_nodes.append(item)
-        return child_nodes
+        return not bool(self.contains)
 
 
 class Recipe:
 
-    def __init__(self, root_node):
+    def __init__(self, root_node: RecipeNode):
         self.root_node = root_node
+        self.node_list = [root_node] + self.expand_child_nodes(root_node)
 
-    def update_achieved_state(self, node: RecipeNode, world: World, toplevel_world_object=None):
-        for obj in world.objects[ClassToString[node.root]]:
-            if not toplevel_world_object or toplevel_world_object.location != obj.location:
+    def goals_completed(self, num_goals):
+        goals = np.zeros(num_goals, dtype=np.int)
+        for node in self.node_list:
+            goals[node.id_num] = int(node.achieved)
+        return goals
+
+    def completed(self):
+        return self.root_node.achieved
+
+    def update_recipe_state(self, world: World):
+        for node in reversed(self.node_list):
+            node.achieved = False
+            node.world_objects = []
+            if not all((contains.achieved for contains in node.contains)):
                 continue
-            # check for all conditions
-            condition_flag = self.check_conditions(node, obj)
-            # check for all contains
+            for obj in world.objects[ClassToString[node.root_type]]:
+                # check for all conditions
+                if self.check_conditions(node, obj):
+                    node.world_objects.append(obj)
+                    node.achieved = True
 
-            pass
+    def expand_child_nodes(self, node: RecipeNode):
+        child_nodes = []
+        for child in node.contains:
+            child_nodes.extend(self.expand_child_nodes(child))
+        return node.contains + child_nodes
 
     @staticmethod
     def check_conditions(node: RecipeNode, world_object):
@@ -51,12 +56,7 @@ class Recipe:
             if getattr(world_object, condition[0]) != condition[1]:
                 return False
         else:
-            return True
-
-    def check_contains(self, node: RecipeNode, world_object, world: World):
-        for held_node in node.contains:
-            contained_world_object = self.check_held_node(held_node, world_object, world)
-
-    def check_held_node(self, held_node, world_object, world: World):
-        for obj in world.objects[ClassToString[held_node.root]]:
-            if obj.location == world_object.location
+            if any((obj.location == world_object.location for contains in node.contains for obj in contains)):
+                return True
+            else:
+                return False
