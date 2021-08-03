@@ -2,6 +2,7 @@
 import numpy as np
 import copy
 import random
+from gym_cooking.recipe_planner.utils import Fresh, Chopped
 from termcolor import colored as color
 from itertools import combinations
 from collections import namedtuple
@@ -12,6 +13,10 @@ from collections import namedtuple
 GridSquareRepr = namedtuple("GridSquareRepr", "name location holding")
 
 GAME_OBJECTS = ['Counter', 'Floor', 'Delivery', 'Cutboard', 'Plate', 'Lettuce', 'Tomato', 'Onion', 'Player']
+GAME_OBJECTS_STATEFUL = [('Counter', []), ('Floor', []), ('Delivery', []), ('Cutboard', []),
+                         ('Plate', []), ('Lettuce', [Fresh, Chopped]), ('Tomato', [Fresh, Chopped]),
+                         ('Onion', [Fresh, Chopped]), ('Player', [])]
+
 
 class Rep:
     FLOOR = ' '
@@ -25,10 +30,11 @@ class Rep:
 
 
 class GridSquare:
+
     def __init__(self, name, location):
         self.name = name
         self.location = location  # (x, y) tuple
-        self.holding = None
+        self.holding = []
         self.color = 'white'
         self.collidable = True  # cannot go through
         self.dynamic = False  # cannot move around
@@ -47,12 +53,11 @@ class GridSquare:
         return gs
 
     def acquire(self, obj):
-        obj.location = self.location
-        self.holding = obj
+        self.holding = [obj]
 
     def release(self):
         temp = self.holding
-        self.holding = None
+        self.holding = []
         return temp
 
 
@@ -147,6 +152,8 @@ class Object:
         self.location = location
         self.contents = contents if isinstance(contents, list) else [contents]
         self.is_held = False
+        self.name = ""
+        self.full_name = ""
         self.update_names()
         self.collidable = False
         self.dynamic = False
@@ -202,7 +209,8 @@ class Object:
     def merge(self, obj):
         if isinstance(obj, Object):
             # move obj's contents into this instance
-            for i in obj.contents: self.contents.append(i)
+            for i in obj.contents:
+                self.contents.append(i)
         elif not (isinstance(obj, Food) or isinstance(obj, Plate)):
             raise ValueError("Incorrect merge object: {}".format(obj))
         else:
@@ -230,28 +238,17 @@ class Object:
 def mergeable(obj1, obj2):
     # query whether two objects are mergeable
     contents = obj1.contents + obj2.contents
-    # check that there is at most one plate
-    try:
-        contents.remove(Plate())
-    except:
-        pass  # do nothing, 1 plate is ok
-    finally:
-        try:
-            contents.remove(Plate())
-        except:
-            for c in contents:  # everything else must be in last state
-                if not c.done():
-                    return False
-        else:
-            return False  # more than 1 plate
-    return True
+
+    plate_mergeable = 2 <= sum([int(isinstance(content, Plate)) for content in contents])
+    food_mergeable = all((content.done() for content in contents if not isinstance(content, Plate)))
+    return plate_mergeable and food_mergeable
 
 
 # -----------------------------------------------------------
 
 class FoodState:
-    FRESH = globals()['recipe'].__dict__['Fresh']
-    CHOPPED = globals()['recipe'].__dict__['Chopped']
+    FRESH = Fresh
+    CHOPPED = Chopped
 
 
 class FoodSequence:
@@ -259,12 +256,17 @@ class FoodSequence:
     FRESH_CHOPPED = [FoodState.FRESH, FoodState.CHOPPED]
 
 
-class Food:
-    def __init__(self):
-        self.state = self.state_seq[self.state_index]
+class Food(Object):
+
+    def __init__(self, location, contents):
+        super().__init__(location, contents)
+        self.state_index = None  # index in food's state sequence
+        self.state_seq = None
+        self.state = None
         self.movable = False
-        self.color = self._set_color()
-        self.update_names()
+        self.color = None
+        self.full_name = ""
+        self.rep = ""
 
     def __str__(self):
         return color(self.rep, self.color)
@@ -279,8 +281,8 @@ class Food:
         return 1  # one food unit
 
     def set_state(self, state):
-        assert state in self.state_seq, "Desired state {} does not exist for the food with sequence {}".format(state,
-                                                                                                               self.state_seq)
+        assert state in self.state_seq, f"Desired state {state} does not exist " \
+                                        f"for the food with sequence {self.state_seq}"
         self.state_index = self.state_seq.index(state)
         self.state = state
         self.update_names()
@@ -289,7 +291,7 @@ class Food:
         return self.state.__name__
 
     def update_names(self):
-        self.full_name = '{}{}'.format(self.get_state(), self.name)
+        self.full_name = f'{self.get_state()}{self.name}'
 
     def needs_chopped(self):
         return self.state_seq[(self.state_index + 1) % len(self.state_seq)] == FoodState.CHOPPED
@@ -299,8 +301,7 @@ class Food:
 
     def update_state(self):
         self.state_index += 1
-        assert 0 <= self.state_index and self.state_index < len(
-            self.state_seq), "State index is out of bounds for its state sequence"
+        assert 0 <= self.state_index < len(self.state_seq), "State index is out of bounds for its state sequence"
         self.state = self.state_seq[self.state_index]
         self.update_names()
 
@@ -309,12 +310,13 @@ class Food:
 
 
 class Tomato(Food):
-    def __init__(self, state_index=0):
+    def __init__(self, location, contents, state_index=0):
         self.state_index = state_index  # index in food's state sequence
         self.state_seq = FoodSequence.FRESH_CHOPPED
+        self.state = self.state_seq[self.state_index]
         self.rep = 't'
         self.name = 'Tomato'
-        Food.__init__(self)
+        Food.__init__(self, location, contents)
 
     def __hash__(self):
         return Food.__hash__(self)
@@ -327,12 +329,12 @@ class Tomato(Food):
 
 
 class Lettuce(Food):
-    def __init__(self, state_index=0):
+    def __init__(self, location, contents, state_index=0):
         self.state_index = state_index  # index in food's state sequence
         self.state_seq = FoodSequence.FRESH_CHOPPED
         self.rep = 'l'
         self.name = 'Lettuce'
-        Food.__init__(self)
+        Food.__init__(self, location, contents)
 
     def __eq__(self, other):
         return Food.__eq__(self, other)
@@ -342,12 +344,12 @@ class Lettuce(Food):
 
 
 class Onion(Food):
-    def __init__(self, state_index=0):
+    def __init__(self, location, contents, state_index=0):
         self.state_index = state_index  # index in food's state sequence
         self.state_seq = FoodSequence.FRESH_CHOPPED
         self.rep = 'o'
         self.name = 'Onion'
-        Food.__init__(self)
+        Food.__init__(self, location, contents)
 
     def __eq__(self, other):
         return Food.__eq__(self, other)
@@ -358,15 +360,16 @@ class Onion(Food):
 
 # -----------------------------------------------------------
 
-class Plate:
-    def __init__(self):
+class Plate(Object):
+    def __init__(self, location, contents):
+        super().__init__(location, contents)
         self.rep = "p"
         self.name = 'Plate'
         self.full_name = 'Plate'
         self.color = 'white'
 
     def __hash__(self):
-        return hash((self.name))
+        return hash(self.name)
 
     def __str__(self):
         return color(self.rep, self.color)
@@ -375,7 +378,7 @@ class Plate:
         return isinstance(other, Plate)
 
     def __copy__(self):
-        return Plate()
+        return Plate(self.location, self.contents)
 
     def needs_chopped(self):
         return False

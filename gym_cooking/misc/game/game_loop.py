@@ -76,25 +76,6 @@ class GamePlay(Game):
                 if done:
                     self._running = False
 
-
-            # if event.key in KeyToTuple_human2 and self.num_humans > 1:
-            #     action = KeyToTuple_human2[event.key]
-            #     self.sim_agents[1].action = action
-            #     interact(self.sim_agents[1], self.world)
-
-    def get_tensor_representation(self):
-        tensor = np.zeros((self.world.width, self.world.height, len(GAME_OBJECTS)))
-        objects = {"Player": self.sim_agents}
-        objects.update(self.world.objects)
-        for idx, name in enumerate(GAME_OBJECTS):
-            try:
-                for obj in objects[name]:
-                    x, y = obj.location
-                    tensor[x, y, idx] += 1
-            except KeyError:
-                continue
-        return tensor
-
     def on_execute(self):
 
         if self.on_init() == False:

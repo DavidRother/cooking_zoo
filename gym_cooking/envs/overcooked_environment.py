@@ -1,6 +1,3 @@
-# Navigation planning
-import gym_cooking.navigation_planner.utils as nav_utils
-
 # Other core modules
 from gym_cooking.utils.interact import interact
 from gym_cooking.utils.world import World
@@ -52,6 +49,7 @@ class OvercookedEnvironment(gym.Env):
         self.termination_info = ""
         self.successful = False
         self.verbose = False
+        self.graph_representation_length = sum([len(tup[1]) if tup[1] else 1 for tup in GAME_OBJECTS_STATEFUL])
 
     def get_repr(self):
         return self.world.get_repr() + tuple([agent.get_repr() for agent in self.sim_agents])
@@ -106,20 +104,18 @@ class OvercookedEnvironment(gym.Env):
                         # Object, i.e. Tomato, Lettuce, Onion, or Plate.
                         if rep in 'tlop':
                             counter = Counter(location=(x, y))
-                            obj = Object(
-                                    location=(x, y),
-                                    contents=RepToClass[rep]())
+                            obj = RepToClass[rep](location=(x, y), contents=[])
                             counter.acquire(obj=obj)
                             self.world.insert(obj=counter)
                             self.world.insert(obj=obj)
                         # GridSquare, i.e. Floor, Counter, Cutboard, Delivery.
                         elif rep in RepToClass:
-                            newobj = RepToClass[rep]((x, y))
-                            self.world.objects.setdefault(newobj.name, []).append(newobj)
+                            newobj = RepToClass[rep](location=(x, y), contents=[])
+                            self.world.insert(obj=newobj)
                         else:
                             # Empty. Set a Floor tile.
-                            f = Floor(location=(x, y))
-                            self.world.objects.setdefault('Floor', []).append(f)
+                            floor = Floor(location=(x, y))
+                            self.world.insert(obj=floor)
                     y += 1
                 # Phase 2: Read in recipe list.
                 elif phase == 2:
@@ -143,7 +139,6 @@ class OvercookedEnvironment(gym.Env):
 
     def reset(self):
         self.world = World(self.playable)
-        self.recipes = []
         self.sim_agents = []
         self.agent_actions = {}
         self.t = 0
@@ -247,14 +242,21 @@ class OvercookedEnvironment(gym.Env):
         return done, rewards, open_goals
 
     def get_tensor_representation(self):
-        tensor = np.zeros((self.world.width, self.world.height, len(GAME_OBJECTS)))
+        tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length))
         objects = {"Player": self.sim_agents}
         objects.update(self.world.objects)
-        for idx, name in enumerate(GAME_OBJECTS):
+        for idx, (name, states) in enumerate(GAME_OBJECTS_STATEFUL):
             try:
-                for obj in objects[name]:
-                    x, y = obj.location
-                    tensor[x, y, idx] += 1
+                object_types_to_search = [key_type for key_type in world.objects.keys() if name in key_type]
+                for obj_type in object_types_to_search:
+                    for obj in world.objects[obj_type]:
+                        if not states:
+                            x, y = obj.location
+                            tensor[x, y, idx] += 1
+                        else:
+                            for state in states:
+                                search_object = next(
+                                    (value for value in world_object.contents if isinstance(value, node.root_type)))
             except KeyError:
                 continue
         return tensor
@@ -351,10 +353,13 @@ class OvercookedEnvironment(gym.Env):
                 agent.action = (0, 0)
 
             if self.verbose:
-                print("{} has action {}".format(color(agent.name, agent.color), agent.action))
+                print(f"{color(agent.name, agent.color)} has action {agent.action}")
 
     def execute_navigation(self):
         for agent in self.sim_agents:
             interact(agent=agent, world=self.world)
             self.agent_actions[agent.name] = agent.action
+
+    def render(self, mode='human'):
+        pass
 

@@ -41,9 +41,6 @@ class World:
             self.add_object(obj, obj.location)
         return self.rep
 
-    def get_tensor_representation(self):
-        tensor = np.zeros((self.width, self.height, len(self.objects)))
-
     def print_objects(self):
         for k, v in self.objects.items():
             print(k, list(map(lambda o: o.location, v)))
@@ -117,21 +114,6 @@ class World:
     def is_collidable(self, location):
         return location in list(map(lambda o: o.location, list(filter(lambda o: o.collidable, self.get_object_list()))))
 
-    def get_object_locs(self, obj, is_held):
-        if obj.name not in self.objects.keys():
-            return []
-
-        if isinstance(obj, Object):
-            return list(
-                map(lambda o: o.location, list(filter(lambda o: obj == o and
-                                                                o.is_held == is_held, self.objects[obj.name]))))
-        else:
-            return list(map(lambda o: o.location, list(filter(lambda o: obj == o,
-                                                              self.objects[obj.name]))))
-
-    def get_all_object_locs(self, obj):
-        return list(set(self.get_object_locs(obj=obj, is_held=True) + self.get_object_locs(obj=obj, is_held=False)))
-
     def get_object_at(self, location, desired_obj, find_held_objects):
         # Map obj => location => filter by location => return that object.
         all_objs = self.get_object_list()
@@ -145,8 +127,7 @@ class World:
                                            isinstance(obj, Object) and obj.is_held is find_held_objects,
                                all_objs))
 
-        assert len(objs) == 1, "looking for {}, found {} at {}".format(desired_obj,
-                                                                       ','.join(o.get_name() for o in objs), location)
+        assert len(objs) == 1, f"looking for {desired_obj}, found {','.join(o.get_name() for o in objs)} at {location}"
 
         return objs[0]
 
@@ -154,7 +135,7 @@ class World:
         gss = list(filter(lambda o: o.location == location and \
                                     isinstance(o, GridSquare), self.get_object_list()))
 
-        assert len(gss) == 1, "{} gridsquares at {}: {}".format(len(gss), location, gss)
+        assert len(gss) == 1, f"{len(gss)} gridsquares at {location}: {gss}"
         return gss[0]
 
     def inbounds(self, location):
