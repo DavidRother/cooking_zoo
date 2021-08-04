@@ -16,6 +16,10 @@ GAME_OBJECTS = ['Counter', 'Floor', 'Delivery', 'Cutboard', 'Plate', 'Lettuce', 
 GAME_OBJECTS_STATEFUL = [('Counter', []), ('Floor', []), ('Delivery', []), ('Cutboard', []),
                          ('Plate', []), ('Lettuce', [Fresh, Chopped]), ('Tomato', [Fresh, Chopped]),
                          ('Onion', [Fresh, Chopped]), ('Player', [])]
+FOOD_OBJECTS = ["Onion", "Lettuce", "Tomato"]
+TRANSPORTATION_OBJECTS = ["Plate"]
+HARD_CONSTRAINTS = ["Counter", "Delivery"]
+WORK_UTENSILS = ["Cutboard"]
 
 
 class Rep:
@@ -152,9 +156,9 @@ class Object:
         self.location = location
         self.contents = contents if isinstance(contents, list) else [contents]
         self.is_held = False
-        self.name = ""
-        self.full_name = ""
-        self.update_names()
+        sorted_contents = sorted(self.contents, key=lambda c: c.name)
+        self.name = "-".join([c.name for c in sorted_contents])
+        self.full_name = "-".join([c.full_name for c in sorted_contents])
         self.collidable = False
         self.dynamic = False
 
@@ -188,6 +192,11 @@ class Object:
 
     def contains(self, c_name):
         return c_name in list(map(lambda c: c.name, self.contents))
+
+    def move_to(self, new_location):
+        self.location = new_location
+        for content in self.contents:
+            content.move_to(new_location)
 
     def needs_chopped(self):
         if len(self.contents) > 1: return False
@@ -311,12 +320,12 @@ class Food(Object):
 
 class Tomato(Food):
     def __init__(self, location, contents, state_index=0):
+        Food.__init__(self, location, contents)
         self.state_index = state_index  # index in food's state sequence
         self.state_seq = FoodSequence.FRESH_CHOPPED
         self.state = self.state_seq[self.state_index]
         self.rep = 't'
         self.name = 'Tomato'
-        Food.__init__(self, location, contents)
 
     def __hash__(self):
         return Food.__hash__(self)
@@ -330,11 +339,12 @@ class Tomato(Food):
 
 class Lettuce(Food):
     def __init__(self, location, contents, state_index=0):
+        Food.__init__(self, location, contents)
         self.state_index = state_index  # index in food's state sequence
         self.state_seq = FoodSequence.FRESH_CHOPPED
+        self.state = self.state_seq[self.state_index]
         self.rep = 'l'
         self.name = 'Lettuce'
-        Food.__init__(self, location, contents)
 
     def __eq__(self, other):
         return Food.__eq__(self, other)
@@ -345,11 +355,12 @@ class Lettuce(Food):
 
 class Onion(Food):
     def __init__(self, location, contents, state_index=0):
+        Food.__init__(self, location, contents)
         self.state_index = state_index  # index in food's state sequence
         self.state_seq = FoodSequence.FRESH_CHOPPED
+        self.state = self.state_seq[self.state_index]
         self.rep = 'o'
         self.name = 'Onion'
-        Food.__init__(self, location, contents)
 
     def __eq__(self, other):
         return Food.__eq__(self, other)

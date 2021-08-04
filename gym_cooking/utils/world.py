@@ -1,7 +1,7 @@
 import numpy as np
 from collections import defaultdict
 import copy
-from gym_cooking.utils.core import Object, GridSquare
+from gym_cooking.utils.core import Object, GridSquare, Floor
 
 
 class World:
@@ -15,9 +15,6 @@ class World:
         self.loc_to_gridsquare = {}
         self.width = 0
         self.height = 0
-
-    def get_repr(self):
-        return self.get_dynamic_objects()
 
     def __str__(self):
         _display = list(map(lambda x: ''.join(map(lambda y: y + ' ', x)), self.rep))
@@ -53,12 +50,7 @@ class World:
                 self.loc_to_gridsquare[obj.location] = obj
 
     def is_occupied(self, location):
-        o = list(
-            filter(lambda obj: not (not (obj.location == location) or not isinstance(obj, Object)) and not obj.is_held,
-                   self.get_object_list()))
-        if o:
-            return True
-        return False
+        return any(((not isinstance(obj, Floor) and obj.location == location) for obj in self.objects))
 
     def clear_object(self, position):
         """Clears object @ position in self.rep and replaces it with an empty space"""
@@ -73,7 +65,7 @@ class World:
         self.rep[y][x] = str(object_)
 
     def insert(self, obj):
-        self.objects.setdefault(obj.name, []).append(obj)
+        self.objects[obj.name].append(obj)
 
     def remove(self, obj):
         num_objs = len(self.objects[obj.name])
@@ -90,26 +82,6 @@ class World:
         for o in self.objects.values():
             all_obs += o
         return all_obs
-
-    def get_dynamic_objects(self):
-        """Get objects that can be moved."""
-        objs = list()
-
-        for key in sorted(self.objects.keys()):
-            if key != "Counter" and key != "Floor" and "Supply" not in key and key != "Delivery" and key != "Cutboard":
-                objs.append(tuple(list(map(lambda o: o.get_repr(), self.objects[key]))))
-
-        # Must return a tuple because this is going to get hashed.
-        return tuple(objs)
-
-    def get_collidable_objects(self):
-        return list(filter(lambda o: o.collidable, self.get_object_list()))
-
-    def get_collidable_object_locations(self):
-        return list(map(lambda o: o.location, self.get_collidable_objects()))
-
-    def get_dynamic_object_locations(self):
-        return list(map(lambda o: o.location, self.get_dynamic_objects()))
 
     def is_collidable(self, location):
         return location in list(map(lambda o: o.location, list(filter(lambda o: o.collidable, self.get_object_list()))))

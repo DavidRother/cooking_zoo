@@ -51,16 +51,10 @@ class OvercookedEnvironment(gym.Env):
         self.verbose = False
         self.graph_representation_length = sum([len(tup[1]) if tup[1] else 1 for tup in GAME_OBJECTS_STATEFUL])
 
-    def get_repr(self):
-        return self.world.get_repr() + tuple([agent.get_repr() for agent in self.sim_agents])
-
     def __str__(self):
         # Print the world and agents.
         _display = list(map(lambda x: ''.join(map(lambda y: y + ' ', x)), self.rep))
         return '\n'.join(_display)
-
-    def __eq__(self, other):
-        return self.get_repr() == other.get_repr()
 
     def __copy__(self):
         new_env = OvercookedEnvironment(self.level, self.num_agents, self.seed, self.playable, self.record,
@@ -110,7 +104,7 @@ class OvercookedEnvironment(gym.Env):
                             self.world.insert(obj=obj)
                         # GridSquare, i.e. Floor, Counter, Cutboard, Delivery.
                         elif rep in RepToClass:
-                            newobj = RepToClass[rep](location=(x, y), contents=[])
+                            newobj = RepToClass[rep](location=(x, y))
                             self.world.insert(obj=newobj)
                         else:
                             # Empty. Set a Floor tile.
@@ -245,20 +239,20 @@ class OvercookedEnvironment(gym.Env):
         tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length))
         objects = {"Player": self.sim_agents}
         objects.update(self.world.objects)
-        for idx, (name, states) in enumerate(GAME_OBJECTS_STATEFUL):
-            try:
-                object_types_to_search = [key_type for key_type in world.objects.keys() if name in key_type]
-                for obj_type in object_types_to_search:
-                    for obj in world.objects[obj_type]:
-                        if not states:
-                            x, y = obj.location
-                            tensor[x, y, idx] += 1
-                        else:
-                            for state in states:
-                                search_object = next(
-                                    (value for value in world_object.contents if isinstance(value, node.root_type)))
-            except KeyError:
-                continue
+        # for idx, (name, states) in enumerate(GAME_OBJECTS_STATEFUL):
+        #     try:
+        #         object_types_to_search = [key_type for key_type in self.world.objects.keys() if name in key_type]
+        #         for obj_type in object_types_to_search:
+        #             for obj in self.world.objects[obj_type]:
+        #                 if not states:
+        #                     x, y = obj.location
+        #                     tensor[x, y, idx] += 1
+        #                 else:
+        #                     for state in states:
+        #                         search_object = next(
+        #                             (value for value in world_object.contents if isinstance(value, node.root_type)))
+        #     except KeyError:
+        #         continue
         return tensor
 
     def print_agents(self):
@@ -319,7 +313,7 @@ class OvercookedEnvironment(gym.Env):
         """Checks for collisions and corrects agents' executable actions.
 
         Collisions can either happen amongst agents or between agents and world objects."""
-        execute = [True for _ in self.sim_agents]
+        execute = [True] * len(self.sim_agents)
 
         # Check each pairwise collision between agents.
         for i, j in combinations(range(len(self.sim_agents)), 2):
@@ -331,10 +325,8 @@ class OvercookedEnvironment(gym.Env):
                     agent2_action=agent_j.action)
 
             # Update exec array and set path to do nothing.
-            if not exec_[0]:
-                execute[i] = False
-            if not exec_[1]:
-                execute[j] = False
+            execute[i] = exec_[0]
+            execute[j] = exec_[1]
 
             # Track collisions.
             if not all(exec_):

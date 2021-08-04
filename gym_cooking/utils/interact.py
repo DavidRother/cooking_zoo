@@ -1,6 +1,7 @@
 from gym_cooking.utils.core import *
 import numpy as np
 
+
 def interact(agent, world):
     """Carries out interaction for this agent taking this action in this world.
 
@@ -11,31 +12,47 @@ def interact(agent, world):
     if agent.action == (0, 0):
         return
 
-    action_x, action_y = world.inbounds(tuple(np.asarray(agent.location) + np.asarray(agent.action)))
-    gs = world.get_gridsquare_at((action_x, action_y))
+    original_location = agent.location
+    target_location = world.inbounds(tuple(np.asarray(agent.location) + np.asarray(agent.action)))
+    gs = world.get_gridsquare_at(target_location)
+    square_occupied = world.is_occupied(target_location)
+
+    if agent.holding and square_occupied:
+        pass
+    elif agent.holding and not square_occupied:
+        pass
+    elif not agent.holding and square_occupied:
+        # try to pick up and get blocked
+        objects = (obj for obj in world.objects if obj.location == target_location)
+        plate = next((any(isinstance(obj, transport) for transport in TRANSPORTATION_OBJECTS) for obj in objects))
+        if plate:
+            pass
+        pass
+    elif not agent.holding and not square_occupied:
+        agent.move_to(target_location)
 
     # if floor in front --> move to that square
-    if isinstance(gs, Floor): #and gs.holding is None:
+    if isinstance(gs, Floor):  # and gs.holding is None:
         agent.move_to(gs.location)
 
     # if holding something
-    elif agent.holding is not None:
+    elif agent.holding:
         # if delivery in front --> deliver
         if isinstance(gs, Delivery):
             obj = agent.holding
             if obj.is_deliverable():
                 gs.acquire(obj)
                 agent.release()
-                print('\nDelivered {}!'.format(obj.full_name))
+                print(f'\nDelivered {obj.full_name}!')
 
         # if occupied gridsquare in front --> try merging
         elif world.is_occupied(gs.location):
             # Get object on gridsquare/counter
-            obj = world.get_object_at(gs.location, None, find_held_objects = False)
+            obj = world.get_object_at(gs.location, None, find_held_objects=False)
 
             if mergeable(agent.holding, obj):
                 world.remove(obj)
-                o = gs.release() # agent is holding object
+                o = gs.release()  # agent is holding object
                 world.remove(agent.holding)
                 agent.acquire(obj)
                 world.insert(agent.holding)
@@ -44,7 +61,6 @@ def interact(agent, world):
                     gs.acquire(agent.holding)
                     agent.release()
 
-
         # if holding something, empty gridsquare in front --> chop or drop
         elif not world.is_occupied(gs.location):
             obj = agent.holding
@@ -52,16 +68,16 @@ def interact(agent, world):
                 # normally chop, but if in playable game mode then put down first
                 obj.chop()
             else:
-                gs.acquire(obj) # obj is put onto gridsquare
+                gs.acquire(obj)  # obj is put onto gridsquare
                 agent.release()
-                assert world.get_object_at(gs.location, obj, find_held_objects =\
-                    False).is_held == False, "Verifying put down works"
+                assert not world.get_object_at(gs.location, obj, find_held_objects=False).is_held, \
+                    "Verifying put down works"
 
     # if not holding anything
     elif agent.holding is None:
         # not empty in front --> pick up
         if world.is_occupied(gs.location) and not isinstance(gs, Delivery):
-            obj = world.get_object_at(gs.location, None, find_held_objects = False)
+            obj = world.get_object_at(gs.location, None, find_held_objects=False)
             # if in playable game mode, then chop raw items on cutting board
             if isinstance(gs, Cutboard) and obj.needs_chopped() and world.play:
                 obj.chop()
@@ -72,3 +88,4 @@ def interact(agent, world):
         # if empty in front --> interact
         elif not world.is_occupied(gs.location):
             pass
+
