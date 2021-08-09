@@ -1,5 +1,7 @@
-from gym_cooking.utils.core import *
-from gym_cooking.utils.world import World
+from gym_cooking.cooking_world.world_objects import *
+from gym_cooking.cooking_world.cooking_world import CookingWorld
+
+import numpy as np
 
 
 class RecipeNode:
@@ -33,19 +35,17 @@ class Recipe:
     def completed(self):
         return self.root_node.achieved
 
-    def update_recipe_state(self, world: World):
+    def update_recipe_state(self, world: CookingWorld):
         for node in reversed(self.node_list):
             node.achieved = False
             node.world_objects = []
             if not all((contains.achieved for contains in node.contains)):
                 continue
-            object_types_to_search = [key_type for key_type in world.objects.keys() if node.name in key_type]
-            for obj_type in object_types_to_search:
-                for obj in world.objects[obj_type]:
-                    # check for all conditions
-                    if self.check_conditions(node, obj):
-                        node.world_objects.append(obj)
-                        node.achieved = True
+            for obj in world.world_objects[node.name]:
+                # check for all conditions
+                if self.check_conditions(node, obj):
+                    node.world_objects.append(obj)
+                    node.achieved = True
 
     def expand_child_nodes(self, node: RecipeNode):
         child_nodes = []
@@ -55,12 +55,8 @@ class Recipe:
 
     @staticmethod
     def check_conditions(node: RecipeNode, world_object):
-        if isinstance(world_object, Object):
-            search_object = next((value for value in world_object.contents if isinstance(value, node.root_type)))
-        else:
-            search_object = world_object
         for condition in node.conditions:
-            if getattr(search_object, condition[0]) != condition[1]:
+            if getattr(world_object, condition[0]) != condition[1]:
                 return False
         else:
             all_contained = []

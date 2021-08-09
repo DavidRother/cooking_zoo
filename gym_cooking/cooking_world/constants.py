@@ -2,8 +2,8 @@ from enum import Enum
 
 
 class ChopFoodStates(Enum):
-    FRESH = 1
-    CHOPPED = 2
+    FRESH = "Fresh"
+    CHOPPED = "Chopped"
 
 
 ONION_INIT_STATE = ChopFoodStates.FRESH
