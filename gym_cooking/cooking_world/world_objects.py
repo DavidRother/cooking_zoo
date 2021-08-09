@@ -39,11 +39,11 @@ class Blender(StaticObject, ProgressingObject):
 
     def __init__(self, location):
         super().__init__(location, False)
-        self.countdown = -1
+        self.countdown = 0
         self.content = None
 
     def progress(self):
-        if not self.content or self.content.done() or self.countdown <= 0:
+        if not self.content or self.countdown == 0 or self.content.done():
             return
         self.countdown -= 1
         if self.countdown == 0:
@@ -54,7 +54,6 @@ class Blender(StaticObject, ProgressingObject):
         self.countdown = 10
 
     def take(self):
-        self.countdown = -1
         tmp = self.content
         self.content = None
         return tmp
