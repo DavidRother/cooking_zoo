@@ -26,7 +26,7 @@ class ActionObject(ABC):
 class ProgressingObject(ABC):
 
     @abstractmethod
-    def progress(self):
+    def progress(self, dynamic_objects):
         pass
 
 
@@ -37,6 +37,10 @@ class StaticObject(Object):
 
     def move_to(self, new_location):
         raise Exception(f"Can't move static object {self.name()}")
+
+    @abstractmethod
+    def accepts(self, dynamic_objects) -> bool:
+        pass
 
 
 class DynamicObject(Object):
@@ -84,3 +88,27 @@ class ChopFood(Food, ABC):
 
     def done(self):
         return self.state == ChopFoodStates.CHOPPED
+
+
+class BlenderFood(Food, ABC):
+
+    def __init__(self, location, food_state):
+        super().__init__(location, food_state)
+        self.current_progress = 10
+        self.max_progress = 0
+        self.min_progress = 10
+
+    def blend(self):
+        if self.done():
+            return False
+        if self.state == BlenderFoodStates.FRESH or self.state == BlenderFoodStates.IN_PROGRESS:
+            self.current_progress -= 1
+            self.state = BlenderFoodStates.IN_PROGRESS if self.current_progress > self.max_progress \
+                else BlenderFoodStates.MASHED
+        return True
+
+    def done(self):
+        return self.state == BlenderFoodStates.MASHED
+
+
+ABSTRACT_GAME_CLASSES = [ActionObject, ProgressingObject, Container, Food, ChopFood, DynamicObject, StaticObject]

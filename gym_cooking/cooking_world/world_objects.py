@@ -1,4 +1,4 @@
-from gym_cooking.cooking_world.AbstractClasses import *
+from gym_cooking.cooking_world.abstract_classes import *
 from gym_cooking.cooking_world.constants import *
 from typing import List
 
@@ -8,17 +8,26 @@ class Floor(StaticObject):
     def __init__(self, location):
         super().__init__(location, True)
 
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
 
 class Counter(StaticObject):
 
     def __init__(self, location):
         super().__init__(location, False)
 
+    def accepts(self, dynamic_objects) -> bool:
+        return True
+
 
 class DeliverSquare(StaticObject):
 
     def __init__(self, location):
         super().__init__(location, False)
+
+    def accepts(self, dynamic_objects) -> bool:
+        return True
 
 
 class CutBoard(StaticObject, ActionObject):
@@ -34,29 +43,37 @@ class CutBoard(StaticObject, ActionObject):
                 return False
         return False
 
+    def accepts(self, dynamic_objects) -> bool:
+        return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], ChopFood)
+
 
 class Blender(StaticObject, ProgressingObject):
 
     def __init__(self, location):
         super().__init__(location, False)
-        self.countdown = 0
-        self.content = None
-
-    def progress(self):
-        if not self.content or self.countdown == 0 or self.content.done():
-            return
-        self.countdown -= 1
-        if self.countdown == 0:
-            self.content.chop()
-
-    def place(self, obj):
-        self.content = obj
         self.countdown = 10
-
-    def take(self):
-        tmp = self.content
         self.content = None
-        return tmp
+
+    def progress(self, dynamic_objects):
+        assert len(dynamic_objects) < 2, "Too many Dynamic Objects placed into the Blender"
+        if not dynamic_objects:
+            self.content = None
+            return
+        elif not self.content:
+            self.content = dynamic_objects
+            self.countdown = 10
+        elif self.content:
+            if self.content[0] == dynamic_objects[0]:
+                if self.countdown > 0:
+                    self.countdown -= 1
+                else:
+                    self.content[0].blend()
+            else:
+                self.content = dynamic_objects
+                self.countdown = 10
+
+    def accepts(self, dynamic_objects) -> bool:
+        return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], BlenderFood)
 
 
 class Plate(Container):
@@ -88,6 +105,12 @@ class Lettuce(ChopFood):
 
     def __init__(self, location):
         super().__init__(location, LETTUCE_INIT_STATE)
+
+
+class Carrot(BlenderFood):
+
+    def __init__(self, location):
+        super().__init__(location, BlenderFoodStates.FRESH)
 
 
 class Agent(Object):
@@ -125,5 +148,5 @@ StringToClass = {
     "Blender": Blender
 }
 
-
+GAME_CLASSES = [Floor, Counter, CutBoard, DeliverSquare, Tomato, Lettuce, Onion, Plate, Agent, Blender]
 

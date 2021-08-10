@@ -10,15 +10,26 @@ class CookingWorld:
         self.width = width
         self.height = height
         self.world_objects = defaultdict(list)
+        self.abstract_index = defaultdict(list)
 
     def add_object(self, obj):
         self.world_objects[type(obj).__name__].append(obj)
+
+    def index_objects(self):
+        for type_name, obj_list in self.world_objects.items():
+            for abstract_class in ABSTRACT_GAME_CLASSES:
+                if issubclass(StringToClass[type_name], abstract_class):
+                    self.abstract_index[abstract_class].extend(obj_list)
 
     def get_object_list(self):
         object_list = []
         for value in self.world_objects.values():
             object_list.extend(value)
         return object_list
+
+    def progress_world(self):
+        for obj in self.abstract_index[ProgressingObject]:
+            obj.progress()
 
     def perform_agent_actions(self, agents, actions):
         cleaned_actions = self.check_inbounds(agents, actions)
@@ -32,18 +43,19 @@ class CookingWorld:
             agent.move_to(target_location)
         else:
             dynamic_objects = self.get_objects_at(target_location, DynamicObject)
+            static_object = self.get_objects_at(target_location, StaticObject)[0]
             if not agent.holding and not dynamic_objects:
                 return
             elif agent.holding and not dynamic_objects:
-                agent.put_down(target_location)
+                if static_object.accepts(agent.holding):
+                    agent.put_down(target_location)
             elif not agent.holding and dynamic_objects:
-                action_object_list = self.get_objects_at(target_location, ActionObject)
-                action_done = False
-                if action_object_list:
-                    action_object = action_object_list[0]
-                    action_done = action_object.action(dynamic_objects)
-                if not action_done:
-                    object_to_grab = self.get_highest_order_object(dynamic_objects)
+                object_to_grab = self.get_highest_order_object(dynamic_objects)
+                if isinstance(static_object, ActionObject):
+                    action_done = static_object.action(dynamic_objects)
+                    if not action_done:
+                        agent.grab(object_to_grab)
+                else:
                     agent.grab(object_to_grab)
             elif agent.holding and dynamic_objects:
                 self.attempt_merge(agent, dynamic_objects, target_location)
@@ -100,6 +112,9 @@ class CookingWorld:
         if len(objects) != 1:
             raise Exception(f"Not exactly one static object at location: {location}")
         return objects[0].walkable
+
+    def get_abstract_object_at(self, location, object_type):
+        return [obj for obj in self.abstract_index[object_type] if obj.location == location]
 
     def get_objects_at(self, location, object_type=None):
         located_objects = []
