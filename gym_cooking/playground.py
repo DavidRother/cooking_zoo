@@ -34,7 +34,7 @@ def initialize_agents(arglist):
 
             # phase 3: read in agent locations (up to num_agents)
             elif phase == 3:
-                if len(real_agents) < arglist.num_agents:
+                if len(real_agents) < arglist.n_agents:
                     loc = line.split(' ')
                     real_agent = RealAgent(
                             arglist=arglist,

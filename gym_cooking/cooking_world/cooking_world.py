@@ -36,6 +36,7 @@ class CookingWorld:
         collision_actions = self.check_collisions(agents, cleaned_actions)
         for agent, action in zip(agents, collision_actions):
             self.perform_agent_action(agent, action)
+        self.progress_world()
 
     def perform_agent_action(self, agent: Agent, action):
         target_location = (action[0] + agent.location[0], action[1] + agent.location[1])
@@ -47,7 +48,7 @@ class CookingWorld:
             if not agent.holding and not dynamic_objects:
                 return
             elif agent.holding and not dynamic_objects:
-                if static_object.accepts(agent.holding):
+                if static_object.accepts([agent.holding]):
                     agent.put_down(target_location)
             elif not agent.holding and dynamic_objects:
                 object_to_grab = self.get_highest_order_object(dynamic_objects)

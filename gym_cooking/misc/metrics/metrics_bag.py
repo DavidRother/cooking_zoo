@@ -11,7 +11,7 @@ class Bag:
 
     def set_general(self):
         self.data["level"] = self.arglist.level
-        self.data["num_agents"] = self.arglist.num_agents
+        self.data["num_agents"] = self.arglist.n_agents
         self.data["profiling"] = {info : [] for info in ["Delegation", "Navigation", "Total"]}
         self.data["num_completed_subtasks"] = []
 
@@ -27,9 +27,9 @@ class Bag:
 
         # Prepare for agent information
         for info in ["states","actions", "subtasks", "subtask_agents", "bayes", "holding", "incomplete_subtasks"]:
-            self.data[info] = {"agent-{}".format(i+1): [] for i in range(self.arglist.num_agents)}
+            self.data[info] = {"agent-{}".format(i+1): [] for i in range(self.arglist.n_agents)}
             if info == "bayes":
-                self.data[info] = {"agent-{}".format(i+1): {} for i in range(self.arglist.num_agents)}
+                self.data[info] = {"agent-{}".format(i+1): {} for i in range(self.arglist.n_agents)}
 
 
     def set_recipe(self, recipe_subtasks):
