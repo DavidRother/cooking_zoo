@@ -16,7 +16,6 @@ from pettingzoo.utils import wrappers
 
 import gym
 
-
 CollisionRepr = namedtuple("CollisionRepr", "time agent_names agent_locations")
 COLORS = ['blue', 'magenta', 'yellow', 'green']
 
@@ -64,6 +63,7 @@ class CookingEnvironment(AECEnv):
         self.record = record
         self.max_num_timesteps = max_num_timesteps
         self.t = 0
+        self.sim_agents = []
         self.filename = ""
         self.set_filename()
         self.world = CookingWorld([], 0, 0)
@@ -165,12 +165,14 @@ class CookingEnvironment(AECEnv):
                         #         location=(int(loc[0]), int(loc[1])))
                         # self.sim_agents.append(sim_agent)
 
+        self.sim_agents = agents
         self.world.agents = agents
         self.world.width = x + 1
         self.world.height = y
 
     def reset(self):
         self.world = CookingWorld([], 0, 0)
+        self.sim_agents = []
         self.agent_actions = {}
         self.t = 0
 
