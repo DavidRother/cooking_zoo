@@ -5,8 +5,8 @@ from gym_cooking.environment.game.game import Game
 
 
 class GameImage(Game):
-    def __init__(self, filename, world, sim_agents, record=False):
-        Game.__init__(self, world, sim_agents)
+    def __init__(self, filename, world, record=False):
+        Game.__init__(self, world)
         self.game_record_dir = 'misc/game/record/{}/'.format(filename)
         self.record = record
 

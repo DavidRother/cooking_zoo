@@ -24,10 +24,10 @@ def get_image(path):
 
 
 class Game:
-    def __init__(self, world, sim_agents, play=False):
+
+    def __init__(self, env, play=False):
         self._running = True
-        self.world = world
-        self.sim_agents = sim_agents
+        self.env = env
         self.play = play
         self.screen = None
 
@@ -35,8 +35,8 @@ class Game:
         self.scale = 80  # num pixels per tile
         self.holding_scale = 0.5
         self.container_scale = 0.7
-        self.width = self.scale * self.world.width
-        self.height = self.scale * self.world.height
+        self.width = self.scale * self.env.unwrapped.world.width
+        self.height = self.scale * self.env.unwrapped.world.height
         self.tile_size = (self.scale, self.scale)
         self.holding_size = tuple((self.holding_scale * np.asarray(self.tile_size)).astype(int))
         self.container_size = tuple((self.container_scale * np.asarray(self.tile_size)).astype(int))
@@ -75,7 +75,7 @@ class Game:
             pygame.display.update()
 
     def draw_static_objects(self):
-        objects = self.world.get_object_list()
+        objects = self.env.unwrapped.world.get_object_list()
         static_objects = [obj for obj in objects if isinstance(obj, StaticObject)]
         for static_object in static_objects:
             self.draw_static_object(static_object)
@@ -101,13 +101,13 @@ class Game:
         #     pygame.draw.rect(self.screen, Color.FLOOR, fill)
 
     def draw_dynamic_objects(self):
-        objects = self.world.get_object_list()
+        objects = self.env.unwrapped.world.get_object_list()
         dynamic_objects = [obj for obj in objects if isinstance(obj, DynamicObject)]
         dynamic_objects_grouped = defaultdict(list)
         for obj in dynamic_objects:
             dynamic_objects_grouped[obj.location].append(obj)
         for location, obj_list in dynamic_objects_grouped.items():
-            if any([agent.location == location for agent in self.sim_agents]):
+            if any([agent.location == location for agent in self.env.unwrapped.world.agents]):
                 self.draw_dynamic_object_stack(obj_list, self.holding_size, self.holding_location(location),
                                                self.holding_container_size, self.holding_container_location(location))
             else:
@@ -115,7 +115,7 @@ class Game:
                                                self.container_size, self.container_location(location))
 
     def draw_dynamic_object_stack(self, dynamic_objects, base_size, base_location, holding_size, holding_location):
-        highest_order_object = self.world.get_highest_order_object(dynamic_objects)
+        highest_order_object = self.env.unwrapped.world.get_highest_order_object(dynamic_objects)
         if isinstance(highest_order_object, Container):
             self.draw('Plate', base_size, base_location)
             rest_stack = [obj for obj in dynamic_objects if obj != highest_order_object]
@@ -127,7 +127,7 @@ class Game:
             self.draw(file_name, base_size, base_location)
 
     def draw_agents(self):
-        for agent in self.sim_agents:
+        for agent in self.env.unwrapped.world.agents:
             self.draw('agent-{}'.format(agent.color), self.tile_size, self.scaled_location(agent.location))
 
     def draw(self, path, size, location):
@@ -137,7 +137,8 @@ class Game:
 
     def draw_agent_object(self, obj):
         # Holding shows up in bottom right corner.
-        if obj is None: return
+        if obj is None:
+            return
         if any([isinstance(c, Plate) for c in obj.contents]):
             self.draw('Plate', self.holding_size, self.holding_location(obj.location))
             if len(obj.contents) > 1:

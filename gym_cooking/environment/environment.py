@@ -190,7 +190,6 @@ class CookingEnvironment(AECEnv):
             self.game = GameImage(
                 filename=self.filename,
                 world=self.world,
-                sim_agents=self.sim_agents,
                 record=self.record)
             self.game.on_init()
         else:

@@ -6,21 +6,26 @@ from gym_cooking.misc.game.utils import *
 import pygame
 import os
 from datetime import datetime
+from collections import defaultdict
+
+
+action_translation_dict = {0: (0, 0), 1: (1, 0), 2: (0, 1), 3: (-1, 0), 4: (0, -1)}
+reverse_action_translation_dict = {(0, 0): 0, (1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
 
 
 class GamePlay(Game):
 
     def __init__(self, env, num_humans, ai_policies, max_steps=100):
-        Game.__init__(self, env.world, env.sim_agents, play=True)
+        Game.__init__(self, env, play=True)
         self.env = env
         self.save_dir = 'misc/game/screenshots'
-        self.store = {"actions": [], "tensor_obs": [], "agent_states": [], "rewards": [], "done": [], "info": []}
+        self.store = defaultdict(list)
         self.num_humans = num_humans
         self.ai_policies = ai_policies
         self.max_steps = max_steps
         self.current_step = 0
-        self.last_obs = env.get_tensor_representation()
-        assert len(ai_policies) == len(env.sim_agents) - num_humans
+        self.last_obs = env.reset()
+        assert len(ai_policies) == len(env.unwrapped.world.agents) - num_humans
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
 
@@ -30,37 +35,40 @@ class GamePlay(Game):
         elif event.type == pygame.KEYDOWN:
             # Save current image
             if event.key == pygame.K_RETURN:
-                image_name = '{}_{}.png'.format(self.env.filename, datetime.now().strftime('%m-%d-%y_%H-%M-%S'))
+                image_name = '{}_{}.png'.format(self.env.unwrapped.filename, datetime.now().strftime('%m-%d-%y_%H-%M-%S'))
                 pygame.image.save(self.screen, '{}/{}'.format(self.save_dir, image_name))
                 print('just saved image {} to {}'.format(image_name, self.save_dir))
                 return
 
             # Control current human agent
             if event.key in KeyToTuple_human1 and self.num_humans > 0:
-                action_translation_dict = {0: (0, 0), 1: (1, 0), 2: (0, 1), 3: (-1, 0), 4: (0, -1)}
-                reverse_action_translation_dict = {(0, 0): 0, (1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
+                store_action_dict = {}
                 action = KeyToTuple_human1[event.key]
-                self.sim_agents[0].action = action
-                self.store["tensor_obs"].append(self.last_obs)
-                self.store["agent_states"].append([agent.location for agent in self.sim_agents])
-                for idx, agent in enumerate(self.sim_agents):
+                self.env.unwrapped.world.agents[0].action = action
+                store_action_dict[self.env.unwrapped.world.agents[0]] = action
+                self.store["observation"].append(self.last_obs)
+                self.store["agent_states"].append([agent.location for agent in self.env.unwrapped.world.agents])
+                for idx, agent in enumerate(self.env.unwrapped.world.agents):
                     if idx >= self.num_humans:
-                        agent = self.ai_policies[idx - self.num_humans].agent
-                        obs = self.ai_policies[idx - self.num_humans].action_state_builder(self.last_obs)
-                        ai_action, _, _ = agent.get_action(obs)
-                        self.sim_agents[idx].action = action_translation_dict[ai_action.item()]
+                        ai_policy = self.ai_policies[idx - self.num_humans].agent
+                        env_agent = self.env.unwrapped.world_agent_to_env_agent_mapping[agent]
+                        last_obs_raw = self.last_obs[env_agent]
+                        obs = self.ai_policies[idx - self.num_humans].action_state_builder(last_obs_raw)
+                        ai_action, _, _ = ai_policy.get_action(obs)
+                        store_action_dict[agent] = ai_action.item()
+                        self.env.unwrapped.world.agents[idx].action = action_translation_dict[ai_action.item()]
 
-                action_dict = {}
-                for idx, agent in enumerate(self.sim_agents):
-                    action_dict[f"agent-{idx + 1}"] = agent.action
-                obs, reward, done, info = self.env.step(action_dict)
-                self.store["actions"].append([reverse_action_translation_dict[agent.action] for agent in self.sim_agents])
-                self.store["info"].append(info)
-                self.store["rewards"].append(reward)
-                self.store["done"].append(done)
-                self.last_obs = info["tensor_obs"]
+                observations, rewards, dones, infos = \
+                    self.env.step({agent: reverse_action_translation_dict[
+                        self.env.unwrapped.world_agent_mapping[agent].action] for agent in self.env.agents})
 
-                if done:
+                self.store["actions"].append(store_action_dict)
+                self.store["info"].append(infos)
+                self.store["rewards"].append(rewards)
+                self.store["done"].append(dones)
+                self.last_obs = observations
+
+                if all(dones.values()):
                     self._running = False
 
     def on_execute(self):
