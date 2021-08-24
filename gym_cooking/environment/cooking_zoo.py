@@ -30,6 +30,7 @@ SymbolToClass = {
     'l': Lettuce,
     'o': Onion,
     'p': Plate,
+    'b': Blender
 }
 
 GAME_OBJECTS_STATEFUL = [('Counter', []), ('Floor', []), ('DeliverSquare', []), ('CutBoard', []),
@@ -87,8 +88,8 @@ class CookingEnvironment(AECEnv):
         self.graph_representation_length = sum([max(len(tup[1]), 2) if tup[1] else 1 for tup in GAME_OBJECTS_STATEFUL])
 
         obs_space = {'symbolic_observation': gym.spaces.Box(low=0, high=10,
-                                                            shape=(self.graph_representation_length, self.world.width,
-                                                                   self.world.height), dtype=np.int32),
+                                                            shape=(self.world.width, self.world.height,
+                                                                   self.graph_representation_length), dtype=np.int32),
                      'agent_location': gym.spaces.Box(low=0, high=max(self.world.width, self.world.height),
                                                       shape=(2,)),
                      'goal_vector': gym.spaces.MultiBinary(NUM_GOALS)}
@@ -179,6 +180,9 @@ class CookingEnvironment(AECEnv):
         # Load world & distances.
         self.load_level(level=self.level, num_agents=self.num_agents)
 
+        for recipe in self.recipe_graphs:
+            recipe.update_recipe_state(self.world)
+
         if self.record:
             self.game = GameImage(
                 filename=self.filename,
@@ -267,6 +271,9 @@ class CookingEnvironment(AECEnv):
             open_goals[idx] = recipe.goals_completed(NUM_GOALS)
             bonus = recipe.completed() * 10
             rewards[idx] = sum(goals_before) - sum(open_goals[idx]) + bonus
+            if rewards[idx] < 0:
+                print(f"Goals before: {goals_before}")
+                print(f"Goals after: {open_goals}")
 
         if all((recipe.completed() for recipe in self.recipe_graphs)):
             self.termination_info = "Terminating because all deliveries were completed"

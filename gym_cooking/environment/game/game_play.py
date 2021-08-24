@@ -25,11 +25,14 @@ class GamePlay(Game):
         self.max_steps = max_steps
         self.current_step = 0
         self.last_obs = env.reset()
+        self.step_done = False
+        self.yielding_action_dict = {}
         assert len(ai_policies) == len(env.unwrapped.world.agents) - num_humans
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
 
     def on_event(self, event):
+        self.step_done = False
         if event.type == pygame.QUIT:
             self._running = False
         elif event.type == pygame.KEYDOWN:
@@ -58,9 +61,9 @@ class GamePlay(Game):
                         store_action_dict[agent] = ai_action.item()
                         self.env.unwrapped.world.agents[idx].action = action_translation_dict[ai_action.item()]
 
-                observations, rewards, dones, infos = \
-                    self.env.step({agent: reverse_action_translation_dict[
-                        self.env.unwrapped.world_agent_mapping[agent].action] for agent in self.env.agents})
+                self.yielding_action_dict = {agent: reverse_action_translation_dict[
+                    self.env.unwrapped.world_agent_mapping[agent].action] for agent in self.env.agents}
+                observations, rewards, dones, infos = self.env.step(self.yielding_action_dict)
 
                 self.store["actions"].append(store_action_dict)
                 self.store["info"].append(infos)
@@ -70,6 +73,8 @@ class GamePlay(Game):
 
                 if all(dones.values()):
                     self._running = False
+
+                self.step_done = True
 
     def on_execute(self):
         self._running = self.on_init()
@@ -81,5 +86,18 @@ class GamePlay(Game):
         self.on_cleanup()
 
         return self.store
+
+    def on_execute_yielding(self):
+        self._running = self.on_init()
+
+        while self._running:
+            for event in pygame.event.get():
+                self.on_event(event)
+            self.on_render()
+            if self.step_done:
+                self.step_done = False
+                yield self.store["observation"][-1], self.store["done"][-1], self.store["info"][-1], \
+                      self.store["rewards"][-1], self.yielding_action_dict
+        self.on_cleanup()
 
 
