@@ -229,6 +229,7 @@ class CookingEnvironment(AECEnv):
         self.t += 1
 
         translated_actions = [action_translation_dict[act] for act in actions]
+        # translated_actions = [action_translation_dict[actions[f"player_{idx}"]] for idx in range(len(actions))]
         self.world.perform_agent_actions(self.world.agents, translated_actions)
 
         # Visualize.
@@ -285,7 +286,6 @@ class CookingEnvironment(AECEnv):
         objects = defaultdict(list)
         objects["Agent"] = self.world.agents
         objects.update(self.world.world_objects)
-
         idx = 0
         for name, states in GAME_OBJECTS_STATEFUL:
             if states:

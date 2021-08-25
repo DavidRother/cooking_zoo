@@ -2,8 +2,25 @@ from collections import defaultdict
 from typing import List
 from gym_cooking.cooking_world.world_objects import *
 
+from pathlib import Path
+import os.path
+
 
 class CookingWorld:
+
+    COLORS = ['blue', 'magenta', 'yellow', 'green']
+
+    SymbolToClass = {
+        ' ': Floor,
+        '-': Counter,
+        '/': CutBoard,
+        '*': DeliverSquare,
+        't': Tomato,
+        'l': Lettuce,
+        'o': Onion,
+        'p': Plate,
+        'b': Blender
+    }
 
     def __init__(self, agents, width, height):
         self.agents = agents
@@ -138,6 +155,60 @@ class CookingWorld:
             if highest_order_obj.done():
                 agent.holding.add_content(highest_order_obj)
                 highest_order_obj.move_to(agent.location)
+
+    def load_level(self, level, num_agents, random=False):
+        x = 0
+        y = 0
+        my_path = os.path.realpath(__file__)
+        dir_name = os.path.dirname(my_path)
+        path = Path(dir_name)
+        parent = path.parent / f"utils/levels/{level}.txt"
+        agents = []
+        # print(parent)
+        with parent.open("r") as file:
+            # Mark the phases of reading.
+            phase = 1
+            for line in file:
+                line = line.strip('\n')
+                if line == '':
+                    phase += 1
+
+                # Phase 1: Read in kitchen map.
+                elif phase == 1:
+                    for x, rep in enumerate(line):
+                        # Object, i.e. Tomato, Lettuce, Onion, or Plate.
+                        if rep in 'tlop':
+                            counter = Counter(location=(x, y))
+                            dynamic_object = self.SymbolToClass[rep](location=(x, y))
+                            self.add_object(counter)
+                            self.add_object(dynamic_object)
+                        # GridSquare, i.e. Floor, Counter, Cutboard, Delivery.
+                        elif rep in self.SymbolToClass:
+                            static_object = self.SymbolToClass[rep](location=(x, y))
+                            self.add_object(static_object)
+                        else:
+                            # Empty. Set a Floor tile.
+                            floor = Floor(location=(x, y))
+                            self.add_object(floor)
+                    y += 1
+                # Phase 2: Read in recipe list.
+                elif phase == 2:
+                    # self.recipes.append(RecipeStore[line]())
+                    pass
+
+                # Phase 3: Read in agent locations (up to num_agents).
+                elif phase == 3:
+                    if len(agents) < num_agents:
+                        loc = line.split(' ')
+                        agent = Agent((int(loc[0]), int(loc[1])), self.COLORS[len(agents)],
+                                      'agent-' + str(len(agents) + 1))
+                        agents.append(agent)
+
+        self.agents = agents
+        self.width = x + 1
+        self.height = y
+
+
 
 
 
