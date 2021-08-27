@@ -15,6 +15,8 @@ from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
+import random
+
 import gym
 
 
@@ -162,7 +164,8 @@ class CookingEnvironment(AECEnv):
                 elif phase == 3:
                     if len(agents) < num_agents:
                         loc = line.split(' ')
-                        agent = Agent((int(loc[0]), int(loc[1])), COLORS[len(agents)],
+                        location = (random.randint(1, 5), random.randint(1, 5))
+                        agent = Agent(location, COLORS[len(agents)],
                                       'agent-' + str(len(agents) + 1))
                         agents.append(agent)
 
