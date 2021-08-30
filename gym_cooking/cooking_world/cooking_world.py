@@ -4,6 +4,7 @@ from gym_cooking.cooking_world.world_objects import *
 
 from pathlib import Path
 import os.path
+import json
 
 
 class CookingWorld:
@@ -156,7 +157,42 @@ class CookingWorld:
                 agent.holding.add_content(highest_order_obj)
                 highest_order_obj.move_to(agent.location)
 
+    def load_new_style_level(self, level_name, num_agents):
+        my_path = os.path.realpath(__file__)
+        dir_name = os.path.dirname(my_path)
+        path = Path(dir_name)
+        parent = path.parent / f"utils/new_style_level/{level_name}.json"
+        with open(parent) as json_file:
+            level_object = json.load(json_file)
+            json_file.close()
+        self.parse_level_layout(level_object)
+        self.parse_static_objects(level_object)
+
+    def parse_level_layout(self, level_object):
+        level_layout = level_object["LEVEL_LAYOUT"]
+        x = 0
+        y = 0
+        for y, line in enumerate(iter(level_layout.splitlines())):
+            for x, char in enumerate(line):
+                if char == "-":
+                    counter = Counter(location=(x, y))
+                    self.add_object(counter)
+                else:
+                    floor = Floor(location=(x, y))
+                    self.add_object(floor)
+        self.width = x
+        self.height = y
+
+    def parse_static_objects(self, level_object):
+        static_objects = level_object["STATIC_OBJECTS"]
+        for static_object in static_objects:
+            name = list(static_object.keys())[0]
+            obj = StringToClass(name)
+
     def load_level(self, level, num_agents, random=False):
+        self.load_new_style_level(level, num_agents)
+
+    def old_load_level(self, level, num_agents, random=False):
         x = 0
         y = 0
         my_path = os.path.realpath(__file__)
