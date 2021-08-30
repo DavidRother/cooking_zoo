@@ -5,6 +5,7 @@ from gym_cooking.cooking_world.world_objects import *
 from pathlib import Path
 import os.path
 import json
+import random
 
 
 class CookingWorld:
@@ -32,6 +33,9 @@ class CookingWorld:
 
     def add_object(self, obj):
         self.world_objects[type(obj).__name__].append(obj)
+
+    def delete_object(self, obj):
+        self.world_objects[type(obj).__name__].remove(obj)
 
     def index_objects(self):
         for type_name, obj_list in self.world_objects.items():
@@ -135,11 +139,11 @@ class CookingWorld:
     def get_abstract_object_at(self, location, object_type):
         return [obj for obj in self.abstract_index[object_type] if obj.location == location]
 
-    def get_objects_at(self, location, object_type=None):
+    def get_objects_at(self, location, object_type=object):
         located_objects = []
         for obj_class_string, objects in self.world_objects.items():
             obj_class = StringToClass[obj_class_string]
-            if not object_type or not issubclass(obj_class, object_type):
+            if not issubclass(obj_class, object_type):
                 continue
             for obj in objects:
                 if obj.location == location:
@@ -187,7 +191,11 @@ class CookingWorld:
         static_objects = level_object["STATIC_OBJECTS"]
         for static_object in static_objects:
             name = list(static_object.keys())[0]
-            obj = StringToClass(name)
+            for idx in range(static_object[name]["COUNT"]):
+                x = random.sample(static_object[name]["X_POSITION"], 1)[0]
+                y = random.sample(static_object[name]["Y_POSITION"], 1)[0]
+
+                obj = StringToClass(name)(x, y)
 
     def load_level(self, level, num_agents, random=False):
         self.load_new_style_level(level, num_agents)

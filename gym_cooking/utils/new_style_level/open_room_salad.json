@@ -1,12 +1,12 @@
 {
   "LEVEL_LAYOUT": "-------\n-     -\n-     -\n-     -\n-     -\n-     -\n-------",
-  "STATIC_OBJECTS": [{"CutBoard": {"COUNT": 1, "X_POSITION": [0, 1 ,2, 3, 4, 5, 6], "Y_POSITION":  [0, 6]}},
+  "STATIC_OBJECTS": [{"CutBoard": {"COUNT": 1, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [0, 6]}},
                      {"CutBoard": {"COUNT": 1, "X_POSITION": [0, 6], "Y_POSITION":  [0, 1 ,2, 3, 4, 5, 6]}},
-                     {"DeliverSquare": {"COUNT": 1, "X_POSITION": [0, 1 ,2, 3, 4, 5, 6], "Y_POSITION":  [0, 6]}}],
-  "DYNAMIC_OBJECTS": [{"Plate":  {"COUNT": 1, "X_POSITION": [0, 1 ,2, 3, 4, 5, 6], "Y_POSITION":  [0, 6]}},
-                      {"Plate": {"COUNT": 1, "X_POSITION": [0, 6], "Y_POSITION":  [0, 1 ,2, 3, 4, 5, 6]}},
-                      {"Salad": {"COUNT": 1, "X_POSITION": [0, 6], "Y_POSITION":  [0, 1 ,2, 3, 4, 5, 6]}},
-                      {"Tomato": {"COUNT": 1, "X_POSITION": [0, 1 ,2, 3, 4, 5, 6], "Y_POSITION":  [0, 6]}}
+                     {"DeliverSquare": {"COUNT": 1, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [0, 6]}}],
+  "DYNAMIC_OBJECTS": [{"Plate":  {"COUNT": 1, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [0, 6]}},
+                      {"Plate": {"COUNT": 1, "X_POSITION": [0, 6], "Y_POSITION":  [1 ,2, 3, 4, 5]}},
+                      {"Salad": {"COUNT": 1, "X_POSITION": [0, 6], "Y_POSITION":  [1 ,2, 3, 4, 5]}},
+                      {"Tomato": {"COUNT": 1, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [0, 6]}}
   ],
   "AGENTS": {"X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [1 ,2, 3, 4, 5]}
 }
