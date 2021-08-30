@@ -24,10 +24,10 @@ class CookingWorld:
         'b': Blender
     }
 
-    def __init__(self, agents, width, height):
-        self.agents = agents
-        self.width = width
-        self.height = height
+    def __init__(self):
+        self.agents = []
+        self.width = 0
+        self.height = 0
         self.world_objects = defaultdict(list)
         self.abstract_index = defaultdict(list)
 
@@ -171,6 +171,7 @@ class CookingWorld:
             json_file.close()
         self.parse_level_layout(level_object)
         self.parse_static_objects(level_object)
+        self.parse_dynamic_objects(level_object)
 
     def parse_level_layout(self, level_object):
         level_layout = level_object["LEVEL_LAYOUT"]
@@ -192,10 +193,78 @@ class CookingWorld:
         for static_object in static_objects:
             name = list(static_object.keys())[0]
             for idx in range(static_object[name]["COUNT"]):
-                x = random.sample(static_object[name]["X_POSITION"], 1)[0]
-                y = random.sample(static_object[name]["Y_POSITION"], 1)[0]
+                time_out = 0
+                while True:
+                    x = random.sample(static_object[name]["X_POSITION"], 1)[0]
+                    y = random.sample(static_object[name]["Y_POSITION"], 1)[0]
+                    if x < 0 or y < 0 or x > self.width or y > self.height:
+                        raise ValueError(f"Position {x} {y} of object {name} is out of bounds set by the level layout!")
+                    static_objects_loc = self.get_objects_at((x, y), StaticObject)
 
-                obj = StringToClass(name)(x, y)
+                    counter = [obj for obj in static_objects_loc if isinstance(obj, (Counter, Floor))]
+                    if counter:
+                        if len(counter) != 1:
+                            raise ValueError("Too many counter in one place detected during initialization")
+                        self.delete_object(counter[0])
+                        obj = StringToClass(name)(x, y)
+                        self.add_object(obj)
+                        break
+                    else:
+                        time_out += 1
+                        if time_out > 100:
+                            raise ValueError(f"Can't find valid position for object: "
+                                             f"{static_object} in {time_out} steps")
+                        continue
+
+    def parse_dynamic_objects(self, level_object):
+        dynamic_objects = level_object["DYNAMIC_OBJECTS"]
+        for dynamic_object in dynamic_objects:
+            name = list(dynamic_object.keys())[0]
+            for idx in range(dynamic_object[name]["COUNT"]):
+                time_out = 0
+                while True:
+                    x = random.sample(dynamic_object[name]["X_POSITION"], 1)[0]
+                    y = random.sample(dynamic_object[name]["Y_POSITION"], 1)[0]
+                    if x < 0 or y < 0 or x > self.width or y > self.height:
+                        raise ValueError(f"Position {x} {y} of object {name} is out of bounds set by the level layout!")
+                    static_objects_loc = self.get_objects_at((x, y), Floor)
+                    dynamic_objects_loc = self.get_objects_at((x, y), DynamicObject)
+
+                    if static_objects_loc == 1 and not dynamic_objects_loc:
+                        obj = StringToClass(name)(x, y)
+                        self.add_object(obj)
+                        break
+                    else:
+                        time_out += 1
+                        if time_out > 100:
+                            raise ValueError(f"Can't find valid position for object: "
+                                             f"{dynamic_object} in {time_out} steps")
+                        continue
+
+    def parse_agents(self, level_object, num_agents):
+        agent_objects = level_object["AGENTS"]
+        agent_idx = 0
+        for agent_object in agent_objects:
+            for idx in range(agent_object["MAX_COUNT"]):
+                agent_idx += 1
+                if agent_idx > num_agents:
+                    return
+                time_out = 0
+                while True:
+                    x = random.sample(agent_object["X_POSITION"], 1)[0]
+                    y = random.sample(agent_object["Y_POSITION"], 1)[0]
+                    if x < 0 or y < 0 or x > self.width or y > self.height:
+                        raise ValueError(f"Position {x} {y} of agent is out of bounds set by the level layout!")
+                    static_objects_loc = self.get_objects_at((x, y), Floor)
+                    if not any([(x, y) == agent.location for agent in self.agents]) and static_objects_loc:
+                        agent = Agent((int(x), int(y)), self.COLORS[len(self.agents)],
+                                      'agent-' + str(len(self.agents) + 1))
+                        self.agents.append(agent)
+                        break
+                    else:
+                        time_out += 1
+                        if time_out > 100:
+                            raise ValueError(f"Can't find valid position for agent: {agent_object} in {time_out} steps")
 
     def load_level(self, level, num_agents, random=False):
         self.load_new_style_level(level, num_agents)
