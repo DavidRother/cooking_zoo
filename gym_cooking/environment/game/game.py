@@ -162,7 +162,7 @@ class Game:
 
     @staticmethod
     def get_file_name(dynamic_objects):
-        order = [Lettuce, Onion, Tomato]
+        order = [Lettuce, Onion, Tomato, Carrot]
         name = []
         for order_type in order:
             for obj in dynamic_objects:

@@ -51,7 +51,6 @@ class Blender(StaticObject, ProgressingObject):
 
     def __init__(self, location):
         super().__init__(location, False)
-        self.countdown = 10
         self.content = None
 
     def progress(self, dynamic_objects):
@@ -61,16 +60,11 @@ class Blender(StaticObject, ProgressingObject):
             return
         elif not self.content:
             self.content = dynamic_objects
-            self.countdown = 10
         elif self.content:
             if self.content[0] == dynamic_objects[0]:
-                if self.countdown > 0:
-                    self.countdown -= 1
-                else:
-                    self.content[0].blend()
+                self.content[0].blend()
             else:
                 self.content = dynamic_objects
-                self.countdown = 10
 
     def accepts(self, dynamic_objects) -> bool:
         return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], BlenderFood)
@@ -84,7 +78,7 @@ class Plate(Container):
     def add_content(self, content):
         if not isinstance(content, Food):
             raise TypeError(f"Only Food can be added to a plate! Tried to add {content.name()}")
-        if not content.state == ChopFoodStates.CHOPPED:
+        if not content.done():
             raise Exception(f"Can't add food in unprepared state.")
         self.content.append(content)
 
@@ -145,7 +139,8 @@ StringToClass = {
     "Onion": Onion,
     "Plate": Plate,
     "Agent": Agent,
-    "Blender": Blender
+    "Blender": Blender,
+    "Carrot": Carrot
 }
 
 GAME_CLASSES = [Floor, Counter, CutBoard, DeliverSquare, Tomato, Lettuce, Onion, Plate, Agent, Blender]

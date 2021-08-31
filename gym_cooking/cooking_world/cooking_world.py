@@ -51,7 +51,8 @@ class CookingWorld:
 
     def progress_world(self):
         for obj in self.abstract_index[ProgressingObject]:
-            obj.progress()
+            dynamic_objects = self.get_objects_at(obj.location, DynamicObject)
+            obj.progress(dynamic_objects)
 
     def perform_agent_actions(self, agents, actions):
         cleaned_actions = self.check_inbounds(agents, actions)
@@ -172,6 +173,7 @@ class CookingWorld:
         self.parse_level_layout(level_object)
         self.parse_static_objects(level_object)
         self.parse_dynamic_objects(level_object)
+        self.parse_agents(level_object, num_agents)
 
     def parse_level_layout(self, level_object):
         level_layout = level_object["LEVEL_LAYOUT"]
@@ -185,8 +187,8 @@ class CookingWorld:
                 else:
                     floor = Floor(location=(x, y))
                     self.add_object(floor)
-        self.width = x
-        self.height = y
+        self.width = x + 1
+        self.height = y + 1
 
     def parse_static_objects(self, level_object):
         static_objects = level_object["STATIC_OBJECTS"]
@@ -206,7 +208,7 @@ class CookingWorld:
                         if len(counter) != 1:
                             raise ValueError("Too many counter in one place detected during initialization")
                         self.delete_object(counter[0])
-                        obj = StringToClass(name)(x, y)
+                        obj = StringToClass[name](location=(x, y))
                         self.add_object(obj)
                         break
                     else:
@@ -227,11 +229,11 @@ class CookingWorld:
                     y = random.sample(dynamic_object[name]["Y_POSITION"], 1)[0]
                     if x < 0 or y < 0 or x > self.width or y > self.height:
                         raise ValueError(f"Position {x} {y} of object {name} is out of bounds set by the level layout!")
-                    static_objects_loc = self.get_objects_at((x, y), Floor)
+                    static_objects_loc = self.get_objects_at((x, y), Counter)
                     dynamic_objects_loc = self.get_objects_at((x, y), DynamicObject)
 
-                    if static_objects_loc == 1 and not dynamic_objects_loc:
-                        obj = StringToClass(name)(x, y)
+                    if len(static_objects_loc) == 1 and not dynamic_objects_loc:
+                        obj = StringToClass[name](location=(x, y))
                         self.add_object(obj)
                         break
                     else:
@@ -268,6 +270,7 @@ class CookingWorld:
 
     def load_level(self, level, num_agents, random=False):
         self.load_new_style_level(level, num_agents)
+        self.index_objects()
 
     def old_load_level(self, level, num_agents, random=False):
         x = 0

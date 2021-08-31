@@ -38,7 +38,8 @@ SymbolToClass = {
 GAME_OBJECTS_STATEFUL = [('Counter', []), ('Floor', []), ('DeliverSquare', []), ('CutBoard', []),
                          ('Plate', []), ('Lettuce', [ChopFoodStates.FRESH, ChopFoodStates.CHOPPED]),
                          ('Tomato', [ChopFoodStates.FRESH, ChopFoodStates.CHOPPED]),
-                         ('Onion', [ChopFoodStates.FRESH, ChopFoodStates.CHOPPED]), ('Agent', [])]
+                         ('Onion', [ChopFoodStates.FRESH, ChopFoodStates.CHOPPED]), ('Agent', []),
+                         ('Blender', []), ("Carrot", ["current_progress"])]
 
 action_translation_dict = {0: (0, 0), 1: (1, 0), 2: (0, 1), 3: (-1, 0), 4: (0, -1)}
 reverse_action_translation_dict = {(0, 0): 0, (1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
@@ -48,7 +49,7 @@ def env(level, num_agents, seed, record, max_num_timesteps, recipes):
     """
     The env function wraps the environment in 3 wrappers by default. These
     wrappers contain logic that is common to many pettingzoo environments.
-    We recomend you use at least the OrderEnforcingWrapper on your own environment
+    We recommend you use at least the OrderEnforcingWrapper on your own environment
     to provide sane error messages. You can find full documentation for these methods
     elsewhere in the developer documentation.
     """
@@ -80,7 +81,7 @@ class CookingEnvironment(AECEnv):
         self.t = 0
         self.filename = ""
         self.set_filename()
-        self.world = CookingWorld([], 0, 0)
+        self.world = CookingWorld()
         self.recipes = recipes
         self.game = None
         self.recipe_graphs = [RECIPES[recipe]() for recipe in recipes]
@@ -174,7 +175,7 @@ class CookingEnvironment(AECEnv):
         self.world.height = y
 
     def reset(self):
-        self.world = CookingWorld([], 0, 0)
+        self.world = CookingWorld()
         self.t = 0
 
         # For tracking data during an episode.
@@ -292,12 +293,20 @@ class CookingEnvironment(AECEnv):
         idx = 0
         for name, states in GAME_OBJECTS_STATEFUL:
             if states:
-                for state in states:
+                if issubclass(StringToClass[name], BlenderFood):
                     for obj in objects[name]:
-                        if obj.state == state:
-                            x, y = obj.location
-                            tensor[x, y, idx] += 1
-                    idx += 1
+                        x, y = obj.location
+                        tensor[x, y, idx] += 1
+                        x, y = obj.location
+                        tensor[x, y, idx + 1] += getattr(obj, states[0])
+                    idx += 2
+                else:
+                    for state in states:
+                        for obj in objects[name]:
+                            if obj.state == state:
+                                x, y = obj.location
+                                tensor[x, y, idx] += 1
+                        idx += 1
             else:
                 for obj in objects[name]:
                     x, y = obj.location

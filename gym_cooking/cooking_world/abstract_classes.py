@@ -111,4 +111,5 @@ class BlenderFood(Food, ABC):
         return self.state == BlenderFoodStates.MASHED
 
 
-ABSTRACT_GAME_CLASSES = [ActionObject, ProgressingObject, Container, Food, ChopFood, DynamicObject, StaticObject]
+ABSTRACT_GAME_CLASSES = [ActionObject, ProgressingObject, Container, Food, ChopFood, DynamicObject, StaticObject,
+                         BlenderFood]

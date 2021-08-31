@@ -65,7 +65,7 @@ class CookingEnvironment(AECEnv):
         self.sim_agents = []
         self.filename = ""
         self.set_filename()
-        self.world = CookingWorld([], 0, 0)
+        self.world = CookingWorld()
         self.recipes = recipes
         self.agent_actions = {}
         self.game = None
@@ -170,7 +170,7 @@ class CookingEnvironment(AECEnv):
         self.world.height = y
 
     def reset(self):
-        self.world = CookingWorld([], 0, 0)
+        self.world = CookingWorld()
         self.sim_agents = []
         self.agent_actions = {}
         self.t = 0

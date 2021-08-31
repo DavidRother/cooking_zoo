@@ -8,8 +8,8 @@ class ChopFoodStates(Enum):
 
 class BlenderFoodStates(Enum):
     FRESH = "Fresh"
-    IN_PROGRESS = "In_Progress"
-    MASHED = "MASHED"
+    IN_PROGRESS = "InProgress"
+    MASHED = "Mashed"
 
 
 ONION_INIT_STATE = ChopFoodStates.FRESH
