@@ -68,16 +68,15 @@ class CookingEnvironment(AECEnv):
 
     metadata = {'render.modes': ['human'], 'name': "cooking_zoo"}
 
-    def __init__(self, level, num_agents, seed, record, max_num_timesteps, recipes):
+    def __init__(self, level, num_agents, record, max_steps, recipes):
         super().__init__()
 
         self.possible_agents = ["player_" + str(r) for r in range(num_agents)]
         self.agents = self.possible_agents[:]
 
         self.level = level
-        self.seed = seed
         self.record = record
-        self.max_num_timesteps = max_num_timesteps
+        self.max_steps = max_steps
         self.t = 0
         self.filename = ""
         self.set_filename()
@@ -116,7 +115,7 @@ class CookingEnvironment(AECEnv):
                                                     self.graph_representation_length))
 
     def set_filename(self):
-        self.filename = f"{self.level}_agents{self.num_agents}_seed{self.seed}"
+        self.filename = f"{self.level}_agents{self.num_agents}"
 
     def state(self):
         pass
@@ -266,8 +265,8 @@ class CookingEnvironment(AECEnv):
         rewards = [0] * len(self.recipes)
         open_goals = [[0]] * len(self.recipes)
         # Done if the episode maxes out
-        if self.t >= self.max_num_timesteps and self.max_num_timesteps:
-            self.termination_info = f"Terminating because passed {self.max_num_timesteps} timesteps"
+        if self.t >= self.max_steps and self.max_steps:
+            self.termination_info = f"Terminating because passed {self.max_steps} timesteps"
             done = True
 
         for idx, recipe in enumerate(self.recipe_graphs):

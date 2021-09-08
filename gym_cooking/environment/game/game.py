@@ -1,13 +1,16 @@
 import os
-import pygame
-import numpy as np
 from gym_cooking.misc.game.utils import *
 from gym_cooking.cooking_world.world_objects import *
 
 from collections import defaultdict
 
+import pygame
+import numpy as np
+
 import os.path
 import pathlib
+
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 
 graphics_dir = 'misc/game/graphics'
 _image_library = {}
