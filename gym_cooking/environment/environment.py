@@ -1,4 +1,5 @@
 from gym_cooking.environment import cooking_zoo
+from gym.utils import seeding
 
 import gym
 
@@ -8,23 +9,22 @@ class GymCookingEnvironment(gym.Env):
 
     metadata = {'render.modes': ['human'], 'name': "cooking_zoo"}
 
-    def __init__(self, level, seed, record, max_num_timesteps, recipe):
+    def __init__(self, level, record, max_steps, recipe):
         super().__init__()
         self.num_agents = 1
-        self.zoo_env = cooking_zoo.parallel_env(level=level, num_agents=self.num_agents, seed=seed, record=record,
-                                                max_num_timestes=max_num_timesteps, recipes=[recipe])
+        self.zoo_env = cooking_zoo.parallel_env(level=level, num_agents=self.num_agents, record=record,
+                                                max_steps=max_steps, recipes=[recipe])
         self.observation_space = self.zoo_env.observation_spaces["player_0"]
         self.action_space = self.zoo_env.action_spaces["player_0"]
 
     def step(self, action):
         converted_action = {"player_0": action}
         obs, reward, done, info = self.zoo_env.step(converted_action)
-        for player_dict in [obs, reward, done, info]:
-            player_dict = player_dict["player_0"]
-        return obs, reward, done, info
+        return obs["player_0"], reward["player_0"], done["player_0"], info["player_0"]
 
     def reset(self):
         return self.zoo_env.reset()
 
     def render(self, mode='human'):
         pass
+

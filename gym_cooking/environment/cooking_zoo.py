@@ -45,7 +45,7 @@ action_translation_dict = {0: (0, 0), 1: (1, 0), 2: (0, 1), 3: (-1, 0), 4: (0, -
 reverse_action_translation_dict = {(0, 0): 0, (1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
 
 
-def env(level, num_agents, seed, record, max_num_timesteps, recipes):
+def env(level, num_agents, record, max_steps, recipes):
     """
     The env function wraps the environment in 3 wrappers by default. These
     wrappers contain logic that is common to many pettingzoo environments.
@@ -53,7 +53,7 @@ def env(level, num_agents, seed, record, max_num_timesteps, recipes):
     to provide sane error messages. You can find full documentation for these methods
     elsewhere in the developer documentation.
     """
-    env_init = CookingEnvironment(level, num_agents, seed, record, max_num_timesteps, recipes)
+    env_init = CookingEnvironment(level, num_agents, record, max_steps, recipes)
     env_init = wrappers.CaptureStdoutWrapper(env_init)
     env_init = wrappers.AssertOutOfBoundsWrapper(env_init)
     env_init = wrappers.OrderEnforcingWrapper(env_init)
