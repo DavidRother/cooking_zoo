@@ -54,13 +54,12 @@ class GamePlay(Game):
                 self.store["agent_states"].append([agent.location for agent in self.env.unwrapped.world.agents])
                 for idx, agent in enumerate(self.env.unwrapped.world.agents):
                     if idx >= self.num_humans:
-                        ai_policy = self.ai_policies[idx - self.num_humans].agent
+                        ai_policy = self.ai_policies[idx - self.num_humans]
                         env_agent = self.env.unwrapped.world_agent_to_env_agent_mapping[agent]
                         last_obs_raw = self.last_obs[env_agent]
-                        obs = self.ai_policies[idx - self.num_humans].action_state_builder(last_obs_raw)
-                        ai_action, _, _ = ai_policy.get_action(obs)
-                        store_action_dict[agent] = ai_action.item()
-                        self.env.unwrapped.world.agents[idx].action = action_translation_dict[ai_action.item()]
+                        ai_action = ai_policy.get_action(last_obs_raw)
+                        store_action_dict[agent] = ai_action
+                        self.env.unwrapped.world.agents[idx].action = action_translation_dict[ai_action]
 
                 self.yielding_action_dict = {agent: reverse_action_translation_dict[
                     self.env.unwrapped.world_agent_mapping[agent].action] for agent in self.env.agents}

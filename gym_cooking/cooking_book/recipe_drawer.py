@@ -21,13 +21,15 @@ ChoppedOnion = RecipeNode(root_type=Onion, id_num=next(id_generator), name="Onio
 ChoppedTomato = RecipeNode(root_type=Tomato, id_num=next(id_generator), name="Tomato",
                            conditions=[("state", ChopFoodStates.CHOPPED)])
 MashedCarrot = RecipeNode(root_type=Carrot, id_num=next(id_generator), name="Carrot",
-                           conditions=[("state", BlenderFoodStates.MASHED)])
+                          conditions=[("state", BlenderFoodStates.MASHED)])
 
 # Salad Plates
 TomatoSaladPlate = RecipeNode(root_type=Plate, id_num=next(id_generator), name="Plate", conditions=None,
                               contains=[ChoppedTomato])
 TomatoLettucePlate = RecipeNode(root_type=Plate, id_num=next(id_generator), name="Plate", conditions=None,
                                 contains=[ChoppedTomato, ChoppedLettuce])
+TomatoLettuceOnionPlate = RecipeNode(root_type=Plate, id_num=next(id_generator), name="Plate", conditions=None,
+                                     contains=[ChoppedTomato, ChoppedLettuce, ChoppedOnion])
 CarrotPlate = RecipeNode(root_type=Plate, id_num=next(id_generator), name="Plate", conditions=None,
                          contains=[MashedCarrot])
 
@@ -36,6 +38,8 @@ TomatoSalad = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), nam
                          contains=[TomatoSaladPlate])
 TomatoLettuceSalad = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), name="DeliverSquare",
                                 conditions=None, contains=[TomatoLettucePlate])
+TomatoLettuceOnionSalad = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), name="DeliverSquare",
+                                     conditions=None, contains=[TomatoLettuceOnionPlate])
 MashedCarrot = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), name="DeliverSquare",
                           conditions=None, contains=[CarrotPlate])
 
@@ -45,4 +49,5 @@ NUM_GOALS = next(id_generator)
 
 RECIPES = {"TomatoSalad": lambda: deepcopy(Recipe(TomatoSalad)),
            "TomatoLettuceSalad": lambda: deepcopy(Recipe(TomatoLettuceSalad)),
+           "TomatoLettuceOnionSalad": lambda: deepcopy(Recipe(TomatoLettuceOnionSalad)),
            "MashedCarrot": lambda: deepcopy(Recipe(MashedCarrot))}
