@@ -23,18 +23,6 @@ import gym
 CollisionRepr = namedtuple("CollisionRepr", "time agent_names agent_locations")
 COLORS = ['blue', 'magenta', 'yellow', 'green']
 
-SymbolToClass = {
-    ' ': Floor,
-    '-': Counter,
-    '/': CutBoard,
-    '*': DeliverSquare,
-    't': Tomato,
-    'l': Lettuce,
-    'o': Onion,
-    'p': Plate,
-    'b': Blender
-}
-
 GAME_OBJECTS_STATEFUL = [('Counter', []), ('Floor', []), ('DeliverSquare', []), ('CutBoard', []),
                          ('Plate', []), ('Lettuce', [ChopFoodStates.FRESH, ChopFoodStates.CHOPPED]),
                          ('Tomato', [ChopFoodStates.FRESH, ChopFoodStates.CHOPPED]),
