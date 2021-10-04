@@ -3,6 +3,7 @@ from gym_cooking.misc.game.utils import *
 from gym_cooking.cooking_world.world_objects import *
 
 from collections import defaultdict
+from gym_cooking.environment.game import graphic_pipeline
 
 import pygame
 import numpy as np
@@ -44,6 +45,7 @@ class Game:
         self.holding_size = tuple((self.holding_scale * np.asarray(self.tile_size)).astype(int))
         self.container_size = tuple((self.container_scale * np.asarray(self.tile_size)).astype(int))
         self.holding_container_size = tuple((self.container_scale * np.asarray(self.holding_size)).astype(int))
+        self.graphics_pipeline = graphic_pipeline.GraphicPipeline(env)
         # self.font = pygame.font.SysFont('arialttf', 10)
         my_path = os.path.realpath(__file__)
         dir_name = os.path.dirname(my_path)
@@ -58,6 +60,7 @@ class Game:
         else:
             # Create a hidden surface
             self.screen = pygame.Surface((self.width, self.height))
+        self.graphics_pipeline.screen = self.screen
         return True
 
     def on_event(self, event):
