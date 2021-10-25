@@ -1,4 +1,4 @@
-from gym_cooking.environment.game.game_play import GamePlay
+from gym_cooking.environment.game.game import Game
 
 from gym_cooking.environment import cooking_zoo
 
@@ -31,7 +31,7 @@ class CookingAgent:
 
 cooking_agent = CookingAgent(player_2_action_space)
 
-game = GamePlay(parallel_env, num_humans, [cooking_agent], max_steps)
+game = Game(parallel_env, num_humans, [cooking_agent], max_steps)
 store = game.on_execute()
 
 print("done")
