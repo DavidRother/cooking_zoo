@@ -4,11 +4,13 @@ from gym_cooking.misc.game.utils import *
 from collections import defaultdict, namedtuple
 
 import numpy as np
-from pathlib import Path
+import pathlib
 import os.path
 
 
 COLORS = ['blue', 'magenta', 'yellow', 'green']
+
+_image_library = {}
 
 
 def get_image(path):
@@ -47,6 +49,20 @@ class GraphicPipeline:
                                                        self.PIXEL_PER_TILE * self.CONTAINER_SCALE),
                                                       (self.PIXEL_PER_TILE * self.CONTAINER_SCALE * self.HOLDING_SCALE,
                                                        self.PIXEL_PER_TILE * self.CONTAINER_SCALE * self.HOLDING_SCALE))
+        my_path = os.path.realpath(__file__)
+        dir_name = os.path.dirname(my_path)
+        path = pathlib.Path(dir_name)
+        self.root_dir = path.parent.parent
+
+    def on_init(self):
+        if self.display:
+            self.screen = pygame.display.set_mode((self.graphics_properties.width_pixel,
+                                                   self.graphics_properties.height_pixel))
+        else:
+            # Create a hidden surface
+            self.screen = pygame.Surface((self.graphics_properties.width_pixel, self.graphics_properties.height_pixel))
+        self.screen = self.screen
+        return True
 
     def on_render(self):
         self.screen.fill(Color.FLOOR)
@@ -128,7 +144,7 @@ class GraphicPipeline:
 
     def draw(self, path, size, location):
         image_path = f'{self.root_dir}/{self.graphics_dir}/{path}.png'
-        image = pygame.transform.scale(get_image(image_path), size)
+        image = pygame.transform.scale(get_image(image_path), (int(size[0]), int(size[1])))
         self.screen.blit(image, location)
 
     def draw_agent_object(self, obj):
@@ -158,7 +174,7 @@ class GraphicPipeline:
 
     @staticmethod
     def get_file_name(dynamic_objects):
-        order = [Lettuce, Onion, Tomato]
+        order = [Lettuce, Onion, Tomato, Carrot]
         name = []
         for order_type in order:
             for obj in dynamic_objects:
@@ -191,3 +207,20 @@ class GraphicPipeline:
         scaled_loc = self.scaled_location(loc)
         factor = (1 - self.HOLDING_SCALE) + (1 - self.CONTAINER_SCALE) / 2 * self.HOLDING_SCALE
         return tuple((np.asarray(scaled_loc) + self.graphics_properties.pixel_per_tile * factor).astype(int))
+
+    def get_image_obs(self):
+        self.on_render()
+        img_int = pygame.PixelArray(self.screen)
+        img_rgb = np.zeros([img_int.shape[1], img_int.shape[0], 3], dtype=np.uint8)
+        for i in range(img_int.shape[0]):
+            for j in range(img_int.shape[1]):
+                color = pygame.Color(img_int[i][j])
+                img_rgb[j, i, 0] = color.g
+                img_rgb[j, i, 1] = color.b
+                img_rgb[j, i, 2] = color.r
+        return img_rgb
+
+    def save_image_obs(self, t):
+        game_record_dir = 'misc/game/record/example/'
+        self.on_render()
+        pygame.image.save(self.screen, '{}/t={:03d}.png'.format(game_record_dir, t))

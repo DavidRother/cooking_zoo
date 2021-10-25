@@ -1,4 +1,4 @@
-from gym_cooking.environment.game.game_play import GamePlay
+from gym_cooking.environment.game.game import Game
 
 from gym_cooking.environment import cooking_zoo
 
@@ -17,7 +17,7 @@ recipes = ["MashedCarrot"]
 parallel_env = cooking_zoo.parallel_env(level=level, num_agents=n_agents, record=record,
                                         max_steps=max_num_timesteps, recipes=recipes)
 
-game = GamePlay(parallel_env, num_humans, [], max_steps)
+game = Game(parallel_env, num_humans, [], max_steps)
 store = game.on_execute()
 
 print("done")

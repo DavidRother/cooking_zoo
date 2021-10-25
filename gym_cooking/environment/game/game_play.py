@@ -41,7 +41,7 @@ class GamePlay(Game):
             if event.key == pygame.K_RETURN:
                 image_name = '{}_{}.png'.format(self.env.unwrapped.filename, datetime.now().strftime('%m-%d-%y_%H-%M-%S'))
                 pygame.image.save(self.screen, '{}/{}'.format(self.save_dir, image_name))
-                print('just saved image {} to {}'.format(image_name, self.save_dir))
+                print('Saved image {} to {}'.format(image_name, self.save_dir))
                 return
 
             # Control current human agent
