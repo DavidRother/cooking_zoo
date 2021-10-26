@@ -1,202 +1,163 @@
 import os
+from gym_cooking.environment.game import graphic_pipeline
 from gym_cooking.misc.game.utils import *
-from gym_cooking.cooking_world.world_objects import *
-
-from collections import defaultdict
 
 import pygame
-import numpy as np
 
 import os.path
-import pathlib
+from collections import defaultdict
+from datetime import datetime
+from time import sleep
+
+
+action_translation_dict = {0: (0, 0), 1: (1, 0), 2: (0, 1), 3: (-1, 0), 4: (0, -1)}
+reverse_action_translation_dict = {(0, 0): 0, (1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
-
-graphics_dir = 'misc/game/graphics'
-_image_library = {}
-
-
-def get_image(path):
-    global _image_library
-    image = _image_library.get(path)
-    if image == None:
-        canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
-        image = pygame.image.load(canonicalized_path)
-        _image_library[path] = image
-    return image
 
 
 class Game:
 
-    def __init__(self, env, play=False):
+    def __init__(self, env, num_humans, ai_policies, max_steps=100):
         self._running = True
         self.env = env
-        self.play = play
-        self.screen = None
-
+        self.play = bool(num_humans)
         # Visual parameters
-        self.scale = 80  # num pixels per tile
-        self.holding_scale = 0.5
-        self.container_scale = 0.7
-        self.width = self.scale * self.env.unwrapped.world.width
-        self.height = self.scale * self.env.unwrapped.world.height
-        self.tile_size = (self.scale, self.scale)
-        self.holding_size = tuple((self.holding_scale * np.asarray(self.tile_size)).astype(int))
-        self.container_size = tuple((self.container_scale * np.asarray(self.tile_size)).astype(int))
-        self.holding_container_size = tuple((self.container_scale * np.asarray(self.holding_size)).astype(int))
-        # self.font = pygame.font.SysFont('arialttf', 10)
-        my_path = os.path.realpath(__file__)
-        dir_name = os.path.dirname(my_path)
-        path = pathlib.Path(dir_name)
-        root = path.parent.parent
-        self.root_dir = root
+        self.graphics_pipeline = graphic_pipeline.GraphicPipeline(env, self.play)
+        self.save_dir = 'misc/game/screenshots'
+        self.store = defaultdict(list)
+        self.num_humans = num_humans
+        self.ai_policies = ai_policies
+        self.max_steps = max_steps
+        self.current_step = 0
+        self.last_obs = env.reset()
+        self.step_done = False
+        self.yielding_action_dict = {}
+        assert len(ai_policies) == len(env.unwrapped.world.agents) - num_humans
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
 
     def on_init(self):
         pygame.init()
-        if self.play:
-            self.screen = pygame.display.set_mode((self.width, self.height))
-        else:
-            # Create a hidden surface
-            self.screen = pygame.Surface((self.width, self.height))
+        self.graphics_pipeline.on_init()
         return True
 
     def on_event(self, event):
+        self.step_done = False
         if event.type == pygame.QUIT:
             self._running = False
+        elif event.type == pygame.KEYDOWN:
+            # Save current image
+            if event.key == pygame.K_RETURN:
+                image_name = '{}_{}.png'.format(self.env.unwrapped.filename, datetime.now().strftime('%m-%d-%y_%H-%M-%S'))
+                pygame.image.save(self.graphics_pipeline.screen, '{}/{}'.format(self.save_dir, image_name))
+                print('Saved image {} to {}'.format(image_name, self.save_dir))
+                return
+
+            # Control current human agent
+            if event.key in KeyToTuple_human1 and self.num_humans > 0:
+                store_action_dict = {}
+                action = KeyToTuple_human1[event.key]
+                self.env.unwrapped.world.agents[0].action = action
+                store_action_dict[self.env.unwrapped.world.agents[0]] = action
+                self.store["observation"].append(self.last_obs)
+                self.store["agent_states"].append([agent.location for agent in self.env.unwrapped.world.agents])
+                for idx, agent in enumerate(self.env.unwrapped.world.agents):
+                    if idx >= self.num_humans:
+                        ai_policy = self.ai_policies[idx - self.num_humans]
+                        env_agent = self.env.unwrapped.world_agent_to_env_agent_mapping[agent]
+                        last_obs_raw = self.last_obs[env_agent]
+                        ai_action = ai_policy.get_action(last_obs_raw)
+                        store_action_dict[agent] = ai_action
+                        self.env.unwrapped.world.agents[idx].action = action_translation_dict[ai_action]
+
+                self.yielding_action_dict = {agent: reverse_action_translation_dict[
+                    self.env.unwrapped.world_agent_mapping[agent].action] for agent in self.env.agents}
+                observations, rewards, dones, infos = self.env.step(self.yielding_action_dict)
+
+                self.store["actions"].append(store_action_dict)
+                self.store["info"].append(infos)
+                self.store["rewards"].append(rewards)
+                self.store["done"].append(dones)
+                self.last_obs = observations
+
+                if all(dones.values()):
+                    self._running = False
+
+                self.step_done = True
+
+    def ai_only_event(self):
+        self.step_done = False
+
+        store_action_dict = {}
+
+        for idx, agent in enumerate(self.env.unwrapped.world.agents):
+            if idx >= self.num_humans:
+                ai_policy = self.ai_policies[idx - self.num_humans].agent
+                env_agent = self.env.unwrapped.world_agent_to_env_agent_mapping[agent]
+                last_obs_raw = self.last_obs[env_agent]
+                obs = self.ai_policies[idx - self.num_humans].action_state_builder(last_obs_raw)
+                ai_action, _, _ = ai_policy.get_action(obs)
+                store_action_dict[agent] = ai_action.item()
+                self.env.unwrapped.world.agents[idx].action = action_translation_dict[ai_action.item()]
+
+        self.yielding_action_dict = {agent: reverse_action_translation_dict[
+            self.env.unwrapped.world_agent_mapping[agent].action] for agent in self.env.agents}
+        # print(self.yielding_action_dict)
+        observations, rewards, dones, infos = self.env.step(self.yielding_action_dict)
+
+        if all(dones.values()):
+            self._running = False
+
+        self.step_done = True
+
+    def on_execute(self):
+        self._running = self.on_init()
+
+        while self._running:
+            for event in pygame.event.get():
+                self.on_event(event)
+            self.on_render()
+        self.on_cleanup()
+
+        return self.store
+
+    def on_execute_yielding(self):
+        self._running = self.on_init()
+
+        while self._running:
+            for event in pygame.event.get():
+                self.on_event(event)
+            self.on_render()
+            if self.step_done:
+                self.step_done = False
+                yield self.store["observation"][-1], self.store["done"][-1], self.store["info"][-1], \
+                      self.store["rewards"][-1], self.yielding_action_dict
+        self.on_cleanup()
+
+    def on_execute_ai_only_with_delay(self):
+        self._running = self.on_init()
+
+        while self._running:
+            sleep(0.4)
+            self.ai_only_event()
+            self.on_render()
+        self.on_cleanup()
+
+        return self.store
 
     def on_render(self):
-        self.screen.fill(Color.FLOOR)
-
-        self.draw_static_objects()
-
-        self.draw_agents()
-
-        self.draw_dynamic_objects()
-
-        if self.play:
-            pygame.display.flip()
-            pygame.display.update()
-
-    def draw_static_objects(self):
-        objects = self.env.unwrapped.world.get_object_list()
-        static_objects = [obj for obj in objects if isinstance(obj, StaticObject)]
-        for static_object in static_objects:
-            self.draw_static_object(static_object)
-
-    def draw_static_object(self, static_object: StaticObject):
-        sl = self.scaled_location(static_object.location)
-        fill = pygame.Rect(sl[0], sl[1], self.scale, self.scale)
-        if isinstance(static_object, Counter):
-            pygame.draw.rect(self.screen, Color.COUNTER, fill)
-            pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
-        elif isinstance(static_object, DeliverSquare):
-            pygame.draw.rect(self.screen, Color.DELIVERY, fill)
-            self.draw('delivery', self.tile_size, sl)
-        elif isinstance(static_object, CutBoard):
-            pygame.draw.rect(self.screen, Color.COUNTER, fill)
-            pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
-            self.draw('cutboard', self.tile_size, sl)
-        elif isinstance(static_object, Blender):
-            pygame.draw.rect(self.screen, Color.COUNTER, fill)
-            pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
-            self.draw('blender3', self.tile_size, sl)
-        # elif isinstance(static_object, Floor):
-        #     pygame.draw.rect(self.screen, Color.FLOOR, fill)
-
-    def draw_dynamic_objects(self):
-        objects = self.env.unwrapped.world.get_object_list()
-        dynamic_objects = [obj for obj in objects if isinstance(obj, DynamicObject)]
-        dynamic_objects_grouped = defaultdict(list)
-        for obj in dynamic_objects:
-            dynamic_objects_grouped[obj.location].append(obj)
-        for location, obj_list in dynamic_objects_grouped.items():
-            if any([agent.location == location for agent in self.env.unwrapped.world.agents]):
-                self.draw_dynamic_object_stack(obj_list, self.holding_size, self.holding_location(location),
-                                               self.holding_container_size, self.holding_container_location(location))
-            else:
-                self.draw_dynamic_object_stack(obj_list, self.tile_size, self.scaled_location(location),
-                                               self.container_size, self.container_location(location))
-
-    def draw_dynamic_object_stack(self, dynamic_objects, base_size, base_location, holding_size, holding_location):
-        highest_order_object = self.env.unwrapped.world.get_highest_order_object(dynamic_objects)
-        if isinstance(highest_order_object, Container):
-            self.draw('Plate', base_size, base_location)
-            rest_stack = [obj for obj in dynamic_objects if obj != highest_order_object]
-            if rest_stack:
-                file_name = self.get_file_name(rest_stack)
-                self.draw(file_name, holding_size, holding_location)
-        else:
-            file_name = self.get_file_name(dynamic_objects)
-            self.draw(file_name, base_size, base_location)
-
-    def draw_agents(self):
-        for agent in self.env.unwrapped.world.agents:
-            self.draw('agent-{}'.format(agent.color), self.tile_size, self.scaled_location(agent.location))
-
-    def draw(self, path, size, location):
-        image_path = f'{self.root_dir}/{graphics_dir}/{path}.png'
-        image = pygame.transform.scale(get_image(image_path), size)
-        self.screen.blit(image, location)
-
-    def draw_agent_object(self, obj):
-        # Holding shows up in bottom right corner.
-        if obj is None:
-            return
-        if any([isinstance(c, Plate) for c in obj.contents]):
-            self.draw('Plate', self.holding_size, self.holding_location(obj.location))
-            if len(obj.contents) > 1:
-                plate = obj.unmerge('Plate')
-                self.draw(obj.full_name, self.holding_container_size, self.holding_container_location(obj.location))
-                obj.merge(plate)
-        else:
-            self.draw(obj.full_name, self.holding_size, self.holding_location(obj.location))
-
-    def draw_object(self, obj):
-        if obj is None:
-            return
-        if any([isinstance(c, Plate) for c in obj.contents]):
-            self.draw('Plate', self.tile_size, self.scaled_location(obj.location))
-            if len(obj.contents) > 1:
-                plate = obj.unmerge('Plate')
-                self.draw(obj.full_name, self.container_size, self.container_location(obj.location))
-                obj.merge(plate)
-        else:
-            self.draw(obj.full_name, self.tile_size, self.scaled_location(obj.location))
+        self.graphics_pipeline.on_render()
 
     @staticmethod
-    def get_file_name(dynamic_objects):
-        order = [Lettuce, Onion, Tomato, Carrot]
-        name = []
-        for order_type in order:
-            for obj in dynamic_objects:
-                if isinstance(obj, order_type):
-                    name.append(obj.state.value + obj.name())
-                    break
-        return '-'.join(name)
-
-    def scaled_location(self, loc):
-        """Return top-left corner of scaled location given coordinates loc, e.g. (3, 4)"""
-        return tuple(self.scale * np.asarray(loc))
-
-    def holding_location(self, loc):
-        """Return top-left corner of location where agent holding will be drawn (bottom right corner)
-        given coordinates loc, e.g. (3, 4)"""
-        scaled_loc = self.scaled_location(loc)
-        return tuple((np.asarray(scaled_loc) + self.scale * (1 - self.holding_scale)).astype(int))
-
-    def container_location(self, loc):
-        """Return top-left corner of location where contained (i.e. plated) object will be drawn,
-        given coordinates loc, e.g. (3, 4)"""
-        scaled_loc = self.scaled_location(loc)
-        return tuple((np.asarray(scaled_loc) + self.scale * (1 - self.container_scale) / 2).astype(int))
-
-    def holding_container_location(self, loc):
-        """Return top-left corner of location where contained, held object will be drawn
-        given coordinates loc, e.g. (3, 4)"""
-        scaled_loc = self.scaled_location(loc)
-        factor = (1 - self.holding_scale) + (1 - self.container_scale) / 2 * self.holding_scale
-        return tuple((np.asarray(scaled_loc) + self.scale * factor).astype(int))
-
-    def on_cleanup(self):
+    def on_cleanup():
         # pygame.display.quit()
         pygame.quit()
+
+    def get_image_obs(self):
+        return self.graphics_pipeline.get_image_obs()
+
+    def save_image_obs(self, t):
+        self.on_render()
+        pygame.image.save(self.screen, '{}/t={:03d}.png'.format(self.game_record_dir, t))
+

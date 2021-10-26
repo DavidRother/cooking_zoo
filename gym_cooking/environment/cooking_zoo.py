@@ -1,7 +1,6 @@
 # Other core modules
 from gym_cooking.cooking_world.cooking_world import CookingWorld
 from gym_cooking.cooking_world.world_objects import *
-from gym_cooking.environment.game.game_image import GameImage
 from gym_cooking.cooking_book.recipe_drawer import RECIPES, NUM_GOALS
 
 import copy
@@ -121,15 +120,15 @@ class CookingEnvironment(AECEnv):
         for recipe in self.recipe_graphs:
             recipe.update_recipe_state(self.world)
 
-        if self.record:
-            self.game = GameImage(
-                filename=self.filename,
-                world=self.world,
-                record=self.record)
-            self.game.on_init()
-            self.game.save_image_obs(self.t)
-        else:
-            self.game = None
+        # if self.record:
+        #     self.game = GameImage(
+        #         filename=self.filename,
+        #         world=self.world,
+        #         record=self.record)
+        #     self.game.on_init()
+        #     self.game.save_image_obs(self.t)
+        # else:
+        #     self.game = None
 
         self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.next()
