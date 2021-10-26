@@ -108,59 +108,6 @@ class CookingEnvironment(AECEnv):
     def state(self):
         pass
 
-    def load_level(self, level, num_agents):
-        x = 0
-        y = 0
-        my_path = os.path.realpath(__file__)
-        dir_name = os.path.dirname(my_path)
-        path = Path(dir_name)
-        parent = path.parent / f"utils/levels/{level}.txt"
-        agents = []
-        # print(parent)
-        with parent.open("r") as file:
-            # Mark the phases of reading.
-            phase = 1
-            for line in file:
-                line = line.strip('\n')
-                if line == '':
-                    phase += 1
-
-                # Phase 1: Read in kitchen map.
-                elif phase == 1:
-                    for x, rep in enumerate(line):
-                        # Object, i.e. Tomato, Lettuce, Onion, or Plate.
-                        if rep in 'tlop':
-                            counter = Counter(location=(x, y))
-                            dynamic_object = SymbolToClass[rep](location=(x, y))
-                            self.world.add_object(counter)
-                            self.world.add_object(dynamic_object)
-                        # GridSquare, i.e. Floor, Counter, Cutboard, Delivery.
-                        elif rep in SymbolToClass:
-                            static_object = SymbolToClass[rep](location=(x, y))
-                            self.world.add_object(static_object)
-                        else:
-                            # Empty. Set a Floor tile.
-                            floor = Floor(location=(x, y))
-                            self.world.add_object(floor)
-                    y += 1
-                # Phase 2: Read in recipe list.
-                elif phase == 2:
-                    # self.recipes.append(RecipeStore[line]())
-                    pass
-
-                # Phase 3: Read in agent locations (up to num_agents).
-                elif phase == 3:
-                    if len(agents) < num_agents:
-                        loc = line.split(' ')
-                        location = (random.randint(1, 5), random.randint(1, 5))
-                        agent = Agent(location, COLORS[len(agents)],
-                                      'agent-' + str(len(agents) + 1))
-                        agents.append(agent)
-
-        self.world.agents = agents
-        self.world.width = x + 1
-        self.world.height = y
-
     def reset(self):
         self.world = CookingWorld()
         self.t = 0
