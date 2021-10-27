@@ -158,6 +158,5 @@ class Game:
         return self.graphics_pipeline.get_image_obs()
 
     def save_image_obs(self, t):
-        self.on_render()
-        pygame.image.save(self.screen, '{}/t={:03d}.png'.format(self.game_record_dir, t))
+        self.graphics_pipeline.save_image_obs(t)
 
