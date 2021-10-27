@@ -22,11 +22,7 @@ import gym
 CollisionRepr = namedtuple("CollisionRepr", "time agent_names agent_locations")
 COLORS = ['blue', 'magenta', 'yellow', 'green']
 
-GAME_OBJECTS_STATEFUL = [('Counter', []), ('Floor', []), ('DeliverSquare', []), ('CutBoard', []),
-                         ('Plate', []), ('Lettuce', [ChopFoodStates.FRESH, ChopFoodStates.CHOPPED]),
-                         ('Tomato', [ChopFoodStates.FRESH, ChopFoodStates.CHOPPED]),
-                         ('Onion', [ChopFoodStates.FRESH, ChopFoodStates.CHOPPED]), ('Agent', []),
-                         ('Blender', []), ("Carrot", ["current_progress"])]
+GAME_OBJECTS_STATEFUL = [('Lettuce', 2), ('Tomato', 2), ('Onion', 2), ("Carrot", 3)]
 
 action_translation_dict = {0: (0, 0), 1: (1, 0), 2: (0, 1), 3: (-1, 0), 4: (0, -1)}
 reverse_action_translation_dict = {(0, 0): 0, (1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
@@ -74,7 +70,7 @@ class CookingEnvironment(AECEnv):
 
         self.termination_info = ""
         self.world.load_level(level=self.level, num_agents=num_agents)
-        self.graph_representation_length = sum([max(len(tup[1]), 2) if tup[1] else 1 for tup in GAME_OBJECTS_STATEFUL])
+        self.graph_representation_length = sum([tup[1] for tup in GAME_CLASSES_STATE_LENGTH])
 
         obs_space = {'symbolic_observation': gym.spaces.Box(low=0, high=10,
                                                             shape=(self.world.width, self.world.height,
@@ -218,33 +214,56 @@ class CookingEnvironment(AECEnv):
             done = True
         return done, rewards, open_goals
 
+# """    def get_tensor_representation(self):
+#         tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length))
+#         objects = defaultdict(list)
+#         objects["Agent"] = self.world.agents
+#         objects.update(self.world.world_objects)
+#         idx = 0
+#         for name, states in GAME_OBJECTS_STATEFUL:
+#             if states:
+#                 if issubclass(StringToClass[name], BlenderFood):
+#                     for obj in objects[name]:
+#                         x, y = obj.location
+#                         tensor[x, y, idx] += 1
+#                         x, y = obj.location
+#                         tensor[x, y, idx + 1] += getattr(obj, states[0])
+#                     idx += 2
+#                 else:
+#                     for state in states:
+#                         for obj in objects[name]:
+#                             if obj.state == state:
+#                                 x, y = obj.location
+#                                 tensor[x, y, idx] += 1
+#                         idx += 1
+#             else:
+#                 for obj in objects[name]:
+#                     x, y = obj.location
+#                     tensor[x, y, idx] += 1
+#                 idx += 1
+#         return tensor"""
+
     def get_tensor_representation(self):
         tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length))
         objects = defaultdict(list)
         objects["Agent"] = self.world.agents
         objects.update(self.world.world_objects)
         idx = 0
-        for name, states in GAME_OBJECTS_STATEFUL:
-            if states:
-                if issubclass(StringToClass[name], BlenderFood):
-                    for obj in objects[name]:
+        for game_class in GAME_CLASSES:
+            for obj in objects[ClassToString[game_class]]:
+                x, y = obj.location
+                tensor[x, y, idx] += 1
+            idx += 1
+            for stateful_class in STATEFUL_GAME_CLASSES:
+                if issubclass(game_class, stateful_class):
+                    n = 1
+                    for obj in objects[ClassToString[game_class]]:
+                        representation = self.handle_stateful_class_representation(obj, stateful_class)
+                        n = len(representation)
                         x, y = obj.location
-                        tensor[x, y, idx] += 1
-                        x, y = obj.location
-                        tensor[x, y, idx + 1] += getattr(obj, states[0])
-                    idx += 2
-                else:
-                    for state in states:
-                        for obj in objects[name]:
-                            if obj.state == state:
-                                x, y = obj.location
-                                tensor[x, y, idx] += 1
-                        idx += 1
-            else:
-                for obj in objects[name]:
-                    x, y = obj.location
-                    tensor[x, y, idx] += 1
-                idx += 1
+                        for i in range(n):
+                            tensor[x, y, idx + i] += representation[i]
+                    idx += n
         return tensor
 
     def get_agent_names(self):
@@ -252,3 +271,12 @@ class CookingEnvironment(AECEnv):
 
     def render(self, mode='human'):
         pass
+
+    @staticmethod
+    def handle_stateful_class_representation(obj, stateful_class):
+        if stateful_class is ChopFood:
+            return [int(obj.chop_state == ChopFoodStates.CHOPPED)]
+        if stateful_class is BlenderFood:
+            return [obj.current_progress]
+        raise ValueError(f"Could not process stateful class {stateful_class}")
+

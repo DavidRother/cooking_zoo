@@ -11,6 +11,9 @@ class Floor(StaticObject):
     def accepts(self, dynamic_objects) -> bool:
         return False
 
+    def file_name(self) -> str:
+        return "floor"
+
 
 class Counter(StaticObject):
 
@@ -20,6 +23,9 @@ class Counter(StaticObject):
     def accepts(self, dynamic_objects) -> bool:
         return True
 
+    def file_name(self) -> str:
+        return "counter"
+
 
 class DeliverSquare(StaticObject):
 
@@ -28,6 +34,9 @@ class DeliverSquare(StaticObject):
 
     def accepts(self, dynamic_objects) -> bool:
         return True
+
+    def file_name(self) -> str:
+        return "delivery"
 
 
 class CutBoard(StaticObject, ActionObject):
@@ -45,6 +54,9 @@ class CutBoard(StaticObject, ActionObject):
 
     def accepts(self, dynamic_objects) -> bool:
         return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], ChopFood)
+
+    def file_name(self) -> str:
+        return "cutboard"
 
 
 class Blender(StaticObject, ProgressingObject):
@@ -69,6 +81,9 @@ class Blender(StaticObject, ProgressingObject):
     def accepts(self, dynamic_objects) -> bool:
         return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], BlenderFood)
 
+    def file_name(self) -> str:
+        return "blender3"
+
 
 class Plate(Container):
 
@@ -82,29 +97,80 @@ class Plate(Container):
             raise Exception(f"Can't add food in unprepared state.")
         self.content.append(content)
 
+    def file_name(self) -> str:
+        return "Plate"
+
 
 class Onion(ChopFood):
 
     def __init__(self, location):
-        super().__init__(location, ONION_INIT_STATE)
+        super().__init__(location)
 
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED:
+            return True
+        else:
+            return False
+
+    def file_name(self) -> str:
+        if self.done():
+            return "ChoppedOnion"
+        else:
+            return "FreshOnion"
+        
 
 class Tomato(ChopFood):
 
     def __init__(self, location):
-        super().__init__(location, TOMATO_INIT_STATE)
+        super().__init__(location)
+
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED:
+            return True
+        else:
+            return False
+
+    def file_name(self) -> str:
+        if self.done():
+            return "ChoppedTomato"
+        else:
+            return "FreshTomato"
 
 
 class Lettuce(ChopFood):
 
     def __init__(self, location):
-        super().__init__(location, LETTUCE_INIT_STATE)
+        super().__init__(location)
+
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED:
+            return True
+        else:
+            return False
+
+    def file_name(self) -> str:
+        if self.done():
+            return "ChoppedLettuce"
+        else:
+            return "FreshLettuce"
 
 
-class Carrot(BlenderFood):
+class Carrot(BlenderFood, ChopFood):
 
     def __init__(self, location):
-        super().__init__(location, BlenderFoodStates.FRESH)
+        super().__init__(location)
+
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED or self.blend_state == BlenderFoodStates.MASHED:
+            return True
+        else:
+            return False
+
+    def file_name(self) -> str:
+        if self.done():
+            return "ChoppedCarrot"
+        else:
+            return "FreshCarrot"
 
 
 class Agent(Object):
@@ -128,6 +194,9 @@ class Agent(Object):
         if self.holding:
             self.holding.move_to(new_location)
 
+    def file_name(self) -> str:
+        pass
+
 
 StringToClass = {
     "Floor": Floor,
@@ -143,5 +212,22 @@ StringToClass = {
     "Carrot": Carrot
 }
 
-GAME_CLASSES = [Floor, Counter, CutBoard, DeliverSquare, Tomato, Lettuce, Onion, Plate, Agent, Blender]
+ClassToString = {
+    Floor: "Floor",
+    Counter: "Counter",
+    CutBoard: "CutBoard",
+    DeliverSquare: "DeliverSquare",
+    Tomato: 'Tomato',
+    Lettuce: "Lettuce",
+    Onion: "Onion",
+    Plate: "Plate",
+    Agent: "Agent",
+    Blender: "Blender",
+    Carrot: "Carrot"
+}
+
+GAME_CLASSES = [Floor, Counter, CutBoard, DeliverSquare, Tomato, Lettuce, Onion, Plate, Agent, Blender, Carrot]
+GAME_CLASSES_STATE_LENGTH = [(Floor, 1), (Counter, 1), (CutBoard, 1), (DeliverSquare, 1), (Tomato, 2),
+                             (Lettuce, 2), (Onion, 2), (Plate, 1), (Agent, 1), (Blender, 1), (Carrot, 3)]
+
 

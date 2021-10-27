@@ -151,18 +151,7 @@ class GraphicPipeline:
         size = (base_size[0] // tiles, base_size[1] // tiles)
         for idx, obj in enumerate(dynamic_objects):
             location = (base_loc[0] + size[0] * (idx % tiles), base_loc[1] + size[1] * (idx // tiles))
-            self.draw(self.get_file_name([obj]), size, location)
-
-    @staticmethod
-    def get_file_name(dynamic_objects):
-        order = [Lettuce, Onion, Tomato, Carrot]
-        name = []
-        for order_type in order:
-            for obj in dynamic_objects:
-                if isinstance(obj, order_type):
-                    name.append(obj.state.value + obj.name())
-                    break
-        return '-'.join(name)
+            self.draw(obj.file_name(), size, location)
 
     def scaled_location(self, loc):
         """Return top-left corner of scaled location given coordinates loc, e.g. (3, 4)"""
