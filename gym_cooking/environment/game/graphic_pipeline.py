@@ -6,6 +6,7 @@ from collections import defaultdict, namedtuple
 import numpy as np
 import pathlib
 import os.path
+import math
 
 
 COLORS = ['blue', 'magenta', 'yellow', 'green']
@@ -131,11 +132,9 @@ class GraphicPipeline:
             self.draw('Plate', base_size, base_location)
             rest_stack = [obj for obj in dynamic_objects if obj != highest_order_object]
             if rest_stack:
-                file_name = self.get_file_name(rest_stack)
-                self.draw(file_name, holding_size, holding_location)
+                self.draw_food_stack(rest_stack, holding_size, holding_location)
         else:
-            file_name = self.get_file_name(dynamic_objects)
-            self.draw(file_name, base_size, base_location)
+            self.draw_food_stack(dynamic_objects, base_size, base_location)
 
     def draw_agents(self):
         for agent in self.env.unwrapped.world.agents:
@@ -147,30 +146,12 @@ class GraphicPipeline:
         image = pygame.transform.scale(get_image(image_path), (int(size[0]), int(size[1])))
         self.screen.blit(image, location)
 
-    def draw_agent_object(self, obj):
-        # Holding shows up in bottom right corner.
-        if obj is None: return
-        if any([isinstance(c, Plate) for c in obj.contents]):
-            self.draw('Plate', self.graphics_properties.holding_size, self.holding_location(obj.location))
-            if len(obj.contents) > 1:
-                plate = obj.unmerge('Plate')
-                self.draw(obj.full_name, self.graphics_properties.holding_container_size,
-                          self.holding_container_location(obj.location))
-                obj.merge(plate)
-        else:
-            self.draw(obj.full_name, self.graphics_properties.holding_size, self.holding_location(obj.location))
-
-    def draw_object(self, obj):
-        if obj is None:
-            return
-        if any([isinstance(c, Plate) for c in obj.contents]):
-            self.draw('Plate', self.graphics_properties.tile_size, self.scaled_location(obj.location))
-            if len(obj.contents) > 1:
-                plate = obj.unmerge('Plate')
-                self.draw(obj.full_name, self.graphics_properties.container_size, self.container_location(obj.location))
-                obj.merge(plate)
-        else:
-            self.draw(obj.full_name, self.graphics_properties.tile_size, self.scaled_location(obj.location))
+    def draw_food_stack(self, dynamic_objects, base_size, base_loc):
+        tiles = int(math.floor(math.sqrt(len(dynamic_objects) - 1)) + 1)
+        size = (base_size[0] // tiles, base_size[1] // tiles)
+        for idx, obj in enumerate(dynamic_objects):
+            location = (base_loc[0] + size[0] * (idx % tiles), base_loc[1] + size[1] * (idx // tiles))
+            self.draw(self.get_file_name([obj]), size, location)
 
     @staticmethod
     def get_file_name(dynamic_objects):
