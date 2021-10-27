@@ -3,26 +3,18 @@ from gym_cooking.cooking_world.cooking_world import CookingWorld
 from gym_cooking.cooking_world.world_objects import *
 from gym_cooking.cooking_book.recipe_drawer import RECIPES, NUM_GOALS
 
-import copy
 import numpy as np
-from pathlib import Path
-import os.path
-from itertools import combinations, product
 from collections import namedtuple, defaultdict
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
-import random
-
 import gym
 
 
 CollisionRepr = namedtuple("CollisionRepr", "time agent_names agent_locations")
 COLORS = ['blue', 'magenta', 'yellow', 'green']
-
-GAME_OBJECTS_STATEFUL = [('Lettuce', 2), ('Tomato', 2), ('Onion', 2), ("Carrot", 3)]
 
 action_translation_dict = {0: (0, 0), 1: (1, 0), 2: (0, 1), 3: (-1, 0), 4: (0, -1)}
 reverse_action_translation_dict = {(0, 0): 0, (1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
@@ -51,9 +43,10 @@ class CookingEnvironment(AECEnv):
 
     metadata = {'render.modes': ['human'], 'name': "cooking_zoo"}
 
-    def __init__(self, level, num_agents, record, max_steps, recipes):
+    def __init__(self, level, num_agents, record, max_steps, recipes, allowed_objects=None):
         super().__init__()
 
+        self.allowed_objects = allowed_objects or []
         self.possible_agents = ["player_" + str(r) for r in range(num_agents)]
         self.agents = self.possible_agents[:]
 
@@ -214,35 +207,6 @@ class CookingEnvironment(AECEnv):
             done = True
         return done, rewards, open_goals
 
-# """    def get_tensor_representation(self):
-#         tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length))
-#         objects = defaultdict(list)
-#         objects["Agent"] = self.world.agents
-#         objects.update(self.world.world_objects)
-#         idx = 0
-#         for name, states in GAME_OBJECTS_STATEFUL:
-#             if states:
-#                 if issubclass(StringToClass[name], BlenderFood):
-#                     for obj in objects[name]:
-#                         x, y = obj.location
-#                         tensor[x, y, idx] += 1
-#                         x, y = obj.location
-#                         tensor[x, y, idx + 1] += getattr(obj, states[0])
-#                     idx += 2
-#                 else:
-#                     for state in states:
-#                         for obj in objects[name]:
-#                             if obj.state == state:
-#                                 x, y = obj.location
-#                                 tensor[x, y, idx] += 1
-#                         idx += 1
-#             else:
-#                 for obj in objects[name]:
-#                     x, y = obj.location
-#                     tensor[x, y, idx] += 1
-#                 idx += 1
-#         return tensor"""
-
     def get_tensor_representation(self):
         tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length))
         objects = defaultdict(list)
@@ -279,4 +243,3 @@ class CookingEnvironment(AECEnv):
         if stateful_class is BlenderFood:
             return [obj.current_progress]
         raise ValueError(f"Could not process stateful class {stateful_class}")
-
