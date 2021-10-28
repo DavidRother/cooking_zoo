@@ -96,15 +96,15 @@ class GraphicPipeline:
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
         elif isinstance(static_object, DeliverSquare):
             pygame.draw.rect(self.screen, Color.DELIVERY, fill)
-            self.draw('delivery', self.graphics_properties.tile_size, sl)
+            self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
         elif isinstance(static_object, CutBoard):
             pygame.draw.rect(self.screen, Color.COUNTER, fill)
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
-            self.draw('cutboard', self.graphics_properties.tile_size, sl)
+            self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
         elif isinstance(static_object, Blender):
             pygame.draw.rect(self.screen, Color.COUNTER, fill)
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
-            self.draw('blender3', self.graphics_properties.tile_size, sl)
+            self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
         # elif isinstance(static_object, Floor):
         #     pygame.draw.rect(self.screen, Color.FLOOR, fill)
 
@@ -129,7 +129,7 @@ class GraphicPipeline:
     def draw_dynamic_object_stack(self, dynamic_objects, base_size, base_location, holding_size, holding_location):
         highest_order_object = self.env.unwrapped.world.get_highest_order_object(dynamic_objects)
         if isinstance(highest_order_object, Container):
-            self.draw('Plate', base_size, base_location)
+            self.draw(highest_order_object.file_name(), base_size, base_location)
             rest_stack = [obj for obj in dynamic_objects if obj != highest_order_object]
             if rest_stack:
                 self.draw_food_stack(rest_stack, holding_size, holding_location)
@@ -140,6 +140,31 @@ class GraphicPipeline:
         for agent in self.env.unwrapped.world.agents:
             self.draw('agent-{}'.format(agent.color), self.graphics_properties.tile_size,
                       self.scaled_location(agent.location))
+            if agent.orientation == 1:
+                file_name = "arrow_left"
+                location = self.scaled_location(agent.location)
+                location = (location[0], location[1] + self.graphics_properties.tile_size[1] // 4)
+                size = (self.graphics_properties.tile_size[0] // 4, self.graphics_properties.tile_size[1] // 4)
+            elif agent.orientation == 2:
+                file_name = "arrow_right"
+                location = self.scaled_location(agent.location)
+                location = (location[0] + 3 * self.graphics_properties.tile_size[0] // 4,
+                            location[1] + self.graphics_properties.tile_size[1] // 4)
+                size = (self.graphics_properties.tile_size[0] // 4, self.graphics_properties.tile_size[1] // 4)
+            elif agent.orientation == 3:
+                file_name = "arrow_down"
+                location = self.scaled_location(agent.location)
+                location = (location[0] + self.graphics_properties.tile_size[0] // 4,
+                            location[1] + 3 * self.graphics_properties.tile_size[1] // 4)
+                size = (self.graphics_properties.tile_size[0] // 4, self.graphics_properties.tile_size[1] // 4)
+            elif agent.orientation == 4:
+                file_name = "arrow_up"
+                location = self.scaled_location(agent.location)
+                location = (location[0] + self.graphics_properties.tile_size[0] // 4, location[1])
+                size = (self.graphics_properties.tile_size[0] // 4, self.graphics_properties.tile_size[1] // 4)
+            else:
+                raise ValueError(f"Agent orientation invalid ({agent.orientation})")
+            self.draw(file_name, size, location)
 
     def draw(self, path, size, location):
         image_path = f'{self.root_dir}/{self.graphics_dir}/{path}.png'

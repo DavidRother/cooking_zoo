@@ -180,6 +180,7 @@ class Agent(Object):
         self.holding = None
         self.color = color
         self.name = name
+        self.orientation = 1
 
     def grab(self, obj: DynamicObject):
         self.holding = obj
@@ -193,6 +194,10 @@ class Agent(Object):
         self.location = new_location
         if self.holding:
             self.holding.move_to(new_location)
+
+    def change_orientation(self, new_orientation):
+        assert 0 < new_orientation < 5
+        self.orientation = new_orientation
 
     def file_name(self) -> str:
         pass
@@ -228,6 +233,6 @@ ClassToString = {
 
 GAME_CLASSES = [Floor, Counter, CutBoard, DeliverSquare, Tomato, Lettuce, Onion, Plate, Agent, Blender, Carrot]
 GAME_CLASSES_STATE_LENGTH = [(Floor, 1), (Counter, 1), (CutBoard, 1), (DeliverSquare, 1), (Tomato, 2),
-                             (Lettuce, 2), (Onion, 2), (Plate, 1), (Agent, 1), (Blender, 1), (Carrot, 3)]
+                             (Lettuce, 2), (Onion, 2), (Plate, 1), (Agent, 5), (Blender, 1), (Carrot, 3)]
 
 

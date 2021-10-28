@@ -10,9 +10,6 @@ from datetime import datetime
 from time import sleep
 
 
-action_translation_dict = {0: (0, 0), 1: (1, 0), 2: (0, 1), 3: (-1, 0), 4: (0, -1)}
-reverse_action_translation_dict = {(0, 0): 0, (1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
-
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 
 
@@ -69,10 +66,10 @@ class Game:
                         last_obs_raw = self.last_obs[env_agent]
                         ai_action = ai_policy.get_action(last_obs_raw)
                         store_action_dict[agent] = ai_action
-                        self.env.unwrapped.world.agents[idx].action = action_translation_dict[ai_action]
+                        self.env.unwrapped.world.agents[idx].action = ai_action
 
-                self.yielding_action_dict = {agent: reverse_action_translation_dict[
-                    self.env.unwrapped.world_agent_mapping[agent].action] for agent in self.env.agents}
+                self.yielding_action_dict = {agent: self.env.unwrapped.world_agent_mapping[agent].action
+                                             for agent in self.env.agents}
                 observations, rewards, dones, infos = self.env.step(self.yielding_action_dict)
 
                 self.store["actions"].append(store_action_dict)
@@ -99,11 +96,10 @@ class Game:
                 obs = self.ai_policies[idx - self.num_humans].action_state_builder(last_obs_raw)
                 ai_action, _, _ = ai_policy.get_action(obs)
                 store_action_dict[agent] = ai_action.item()
-                self.env.unwrapped.world.agents[idx].action = action_translation_dict[ai_action.item()]
+                self.env.unwrapped.world.agents[idx].action = ai_action.item()
 
-        self.yielding_action_dict = {agent: reverse_action_translation_dict[
-            self.env.unwrapped.world_agent_mapping[agent].action] for agent in self.env.agents}
-        # print(self.yielding_action_dict)
+        self.yielding_action_dict = {agent: self.env.unwrapped.world_agent_mapping[agent].action
+                                     for agent in self.env.agents}
         observations, rewards, dones, infos = self.env.step(self.yielding_action_dict)
 
         if all(dones.values()):

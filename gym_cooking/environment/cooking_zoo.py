@@ -16,9 +16,6 @@ import gym
 CollisionRepr = namedtuple("CollisionRepr", "time agent_names agent_locations")
 COLORS = ['blue', 'magenta', 'yellow', 'green']
 
-action_translation_dict = {0: (0, 0), 1: (1, 0), 2: (0, 1), 3: (-1, 0), 4: (0, -1)}
-reverse_action_translation_dict = {(0, 0): 0, (1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
-
 
 def env(level, num_agents, record, max_steps, recipes):
     """
@@ -72,7 +69,7 @@ class CookingEnvironment(AECEnv):
                                                       shape=(2,)),
                      'goal_vector': gym.spaces.MultiBinary(NUM_GOALS)}
         self.observation_spaces = {agent: gym.spaces.Dict(obs_space) for agent in self.possible_agents}
-        self.action_spaces = {agent: gym.spaces.Discrete(5) for agent in self.possible_agents}
+        self.action_spaces = {agent: gym.spaces.Discrete(6) for agent in self.possible_agents}
         self.has_reset = True
 
         self.recipe_mapping = dict(zip(self.possible_agents, self.recipe_graphs))
@@ -153,10 +150,8 @@ class CookingEnvironment(AECEnv):
     def accumulated_step(self, actions):
         # Track internal environment info.
         self.t += 1
-
-        translated_actions = [action_translation_dict[act] for act in actions]
         # translated_actions = [action_translation_dict[actions[f"player_{idx}"]] for idx in range(len(actions))]
-        self.world.perform_agent_actions(self.world.agents, translated_actions)
+        self.world.perform_agent_actions(self.world.agents, actions)
 
         # Visualize.
         if self.record:
@@ -210,10 +205,11 @@ class CookingEnvironment(AECEnv):
     def get_tensor_representation(self):
         tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length))
         objects = defaultdict(list)
-        objects["Agent"] = self.world.agents
         objects.update(self.world.world_objects)
         idx = 0
         for game_class in GAME_CLASSES:
+            if game_class is Agent:
+                continue
             for obj in objects[ClassToString[game_class]]:
                 x, y = obj.location
                 tensor[x, y, idx] += 1
@@ -228,6 +224,13 @@ class CookingEnvironment(AECEnv):
                         for i in range(n):
                             tensor[x, y, idx + i] += representation[i]
                     idx += n
+        for agent in self.world.agents:
+            x, y = agent.location
+            tensor[x, y, idx] = 1
+            tensor[x, y, idx + 1] = 1 if agent.orientation == 1 else 0
+            tensor[x, y, idx + 2] = 1 if agent.orientation == 2 else 0
+            tensor[x, y, idx + 3] = 1 if agent.orientation == 3 else 0
+            tensor[x, y, idx + 4] = 1 if agent.orientation == 4 else 0
         return tensor
 
     def get_agent_names(self):

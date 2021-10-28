@@ -17,10 +17,12 @@ KeyToTuple = {
 }
 
 KeyToTuple_human1 = {
-    pygame.K_UP: (0, -1),  # 273
-    pygame.K_DOWN: (0, 1),  # 274
-    pygame.K_RIGHT: (1, 0),  # 275
-    pygame.K_LEFT: (-1, 0),  # 276
+    pygame.K_UP: 4,  # 273
+    pygame.K_DOWN: 3,  # 274
+    pygame.K_RIGHT: 2,  # 275
+    pygame.K_LEFT: 1,  # 276
+    pygame.K_SPACE: 0,
+    pygame.K_f: 5
 }
 
 KeyToTuple_human2 = {

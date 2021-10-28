@@ -23,6 +23,8 @@ class CookingWorld:
         'b': Blender
     }
 
+    # AGENT_ACTIONS: 0: Noop, 1: Left, 2: right, 3: down, 4: up, 5: interact
+
     def __init__(self):
         self.agents = []
         self.width = 0
@@ -54,6 +56,9 @@ class CookingWorld:
             obj.progress(dynamic_objects)
 
     def perform_agent_actions(self, agents, actions):
+        for agent, action in zip(agents, actions):
+            if 0 < action < 5:
+                agent.change_orientation(action)
         cleaned_actions = self.check_inbounds(agents, actions)
         collision_actions = self.check_collisions(agents, cleaned_actions)
         for agent, action in zip(agents, collision_actions):
@@ -61,17 +66,17 @@ class CookingWorld:
         self.progress_world()
 
     def perform_agent_action(self, agent: Agent, action):
-        target_location = (action[0] + agent.location[0], action[1] + agent.location[1])
-        if self.square_walkable(target_location):
-            agent.move_to(target_location)
-        else:
-            dynamic_objects = self.get_objects_at(target_location, DynamicObject)
-            static_object = self.get_objects_at(target_location, StaticObject)[0]
+        if 0 < action < 5:
+            self.resolve_walking_action(agent, action)
+        if action == 5:
+            interaction_location = self.get_target_location(agent, agent.orientation)
+            dynamic_objects = self.get_objects_at(interaction_location, DynamicObject)
+            static_object = self.get_objects_at(interaction_location, StaticObject)[0]
             if not agent.holding and not dynamic_objects:
                 return
             elif agent.holding and not dynamic_objects:
                 if static_object.accepts([agent.holding]):
-                    agent.put_down(target_location)
+                    agent.put_down(interaction_location)
             elif not agent.holding and dynamic_objects:
                 object_to_grab = self.get_highest_order_object(dynamic_objects)
                 if isinstance(static_object, ActionObject):
@@ -81,7 +86,12 @@ class CookingWorld:
                 else:
                     agent.grab(object_to_grab)
             elif agent.holding and dynamic_objects:
-                self.attempt_merge(agent, dynamic_objects, target_location)
+                self.attempt_merge(agent, dynamic_objects, interaction_location)
+
+    def resolve_walking_action(self, agent: Agent, action):
+        target_location = self.get_target_location(agent, action)
+        if self.square_walkable(target_location):
+            agent.move_to(target_location)
 
     def get_highest_order_object(self, objects: List[DynamicObject]):
         order = [Container, Food]
@@ -90,6 +100,20 @@ class CookingWorld:
             if obj:
                 return obj
         return None
+
+    @staticmethod
+    def get_target_location(agent, action):
+        if action == 1:
+            target_location = (agent.location[0] - 1, agent.location[1])
+        elif action == 2:
+            target_location = (agent.location[0] + 1, agent.location[1])
+        elif action == 3:
+            target_location = (agent.location[0], agent.location[1] + 1)
+        elif action == 4:
+            target_location = (agent.location[0], agent.location[1] - 1)
+        else:
+            target_location = (agent.location[0], agent.location[1])
+        return target_location
 
     @staticmethod
     def filter_obj(objects: List[DynamicObject], obj_type):
@@ -104,12 +128,14 @@ class CookingWorld:
     def check_inbounds(self, agents, actions):
         cleaned_actions = []
         for agent, action in zip(agents, actions):
-            new_x = agent.location[0] + action[0]
-            new_y = agent.location[1] + action[1]
-            if new_x > self.width - 1 or new_x < 0:
-                action[0] = 0
-            if new_y > self.height - 1 or new_x < 0:
-                action[1] = 0
+            if action == 0 or action == 5:
+                cleaned_actions.append(action)
+                continue
+            target_location = self.get_target_location(agent, action)
+            if target_location[0] > self.width - 1 or target_location[0] < 0:
+                action = 0
+            if target_location[1] > self.height - 1 or target_location[1] < 0:
+                action = 0
             cleaned_actions.append(action)
         return cleaned_actions
 
@@ -118,14 +144,14 @@ class CookingWorld:
         target_locations = []
         walkable = []
         for agent, action in zip(agents, actions):
-            target_location = (action[0] + agent.location[0], action[1] + agent.location[1])
+            target_location = self.get_target_location(agent, action)
             target_walkable = self.square_walkable(target_location)
             end_location = target_location if target_walkable else agent.location
             target_locations.append(end_location)
             walkable.append(target_walkable)
         for idx, (action, target_location, target_walkable) in enumerate(zip(actions, target_locations, walkable)):
             if target_location in target_locations[:idx] + target_locations[idx+1:] and target_walkable:
-                collision_actions.append((0, 0))
+                collision_actions.append(0)
             else:
                 collision_actions.append(action)
         return collision_actions
