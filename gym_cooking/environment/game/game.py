@@ -15,12 +15,13 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 
 class Game:
 
-    def __init__(self, env, num_humans, ai_policies, max_steps=100):
+    def __init__(self, env, num_humans, ai_policies, max_steps=100, render=False):
         self._running = True
         self.env = env
         self.play = bool(num_humans)
+        self.render = render or self.play
         # Visual parameters
-        self.graphics_pipeline = graphic_pipeline.GraphicPipeline(env, self.play)
+        self.graphics_pipeline = graphic_pipeline.GraphicPipeline(env, self.render)
         self.save_dir = 'misc/game/screenshots'
         self.store = defaultdict(list)
         self.num_humans = num_humans
@@ -76,11 +77,11 @@ class Game:
                 self.store["info"].append(infos)
                 self.store["rewards"].append(rewards)
                 self.store["done"].append(dones)
-                self.last_obs = observations
 
                 if all(dones.values()):
                     self._running = False
 
+                self.last_obs = observations
                 self.step_done = True
 
     def ai_only_event(self):
@@ -88,6 +89,8 @@ class Game:
 
         store_action_dict = {}
 
+        self.store["observation"].append(self.last_obs)
+        self.store["agent_states"].append([agent.location for agent in self.env.unwrapped.world.agents])
         for idx, agent in enumerate(self.env.unwrapped.world.agents):
             if idx >= self.num_humans:
                 ai_policy = self.ai_policies[idx - self.num_humans].agent
@@ -102,9 +105,15 @@ class Game:
                                      for agent in self.env.agents}
         observations, rewards, dones, infos = self.env.step(self.yielding_action_dict)
 
+        self.store["actions"].append(store_action_dict)
+        self.store["info"].append(infos)
+        self.store["rewards"].append(rewards)
+        self.store["done"].append(dones)
+
         if all(dones.values()):
             self._running = False
 
+        self.last_obs = observations
         self.step_done = True
 
     def on_execute(self):
@@ -135,7 +144,7 @@ class Game:
         self._running = self.on_init()
 
         while self._running:
-            sleep(0.4)
+            sleep(0.2)
             self.ai_only_event()
             self.on_render()
         self.on_cleanup()

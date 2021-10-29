@@ -4,9 +4,15 @@ from gym_cooking.cooking_world.cooking_world import CookingWorld
 import numpy as np
 
 
+class NodeTypes(Enum):
+    CHECKPOINT = "Checkpoint"
+    ACTION = "Action"
+
+
 class RecipeNode:
 
-    def __init__(self, root_type, id_num, name, parent=None, conditions=None, contains=None):
+    def __init__(self, root_type, id_num, name, parent=None, conditions=None, contains=None,
+                 node_type=NodeTypes.CHECKPOINT):
         self.parent = parent
         self.achieved = False
         self.id_num = id_num
@@ -15,6 +21,7 @@ class RecipeNode:
         self.contains = contains or []
         self.world_objects = []
         self.name = name
+        self.node_type = node_type
 
     def is_leaf(self):
         return not bool(self.contains)

@@ -8,11 +8,11 @@ num_humans = 1
 max_steps = 1000
 render = False
 
-level = 'open_room_blender'
+level = 'open_room_tomato_salad'
 seed = 1
 record = False
 max_num_timesteps = 100
-recipes = ["MashedCarrot"]
+recipes = ["TomatoSalad"]
 
 parallel_env = cooking_zoo.parallel_env(level=level, num_agents=n_agents, record=record,
                                         max_steps=max_num_timesteps, recipes=recipes)

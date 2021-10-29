@@ -191,8 +191,8 @@ class CookingEnvironment(AECEnv):
             goals_before = recipe.goals_completed(NUM_GOALS)
             recipe.update_recipe_state(self.world)
             open_goals[idx] = recipe.goals_completed(NUM_GOALS)
-            bonus = recipe.completed() * 10
-            rewards[idx] = sum(goals_before) - sum(open_goals[idx]) + bonus
+            bonus = recipe.completed() * 0.1
+            rewards[idx] = (sum(goals_before) - sum(open_goals[idx]) + bonus) * 10
             if rewards[idx] < 0:
                 print(f"Goals before: {goals_before}")
                 print(f"Goals after: {open_goals}")
