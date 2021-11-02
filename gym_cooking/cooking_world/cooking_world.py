@@ -70,6 +70,8 @@ class CookingWorld:
             self.resolve_walking_action(agent, action)
         if action == 5:
             interaction_location = self.get_target_location(agent, agent.orientation)
+            if any([agent.location == interaction_location for agent in self.agents]):
+                return
             dynamic_objects = self.get_objects_at(interaction_location, DynamicObject)
             static_object = self.get_objects_at(interaction_location, StaticObject)[0]
             if not agent.holding and not dynamic_objects:
