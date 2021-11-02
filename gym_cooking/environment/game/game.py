@@ -96,10 +96,9 @@ class Game:
                 ai_policy = self.ai_policies[idx - self.num_humans].agent
                 env_agent = self.env.unwrapped.world_agent_to_env_agent_mapping[agent]
                 last_obs_raw = self.last_obs[env_agent]
-                obs = self.ai_policies[idx - self.num_humans].action_state_builder(last_obs_raw)
-                ai_action, _, _ = ai_policy.get_action(obs)
-                store_action_dict[agent] = ai_action.item()
-                self.env.unwrapped.world.agents[idx].action = ai_action.item()
+                ai_action = ai_policy.get_action(last_obs_raw)
+                store_action_dict[agent] = ai_action
+                self.env.unwrapped.world.agents[idx].action = ai_action
 
         self.yielding_action_dict = {agent: self.env.unwrapped.world_agent_mapping[agent].action
                                      for agent in self.env.agents}
