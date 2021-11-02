@@ -61,10 +61,9 @@ Look up the file world_objects.py in the folder cooking_world.
 In this file add a new class of your object and let it inherit from the desired class in abstract_classes.py.
 To get specific implementation details you can look at another inherited object class. 
 
-Then add a new entry to the StringToClass dictionary and the class to the GAME_CLASSES list at the bottom of the 
-world_objects.py file. 
-Then navigate to the cooking_zoo.py file in the environment folder and add your new object to the 
-GAME_OBJECTS_STATEFUL list.
+Then add a new entry to the StringToClass dictionary and the class to the GAME_CLASSES and the GAME_CLASSES_STATE_LENGTH 
+list at the bottom of the world_objects.py file. The GAME_CLASSES_STATE_LENGTH List contains tuples with the class and 
+the corresponding state length for the feature matrix representation.
 
 ### Recipes
 
