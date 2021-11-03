@@ -23,7 +23,7 @@ class GymCookingEnvironment(gym.Env):
         return obs["player_0"], reward["player_0"], done["player_0"], info["player_0"]
 
     def reset(self):
-        return self.zoo_env.reset()
+        return self.zoo_env.reset()["player_0"]
 
     def render(self, mode='human'):
         pass

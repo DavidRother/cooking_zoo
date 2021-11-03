@@ -173,9 +173,6 @@ class CookingEnvironment(AECEnv):
             self.rewards[agent] = rewards[idx]
             self.infos[agent] = info
 
-        if done:
-            self.agents = []
-
     def observe(self, agent):
         observation = {'symbolic_observation': self.current_tensor_observation,
                        'agent_location': np.asarray(self.world_agent_mapping[agent].location, np.int32),
