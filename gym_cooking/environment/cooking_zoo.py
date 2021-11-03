@@ -1,4 +1,6 @@
 # Other core modules
+import copy
+
 from gym_cooking.cooking_world.cooking_world import CookingWorld
 from gym_cooking.cooking_world.world_objects import *
 from gym_cooking.cooking_book.recipe_drawer import RECIPES, NUM_GOALS
@@ -17,7 +19,7 @@ CollisionRepr = namedtuple("CollisionRepr", "time agent_names agent_locations")
 COLORS = ['blue', 'magenta', 'yellow', 'green']
 
 
-def env(level, num_agents, record, max_steps, recipes):
+def env(level, num_agents, record, max_steps, recipes, obs_spaces):
     """
     The env function wraps the environment in 3 wrappers by default. These
     wrappers contain logic that is common to many pettingzoo environments.
@@ -25,7 +27,7 @@ def env(level, num_agents, record, max_steps, recipes):
     to provide sane error messages. You can find full documentation for these methods
     elsewhere in the developer documentation.
     """
-    env_init = CookingEnvironment(level, num_agents, record, max_steps, recipes)
+    env_init = CookingEnvironment(level, num_agents, record, max_steps, recipes, obs_spaces)
     env_init = wrappers.CaptureStdoutWrapper(env_init)
     env_init = wrappers.AssertOutOfBoundsWrapper(env_init)
     env_init = wrappers.OrderEnforcingWrapper(env_init)
@@ -40,9 +42,14 @@ class CookingEnvironment(AECEnv):
 
     metadata = {'render.modes': ['human'], 'name': "cooking_zoo"}
 
-    def __init__(self, level, num_agents, record, max_steps, recipes, allowed_objects=None):
+    def __init__(self, level, num_agents, record, max_steps, recipes, obs_spaces=["numeric"], allowed_objects=None):
         super().__init__()
 
+        self.allowed_obs_spaces = ["symbolic", "numeric"]
+        assert len(set(obs_spaces + self.allowed_obs_spaces)) == 2, \
+            f"Selected invalid obs spaces. Allowed {self.allowed_obs_spaces}"
+        assert len(obs_spaces) != 0, f"Please select an observation space from: {self.allowed_obs_spaces}"
+        self.obs_spaces = obs_spaces
         self.allowed_objects = allowed_objects or []
         self.possible_agents = ["player_" + str(r) for r in range(num_agents)]
         self.agents = self.possible_agents[:]
@@ -62,13 +69,13 @@ class CookingEnvironment(AECEnv):
         self.world.load_level(level=self.level, num_agents=num_agents)
         self.graph_representation_length = sum([tup[1] for tup in GAME_CLASSES_STATE_LENGTH])
 
-        obs_space = {'symbolic_observation': gym.spaces.Box(low=0, high=10,
+        numeric_obs_space = {'symbolic_observation': gym.spaces.Box(low=0, high=10,
                                                             shape=(self.world.width, self.world.height,
                                                                    self.graph_representation_length), dtype=np.int32),
-                     'agent_location': gym.spaces.Box(low=0, high=max(self.world.width, self.world.height),
-                                                      shape=(2,)),
-                     'goal_vector': gym.spaces.MultiBinary(NUM_GOALS)}
-        self.observation_spaces = {agent: gym.spaces.Dict(obs_space) for agent in self.possible_agents}
+                             'agent_location': gym.spaces.Box(low=0, high=max(self.world.width, self.world.height),
+                                                              shape=(2,)),
+                             'goal_vector': gym.spaces.MultiBinary(NUM_GOALS)}
+        self.observation_spaces = {agent: gym.spaces.Dict(numeric_obs_space) for agent in self.possible_agents}
         self.action_spaces = {agent: gym.spaces.Discrete(6) for agent in self.possible_agents}
         self.has_reset = True
 
@@ -174,10 +181,20 @@ class CookingEnvironment(AECEnv):
             self.infos[agent] = info
 
     def observe(self, agent):
-        observation = {'symbolic_observation': self.current_tensor_observation,
-                       'agent_location': np.asarray(self.world_agent_mapping[agent].location, np.int32),
-                       'goal_vector': self.recipe_mapping[agent].goals_completed(NUM_GOALS)}
-        return observation
+        observation = []
+        if "numeric" in self.obs_spaces:
+            num_observation = {'symbolic_observation': self.current_tensor_observation,
+                               'agent_location': np.asarray(self.world_agent_mapping[agent].location, np.int32),
+                               'goal_vector': self.recipe_mapping[agent].goals_completed(NUM_GOALS)}
+            observation.append(num_observation)
+        if "symbolic" in self.obs_spaces:
+            objects = defaultdict(list)
+            objects.update(self.world.world_objects)
+            objects["Agent"] = self.world.agents
+            sym_observation = copy.deepcopy(objects)
+            observation.append(sym_observation)
+        returned_observation = observation if not len(observation) == 1 else observation[0]
+        return returned_observation
 
     def compute_rewards(self):
         done = False
