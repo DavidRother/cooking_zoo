@@ -116,6 +116,7 @@ class CookingEnvironment(AECEnv):
         # else:
         #     self.game = None
 
+        self.agents = self.possible_agents[:]
         self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.next()
 
@@ -171,6 +172,9 @@ class CookingEnvironment(AECEnv):
             self.dones[agent] = done
             self.rewards[agent] = rewards[idx]
             self.infos[agent] = info
+
+        if done:
+            self.agents = []
 
     def observe(self, agent):
         observation = {'symbolic_observation': self.current_tensor_observation,

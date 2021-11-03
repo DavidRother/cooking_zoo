@@ -5,13 +5,13 @@ from gym_cooking.environment import cooking_zoo
 
 n_agents = 1
 num_humans = 1
-max_steps = 1000
+max_steps = 10
 render = False
 
 level = 'open_room_tomato_salad'
 seed = 1
 record = False
-max_num_timesteps = 100
+max_num_timesteps = 10
 recipes = ["TomatoSalad"]
 
 parallel_env = cooking_zoo.parallel_env(level=level, num_agents=n_agents, record=record,
