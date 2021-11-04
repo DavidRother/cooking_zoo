@@ -1,5 +1,6 @@
 from collections import defaultdict
 from gym_cooking.cooking_world.world_objects import *
+from gym_cooking.cooking_world.actions import *
 
 from pathlib import Path
 import os.path
@@ -57,7 +58,7 @@ class CookingWorld:
 
     def perform_agent_actions(self, agents, actions):
         for agent, action in zip(agents, actions):
-            if 0 < action < 5:
+            if action in WALK_ACTIONS:
                 agent.change_orientation(action)
         cleaned_actions = self.check_inbounds(agents, actions)
         collision_actions = self.check_collisions(agents, cleaned_actions)
@@ -66,34 +67,58 @@ class CookingWorld:
         self.progress_world()
 
     def perform_agent_action(self, agent: Agent, action):
-        if 0 < action < 5:
+        if action in WALK_ACTIONS:
             self.resolve_walking_action(agent, action)
-        if action == 5:
-            interaction_location = self.get_target_location(agent, agent.orientation)
-            if any([agent.location == interaction_location for agent in self.agents]):
-                return
-            dynamic_objects = self.get_objects_at(interaction_location, DynamicObject)
-            static_object = self.get_objects_at(interaction_location, StaticObject)[0]
-            if not agent.holding and not dynamic_objects:
-                return
-            elif agent.holding and not dynamic_objects:
-                if static_object.accepts([agent.holding]):
-                    agent.put_down(interaction_location)
-            elif not agent.holding and dynamic_objects:
-                object_to_grab = self.get_highest_order_object(dynamic_objects)
-                if isinstance(static_object, ActionObject):
-                    action_done = static_object.action(dynamic_objects)
-                    if not action_done:
-                        agent.grab(object_to_grab)
-                else:
-                    agent.grab(object_to_grab)
-            elif agent.holding and dynamic_objects:
-                self.attempt_merge(agent, dynamic_objects, interaction_location)
+        if action in INTERACT_ACTIONS:
+            self.resolve_interaction(agent, action)
 
     def resolve_walking_action(self, agent: Agent, action):
         target_location = self.get_target_location(agent, action)
         if self.square_walkable(target_location):
             agent.move_to(target_location)
+
+    def resolve_interaction(self, agent: Agent, action):
+        if action == INTERACT_PRIMARY:
+            self.resolve_primary_interaction(agent)
+        elif action == INTERACT_PICK_UP_SPECIAL:
+            self.resolve_interaction_pick_up_special(agent)
+
+    def resolve_primary_interaction(self, agent: Agent):
+        interaction_location = self.get_target_location(agent, agent.orientation)
+        if any([agent.location == interaction_location for agent in self.agents]):
+            return
+        dynamic_objects = self.get_objects_at(interaction_location, DynamicObject)
+        static_object = self.get_objects_at(interaction_location, StaticObject)[0]
+        if not agent.holding and not dynamic_objects:
+            return
+        elif agent.holding and not dynamic_objects:
+            if static_object.accepts([agent.holding]):
+                agent.put_down(interaction_location)
+        elif not agent.holding and dynamic_objects:
+            object_to_grab = self.get_highest_order_object(dynamic_objects)
+            if isinstance(static_object, ActionObject):
+                action_done = static_object.action(dynamic_objects)
+                if not action_done:
+                    agent.grab(object_to_grab)
+            else:
+                agent.grab(object_to_grab)
+        elif agent.holding and dynamic_objects:
+            self.attempt_merge(agent, dynamic_objects, interaction_location)
+
+    def resolve_interaction_pick_up_special(self, agent: Agent):
+        interaction_location = self.get_target_location(agent, agent.orientation)
+        if any([agent.location == interaction_location for agent in self.agents]):
+            return
+        dynamic_objects = self.get_objects_at(interaction_location, DynamicObject)
+        if not agent.holding and dynamic_objects:
+            highest_stack_obj = self.get_highest_order_object(dynamic_objects)
+            if isinstance(highest_stack_obj, Container):
+                obj = highest_stack_obj.content.pop(0)
+                agent.grab(obj)
+            else:
+                return
+        else:
+            return
 
     def get_highest_order_object(self, objects: List[DynamicObject]):
         order = [Container, Food]

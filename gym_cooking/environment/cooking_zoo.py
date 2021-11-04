@@ -19,7 +19,7 @@ CollisionRepr = namedtuple("CollisionRepr", "time agent_names agent_locations")
 COLORS = ['blue', 'magenta', 'yellow', 'green']
 
 
-def env(level, num_agents, record, max_steps, recipes, obs_spaces):
+def env(level, num_agents, record, max_steps, recipes, obs_spaces=None):
     """
     The env function wraps the environment in 3 wrappers by default. These
     wrappers contain logic that is common to many pettingzoo environments.
@@ -42,9 +42,10 @@ class CookingEnvironment(AECEnv):
 
     metadata = {'render.modes': ['human'], 'name': "cooking_zoo"}
 
-    def __init__(self, level, num_agents, record, max_steps, recipes, obs_spaces=["numeric"], allowed_objects=None):
+    def __init__(self, level, num_agents, record, max_steps, recipes, obs_spaces=None, allowed_objects=None):
         super().__init__()
 
+        obs_spaces = obs_spaces or ["numeric"]
         self.allowed_obs_spaces = ["symbolic", "numeric"]
         assert len(set(obs_spaces + self.allowed_obs_spaces)) == 2, \
             f"Selected invalid obs spaces. Allowed {self.allowed_obs_spaces}"
@@ -76,7 +77,7 @@ class CookingEnvironment(AECEnv):
                                                               shape=(2,)),
                              'goal_vector': gym.spaces.MultiBinary(NUM_GOALS)}
         self.observation_spaces = {agent: gym.spaces.Dict(numeric_obs_space) for agent in self.possible_agents}
-        self.action_spaces = {agent: gym.spaces.Discrete(6) for agent in self.possible_agents}
+        self.action_spaces = {agent: gym.spaces.Discrete(7) for agent in self.possible_agents}
         self.has_reset = True
 
         self.recipe_mapping = dict(zip(self.possible_agents, self.recipe_graphs))
@@ -211,9 +212,6 @@ class CookingEnvironment(AECEnv):
             open_goals[idx] = recipe.goals_completed(NUM_GOALS)
             bonus = recipe.completed() * 0.1
             rewards[idx] = (sum(goals_before) - sum(open_goals[idx]) + bonus) * 10
-            if rewards[idx] < 0:
-                print(f"Goals before: {goals_before}")
-                print(f"Goals after: {open_goals}")
 
         if all((recipe.completed() for recipe in self.recipe_graphs)):
             self.termination_info = "Terminating because all deliveries were completed"

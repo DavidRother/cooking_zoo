@@ -1,4 +1,5 @@
 import pygame
+from gym_cooking.cooking_world.actions import *
 
 
 class Color:
@@ -17,12 +18,13 @@ KeyToTuple = {
 }
 
 KeyToTuple_human1 = {
-    pygame.K_UP: 4,  # 273
-    pygame.K_DOWN: 3,  # 274
-    pygame.K_RIGHT: 2,  # 275
-    pygame.K_LEFT: 1,  # 276
-    pygame.K_SPACE: 0,
-    pygame.K_f: 5
+    pygame.K_UP: WALK_UP,  # 273
+    pygame.K_DOWN: WALK_DOWN,  # 274
+    pygame.K_RIGHT: WALK_RIGHT,  # 275
+    pygame.K_LEFT: WALK_LEFT,  # 276
+    pygame.K_SPACE: NO_OP,
+    pygame.K_f: INTERACT_PRIMARY,
+    pygame.K_g: INTERACT_PICK_UP_SPECIAL
 }
 
 KeyToTuple_human2 = {
