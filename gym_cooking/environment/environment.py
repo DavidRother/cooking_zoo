@@ -9,7 +9,7 @@ class GymCookingEnvironment(gym.Env):
 
     metadata = {'render.modes': ['human'], 'name': "cooking_zoo"}
 
-    def __init__(self, level, record, max_steps, recipe, obs_spaces=["numeric"]):
+    def __init__(self, level, record, max_steps, recipe, obs_spaces=None):
         super().__init__()
         self.num_agents = 1
         self.zoo_env = cooking_zoo.parallel_env(level=level, num_agents=self.num_agents, record=record,
