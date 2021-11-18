@@ -5,8 +5,8 @@ from typing import List
 
 class Floor(StaticObject):
 
-    def __init__(self, location):
-        super().__init__(location, True)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, True)
 
     def accepts(self, dynamic_objects) -> bool:
         return False
@@ -17,8 +17,8 @@ class Floor(StaticObject):
 
 class Counter(StaticObject):
 
-    def __init__(self, location):
-        super().__init__(location, False)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, False)
 
     def accepts(self, dynamic_objects) -> bool:
         return True
@@ -29,8 +29,8 @@ class Counter(StaticObject):
 
 class DeliverSquare(StaticObject):
 
-    def __init__(self, location):
-        super().__init__(location, False)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, False)
 
     def accepts(self, dynamic_objects) -> bool:
         return True
@@ -41,8 +41,8 @@ class DeliverSquare(StaticObject):
 
 class CutBoard(StaticObject, ActionObject):
 
-    def __init__(self, location):
-        super().__init__(location, False)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, False)
 
     def action(self, dynamic_objects: List):
         if len(dynamic_objects) == 1:
@@ -61,8 +61,8 @@ class CutBoard(StaticObject, ActionObject):
 
 class Blender(StaticObject, ProgressingObject):
 
-    def __init__(self, location):
-        super().__init__(location, False)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, False)
         self.content = None
 
     def progress(self, dynamic_objects):
@@ -87,8 +87,8 @@ class Blender(StaticObject, ProgressingObject):
 
 class Plate(Container):
 
-    def __init__(self, location):
-        super().__init__(location)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
 
     def add_content(self, content):
         if not isinstance(content, Food):
@@ -103,8 +103,8 @@ class Plate(Container):
 
 class Onion(ChopFood):
 
-    def __init__(self, location):
-        super().__init__(location)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
 
     def done(self):
         if self.chop_state == ChopFoodStates.CHOPPED:
@@ -121,8 +121,8 @@ class Onion(ChopFood):
 
 class Tomato(ChopFood):
 
-    def __init__(self, location):
-        super().__init__(location)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
 
     def done(self):
         if self.chop_state == ChopFoodStates.CHOPPED:
@@ -139,8 +139,8 @@ class Tomato(ChopFood):
 
 class Lettuce(ChopFood):
 
-    def __init__(self, location):
-        super().__init__(location)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
 
     def done(self):
         if self.chop_state == ChopFoodStates.CHOPPED:
@@ -157,8 +157,8 @@ class Lettuce(ChopFood):
 
 class Carrot(BlenderFood, ChopFood):
 
-    def __init__(self, location):
-        super().__init__(location)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
 
     def done(self):
         if self.chop_state == ChopFoodStates.CHOPPED or self.blend_state == BlenderFoodStates.MASHED:
@@ -175,8 +175,8 @@ class Carrot(BlenderFood, ChopFood):
 
 class Agent(Object):
 
-    def __init__(self, location, color, name):
-        super().__init__(location, False, False)
+    def __init__(self, unique_id, location, color, name):
+        super().__init__(unique_id, location, False, False)
         self.holding = None
         self.color = color
         self.name = name

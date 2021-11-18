@@ -4,7 +4,8 @@ from gym_cooking.cooking_world.constants import *
 
 class Object(ABC):
 
-    def __init__(self, location, movable, walkable):
+    def __init__(self, unique_id, location, movable, walkable):
+        self.unique_id = unique_id
         self.location = location
         self.movable = movable  # you can pick this one up
         self.walkable = walkable  # you can walk on it
@@ -36,8 +37,8 @@ class ProgressingObject(ABC):
 
 class StaticObject(Object):
 
-    def __init__(self, location, walkable):
-        super().__init__(location, False, walkable)
+    def __init__(self, unique_id, location, walkable):
+        super().__init__(unique_id, location, False, walkable)
 
     def move_to(self, new_location):
         raise Exception(f"Can't move static object {self.name()}")
@@ -49,14 +50,14 @@ class StaticObject(Object):
 
 class DynamicObject(Object, ABC):
 
-    def __init__(self, location):
-        super().__init__(location, True, False)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, True, False)
 
 
 class Container(DynamicObject, ABC):
 
-    def __init__(self, location, content=None):
-        super().__init__(location)
+    def __init__(self, unique_id, location, content=None):
+        super().__init__(unique_id, location)
         self.content = content or []
 
     def move_to(self, new_location):
@@ -77,8 +78,8 @@ class Food:
 
 class ChopFood(DynamicObject, Food, ABC):
 
-    def __init__(self, location):
-        super().__init__(location)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
         self.chop_state = ChopFoodStates.FRESH
 
     def chop(self):
@@ -90,8 +91,8 @@ class ChopFood(DynamicObject, Food, ABC):
 
 class BlenderFood(DynamicObject, Food, ABC):
 
-    def __init__(self, location):
-        super().__init__(location)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
         self.current_progress = 10
         self.max_progress = 0
         self.min_progress = 10

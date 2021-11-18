@@ -6,6 +6,7 @@ from pathlib import Path
 import os.path
 import json
 import random
+import itertools
 
 
 class CookingWorld:
@@ -32,6 +33,7 @@ class CookingWorld:
         self.height = 0
         self.world_objects = defaultdict(list)
         self.abstract_index = defaultdict(list)
+        self.id_counter = itertools.count(start=0, step=1)
 
     def add_object(self, obj):
         self.world_objects[type(obj).__name__].append(obj)
@@ -113,8 +115,11 @@ class CookingWorld:
         if not agent.holding and dynamic_objects:
             highest_stack_obj = self.get_highest_order_object(dynamic_objects)
             if isinstance(highest_stack_obj, Container):
-                obj = highest_stack_obj.content.pop(0)
-                agent.grab(obj)
+                try:
+                    obj = highest_stack_obj.content.pop(0)
+                    agent.grab(obj)
+                except IndexError:
+                    pass
             else:
                 return
         else:
@@ -215,6 +220,7 @@ class CookingWorld:
                 highest_order_obj.move_to(agent.location)
 
     def load_new_style_level(self, level_name, num_agents):
+        self.id_counter = itertools.count(start=0, step=1)
         my_path = os.path.realpath(__file__)
         dir_name = os.path.dirname(my_path)
         path = Path(dir_name)
@@ -234,10 +240,10 @@ class CookingWorld:
         for y, line in enumerate(iter(level_layout.splitlines())):
             for x, char in enumerate(line):
                 if char == "-":
-                    counter = Counter(location=(x, y))
+                    counter = Counter(unique_id=next(self.id_counter), location=(x, y))
                     self.add_object(counter)
                 else:
-                    floor = Floor(location=(x, y))
+                    floor = Floor(unique_id=next(self.id_counter), location=(x, y))
                     self.add_object(floor)
         self.width = x + 1
         self.height = y + 1
@@ -260,7 +266,7 @@ class CookingWorld:
                         if len(counter) != 1:
                             raise ValueError("Too many counter in one place detected during initialization")
                         self.delete_object(counter[0])
-                        obj = StringToClass[name](location=(x, y))
+                        obj = StringToClass[name](unique_id=next(self.id_counter), location=(x, y))
                         self.add_object(obj)
                         break
                     else:
@@ -285,7 +291,7 @@ class CookingWorld:
                     dynamic_objects_loc = self.get_objects_at((x, y), DynamicObject)
 
                     if len(static_objects_loc) == 1 and not dynamic_objects_loc:
-                        obj = StringToClass[name](location=(x, y))
+                        obj = StringToClass[name](unique_id=next(self.id_counter), location=(x, y))
                         self.add_object(obj)
                         break
                     else:
@@ -311,7 +317,7 @@ class CookingWorld:
                         raise ValueError(f"Position {x} {y} of agent is out of bounds set by the level layout!")
                     static_objects_loc = self.get_objects_at((x, y), Floor)
                     if not any([(x, y) == agent.location for agent in self.agents]) and static_objects_loc:
-                        agent = Agent((int(x), int(y)), self.COLORS[len(self.agents)],
+                        agent = Agent(next(self.id_counter), (int(x), int(y)), self.COLORS[len(self.agents)],
                                       'agent-' + str(len(self.agents) + 1))
                         self.agents.append(agent)
                         break

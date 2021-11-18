@@ -81,11 +81,12 @@ class Game:
                 self.store["rewards"].append(rewards)
                 self.store["done"].append(dones)
 
-                if all(dones.values()):
-                    self._running = False
-
                 self.last_obs = observations
                 self.step_done = True
+
+                if all(dones.values()):
+                    self._running = False
+                    self.store["observation"].append(self.last_obs)
 
     def ai_only_event(self):
         self.step_done = False
@@ -111,12 +112,12 @@ class Game:
         self.store["info"].append(infos)
         self.store["rewards"].append(rewards)
         self.store["done"].append(dones)
+        self.last_obs = observations
+        self.step_done = True
 
         if all(dones.values()):
             self._running = False
-
-        self.last_obs = observations
-        self.step_done = True
+            self.store["observation"].append(self.last_obs)
 
     def on_execute(self):
         self._running = self.on_init()
