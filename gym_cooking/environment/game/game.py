@@ -44,10 +44,12 @@ class Game:
         self.step_done = False
         if event.type == pygame.QUIT:
             self._running = False
+            self.store["observation"].append(self.last_obs)
         elif event.type == pygame.KEYDOWN:
             # exit the game
             if event.key == pygame.K_ESCAPE:
                 self._running = False
+                self.store["observation"].append(self.last_obs)
             # Save current image
             if event.key == pygame.K_RETURN:
                 image_name = '{}_{}.png'.format(self.env.unwrapped.filename, datetime.now().strftime('%m-%d-%y_%H-%M-%S'))
