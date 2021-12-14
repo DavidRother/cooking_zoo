@@ -44,10 +44,12 @@ class Game:
         self.step_done = False
         if event.type == pygame.QUIT:
             self._running = False
+            self.store["observation"].append(self.last_obs)
         elif event.type == pygame.KEYDOWN:
             # exit the game
             if event.key == pygame.K_ESCAPE:
                 self._running = False
+                self.store["observation"].append(self.last_obs)
             # Save current image
             if event.key == pygame.K_RETURN:
                 image_name = '{}_{}.png'.format(self.env.unwrapped.filename, datetime.now().strftime('%m-%d-%y_%H-%M-%S'))
@@ -81,11 +83,12 @@ class Game:
                 self.store["rewards"].append(rewards)
                 self.store["done"].append(dones)
 
-                if all(dones.values()):
-                    self._running = False
-
                 self.last_obs = observations
                 self.step_done = True
+
+                if all(dones.values()):
+                    self._running = False
+                    self.store["observation"].append(self.last_obs)
 
     def ai_only_event(self):
         self.step_done = False
@@ -111,12 +114,12 @@ class Game:
         self.store["info"].append(infos)
         self.store["rewards"].append(rewards)
         self.store["done"].append(dones)
+        self.last_obs = observations
+        self.step_done = True
 
         if all(dones.values()):
             self._running = False
-
-        self.last_obs = observations
-        self.step_done = True
+            self.store["observation"].append(self.last_obs)
 
     def on_execute(self):
         self._running = self.on_init()
@@ -166,4 +169,3 @@ class Game:
 
     def save_image_obs(self, t):
         self.graphics_pipeline.save_image_obs(t)
-

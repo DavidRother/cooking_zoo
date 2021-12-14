@@ -67,7 +67,7 @@ class CookingEnvironment(AECEnv):
 
         self.termination_info = ""
         self.world.load_level(level=self.level, num_agents=num_agents)
-        self.graph_representation_length = sum([tup[1] for tup in GAME_CLASSES_STATE_LENGTH])
+        self.graph_representation_length = sum([tup[1] for tup in GAME_CLASSES_STATE_LENGTH]) + self.num_agents
 
         numeric_obs_space = {'symbolic_observation': gym.spaces.Box(low=0, high=10,
                                                             shape=(self.world.width, self.world.height,
@@ -91,8 +91,9 @@ class CookingEnvironment(AECEnv):
         self.dones = dict(zip(self.agents, [False for _ in self.agents]))
         self.infos = dict(zip(self.agents, [{} for _ in self.agents]))
         self.accumulated_actions = []
-        self.current_tensor_observation = np.zeros((self.world.width, self.world.height,
-                                                    self.graph_representation_length))
+        self.current_tensor_observation = dict(zip(self.agents, [np.zeros((self.world.width, self.world.height,
+                                                                           self.graph_representation_length))
+                                                                 for _ in self.agents]))
 
     def set_filename(self):
         self.filename = f"{self.level}_agents{self.num_agents}"
@@ -134,7 +135,9 @@ class CookingEnvironment(AECEnv):
         self.world_agent_mapping = dict(zip(self.possible_agents, self.world.agents))
         self.world_agent_to_env_agent_mapping = dict(zip(self.world.agents, self.possible_agents))
 
-        self.current_tensor_observation = self.get_tensor_representation()
+        self.current_tensor_observation = dict(zip(self.agents, [np.zeros((self.world.width, self.world.height,
+                                                                           self.graph_representation_length))
+                                                                 for _ in self.agents]))
         self.rewards = dict(zip(self.agents, [0 for _ in self.agents]))
         self._cumulative_rewards = dict(zip(self.agents, [0 for _ in self.agents]))
         self.dones = dict(zip(self.agents, [False for _ in self.agents]))
@@ -170,7 +173,8 @@ class CookingEnvironment(AECEnv):
 
         # Get an image observation
         # image_obs = self.game.get_image_obs()
-        self.current_tensor_observation = self.get_tensor_representation()
+        for agent in self.agents:
+            self.current_tensor_observation[agent] = self.get_tensor_representation(agent)
 
         info = {"t": self.t, "termination_info": self.termination_info}
 
@@ -183,7 +187,7 @@ class CookingEnvironment(AECEnv):
     def observe(self, agent):
         observation = []
         if "numeric" in self.obs_spaces:
-            num_observation = {'symbolic_observation': self.current_tensor_observation,
+            num_observation = {'numeric_observation': self.current_tensor_observation[agent],
                                'agent_location': np.asarray(self.world_agent_mapping[agent].location, np.int32),
                                'goal_vector': self.recipe_mapping[agent].goals_completed(NUM_GOALS)}
             observation.append(num_observation)
@@ -220,35 +224,49 @@ class CookingEnvironment(AECEnv):
             done = True
         return done, rewards, open_goals
 
-    def get_tensor_representation(self):
-        tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length))
+    def get_tensor_representation(self, agent):
+        tensor = np.zeros(
+            (self.world.width, self.world.height, self.graph_representation_length + len(self.world.agents)))
         objects = defaultdict(list)
         objects.update(self.world.world_objects)
         idx = 0
         for game_class in GAME_CLASSES:
             if game_class is Agent:
                 continue
-            for obj in objects[ClassToString[game_class]]:
-                x, y = obj.location
-                tensor[x, y, idx] += 1
-            idx += 1
-            for stateful_class in STATEFUL_GAME_CLASSES:
-                if issubclass(game_class, stateful_class):
-                    n = 1
-                    for obj in objects[ClassToString[game_class]]:
-                        representation = self.handle_stateful_class_representation(obj, stateful_class)
-                        n = len(representation)
-                        x, y = obj.location
-                        for i in range(n):
-                            tensor[x, y, idx + i] += representation[i]
-                    idx += n
-        for agent in self.world.agents:
-            x, y = agent.location
-            tensor[x, y, idx] = 1
-            tensor[x, y, idx + 1] = 1 if agent.orientation == 1 else 0
-            tensor[x, y, idx + 2] = 1 if agent.orientation == 2 else 0
-            tensor[x, y, idx + 3] = 1 if agent.orientation == 3 else 0
-            tensor[x, y, idx + 4] = 1 if agent.orientation == 4 else 0
+            stateful_class = self.get_stateful_class(game_class)
+            if stateful_class:
+                n = 1
+                for obj in objects[ClassToString[game_class]]:
+                    representation = self.handle_stateful_class_representation(obj, stateful_class)
+                    n = len(representation)
+                    x, y = obj.location
+                    for i in range(n):
+                        tensor[x, y, idx + i] += representation[i]
+                idx += n
+            else:
+                for obj in objects[ClassToString[game_class]]:
+                    x, y = obj.location
+                    tensor[x, y, idx] += 1
+                idx += 1
+
+        ego_agent = self.world_agent_mapping[agent]
+        x, y = ego_agent.location
+        # location map for all agents, location maps for separate agent and four orientation maps shared
+        # between all agents
+        tensor[x, y, idx] = 1
+        tensor[x, y, idx + 1] = 1
+        tensor[x, y, idx + self.num_agents + ego_agent.orientation] = 1
+
+        agent_idx = 1
+        for world_agent in self.world.agents:
+            if agent != world_agent:
+                x, y = world_agent.location
+                # location map for all agents, location maps for separate agent and four orientation maps shared
+                # between all agents
+                tensor[x, y, idx] = 1
+                tensor[x, y, idx + agent_idx + 1] = 1
+                tensor[x, y, idx + self.num_agents + world_agent.orientation] = 1
+                agent_idx += 1
         return tensor
 
     def get_agent_names(self):
@@ -256,6 +274,13 @@ class CookingEnvironment(AECEnv):
 
     def render(self, mode='human'):
         pass
+
+    @staticmethod
+    def get_stateful_class(game_class):
+        for stateful_class in STATEFUL_GAME_CLASSES:
+            if issubclass(game_class, stateful_class):
+                return stateful_class
+        return None
 
     @staticmethod
     def handle_stateful_class_representation(obj, stateful_class):

@@ -15,7 +15,7 @@ max_num_timesteps = 100
 recipes = ["TomatoSalad"]
 
 parallel_env = cooking_zoo.parallel_env(level=level, num_agents=n_agents, record=record,
-                                        max_steps=max_num_timesteps, recipes=recipes)
+                                        max_steps=max_num_timesteps, recipes=recipes, obs_spaces=["numeric"])
 
 game = Game(parallel_env, num_humans, [], max_steps)
 store = game.on_execute()
