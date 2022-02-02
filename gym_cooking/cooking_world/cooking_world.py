@@ -95,6 +95,7 @@ class CookingWorld:
             return
         elif agent.holding and not dynamic_objects:
             if static_object.accepts([agent.holding]):
+                static_object.add_content(agent.holding)
                 agent.put_down(interaction_location)
         elif not agent.holding and dynamic_objects:
             object_to_grab = self.get_highest_order_object(dynamic_objects)
@@ -293,6 +294,7 @@ class CookingWorld:
                     if len(static_objects_loc) == 1 and not dynamic_objects_loc:
                         obj = StringToClass[name](unique_id=next(self.id_counter), location=(x, y))
                         self.add_object(obj)
+                        static_objects_loc[0].add_content(obj)
                         break
                     else:
                         time_out += 1

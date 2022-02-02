@@ -31,7 +31,28 @@ class ActionObject(ABC):
 class ProgressingObject(ABC):
 
     @abstractmethod
-    def progress(self, dynamic_objects):
+    def progress(self):
+        pass
+
+
+class ContentObject:
+
+    def __init__(self):
+        self.content = []
+
+    @abstractmethod
+    def add_content(self, content):
+        pass
+
+    @abstractmethod
+    def move_to(self, new_location):
+        pass
+
+
+class Food:
+
+    @abstractmethod
+    def done(self):
         pass
 
 
@@ -54,7 +75,7 @@ class DynamicObject(Object, ABC):
         super().__init__(unique_id, location, True, False)
 
 
-class Container(DynamicObject, ABC):
+class Container(DynamicObject, ContentObject, ABC):
 
     def __init__(self, unique_id, location, content=None):
         super().__init__(unique_id, location)
@@ -67,13 +88,6 @@ class Container(DynamicObject, ABC):
 
     def add_content(self, content):
         self.content.append(content)
-
-
-class Food:
-
-    @abstractmethod
-    def done(self):
-        pass
 
 
 class ChopFood(DynamicObject, Food, ABC):
