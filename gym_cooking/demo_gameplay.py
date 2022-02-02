@@ -8,7 +8,7 @@ num_humans = 1
 max_steps = 100
 render = False
 
-level = 'open_room_tomato_salad'
+level = 'open_room_blender'
 seed = 1
 record = False
 max_num_timesteps = 100
