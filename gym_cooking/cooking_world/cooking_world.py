@@ -89,6 +89,8 @@ class CookingWorld:
             self.resolve_primary_interaction(agent)
         elif action == INTERACT_PICK_UP_SPECIAL:
             self.resolve_interaction_pick_up_special(agent)
+        elif action == EXECUTE_ACTION:
+            self.resolve_execute_action(agent)
 
     def resolve_primary_interaction(self, agent: Agent):
         interaction_location = self.get_target_location(agent, agent.orientation)
@@ -105,12 +107,7 @@ class CookingWorld:
                 agent.put_down(interaction_location)
         elif not agent.holding and dynamic_objects:
             object_to_grab = self.get_highest_order_object(dynamic_objects)
-            if isinstance(static_object, ActionObject):
-                action_done = static_object.action(dynamic_objects)
-                if not action_done:
-                    agent.grab(object_to_grab)
-            else:
-                agent.grab(object_to_grab)
+            agent.grab(object_to_grab)
             agent.interacts_with = [object_to_grab, static_object]
         elif agent.holding and dynamic_objects:
             agent.interacts_with.append(static_object)
@@ -133,6 +130,16 @@ class CookingWorld:
                 return
         else:
             return
+
+    def resolve_execute_action(self, agent: Agent):
+        interaction_location = self.get_target_location(agent, agent.orientation)
+        if any([agent.location == interaction_location for agent in self.agents]):
+            return
+        dynamic_objects = self.get_objects_at(interaction_location, DynamicObject)
+        static_object = self.get_objects_at(interaction_location, StaticObject)[0]
+        if isinstance(static_object, ActionObject):
+            static_object.action()
+            agent.interacts_with = [static_object] + dynamic_objects
 
     def get_highest_order_object(self, objects: List[DynamicObject]):
         order = [Container, Food]

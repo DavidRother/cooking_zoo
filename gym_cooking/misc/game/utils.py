@@ -24,7 +24,8 @@ KeyToTuple_human1 = {
     pygame.K_LEFT: WALK_LEFT,  # 276
     pygame.K_SPACE: NO_OP,
     pygame.K_f: INTERACT_PRIMARY,
-    pygame.K_g: INTERACT_PICK_UP_SPECIAL
+    pygame.K_g: INTERACT_PICK_UP_SPECIAL,
+    pygame.K_e: EXECUTE_ACTION
 }
 
 KeyToTuple_human2 = {

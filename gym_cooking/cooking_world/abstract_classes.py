@@ -28,7 +28,7 @@ class ActionObject(ABC):
         super(ActionObject, self).__init__()
 
     @abstractmethod
-    def action(self, objects):
+    def action(self):
         pass
 
 
