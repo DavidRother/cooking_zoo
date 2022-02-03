@@ -188,6 +188,7 @@ class Agent(Object):
         self.color = color
         self.name = name
         self.orientation = 1
+        self.interacts_with = []
 
     def grab(self, obj: DynamicObject):
         self.holding = obj
