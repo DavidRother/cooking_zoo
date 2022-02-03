@@ -1,6 +1,7 @@
 import os
 from gym_cooking.environment.game import graphic_pipeline
 from gym_cooking.misc.game.utils import *
+from gym_cooking.cooking_world.actions import *
 
 import pygame
 
@@ -15,9 +16,12 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 
 class Game:
 
+    action_scheme_to_human_key_map = {ActionScheme1: KeyToTuple_human1, ActionScheme2: KeyToTuple_Scheme2_human1}
+
     def __init__(self, env, num_humans, ai_policies, max_steps=100, render=False):
         self._running = True
         self.env = env
+        self.key_to_action = self.action_scheme_to_human_key_map[env.unwrapped.world.action_scheme]
         self.play = bool(num_humans)
         self.render = render or self.play
         # Visual parameters
@@ -58,9 +62,9 @@ class Game:
                 return
 
             # Control current human agent
-            if event.key in KeyToTuple_human1 and self.num_humans > 0:
+            if event.key in self.key_to_action and self.num_humans > 0:
                 store_action_dict = {}
-                action = KeyToTuple_human1[event.key]
+                action = self.key_to_action[event.key]
                 self.env.unwrapped.world.agents[0].action = action
                 store_action_dict[self.env.unwrapped.world.agents[0]] = action
                 self.store["observation"].append(self.last_obs)

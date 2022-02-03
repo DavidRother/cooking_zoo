@@ -9,11 +9,12 @@ class GymCookingEnvironment(gym.Env):
 
     metadata = {'render.modes': ['human'], 'name': "cooking_zoo"}
 
-    def __init__(self, level, record, max_steps, recipe, obs_spaces=None):
+    def __init__(self, level, record, max_steps, recipe, obs_spaces=None, action_scheme="scheme1"):
         super().__init__()
         self.num_agents = 1
         self.zoo_env = cooking_zoo.parallel_env(level=level, num_agents=self.num_agents, record=record,
-                                                max_steps=max_steps, recipes=[recipe], obs_spaces=obs_spaces)
+                                                max_steps=max_steps, recipes=[recipe], obs_spaces=obs_spaces,
+                                                action_scheme=action_scheme)
         self.observation_space = self.zoo_env.observation_spaces["player_0"]
         self.action_space = self.zoo_env.action_spaces["player_0"]
 
