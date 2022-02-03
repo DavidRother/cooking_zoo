@@ -42,6 +42,12 @@ class ToggleObject(ABC):
         self.toggle = not self.toggle
 
 
+class TemperatureObject(ABC):
+
+    def __init__(self):
+        super(TemperatureObject).__init__()
+
+
 class ProgressingObject(ABC):
 
     def __init__(self):
