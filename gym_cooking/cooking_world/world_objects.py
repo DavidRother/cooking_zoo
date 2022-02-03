@@ -54,10 +54,10 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
 
-    def action(self, dynamic_objects: List):
-        if len(dynamic_objects) == 1:
+    def action(self):
+        if len(self.content) == 1:
             try:
-                return dynamic_objects[0].chop()
+                return self.content[0].chop()
             except AttributeError:
                 return False
         return False

@@ -77,7 +77,7 @@ class CookingEnvironment(AECEnv):
                                                               shape=(2,)),
                              'goal_vector': gym.spaces.MultiBinary(NUM_GOALS)}
         self.observation_spaces = {agent: gym.spaces.Dict(numeric_obs_space) for agent in self.possible_agents}
-        self.action_spaces = {agent: gym.spaces.Discrete(7) for agent in self.possible_agents}
+        self.action_spaces = {agent: gym.spaces.Discrete(8) for agent in self.possible_agents}
         self.has_reset = True
 
         self.recipe_mapping = dict(zip(self.possible_agents, self.recipe_graphs))
