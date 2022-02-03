@@ -32,6 +32,16 @@ class ActionObject(ABC):
         pass
 
 
+class ToggleObject(ABC):
+
+    def __init__(self, toggle=False):
+        super(ToggleObject, self).__init__()
+        self.toggle = toggle
+
+    def switch_toggle(self):
+        self.toggle = not self.toggle
+
+
 class ProgressingObject(ABC):
 
     def __init__(self):

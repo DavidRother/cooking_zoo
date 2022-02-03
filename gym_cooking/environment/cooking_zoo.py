@@ -3,6 +3,7 @@ import copy
 
 from gym_cooking.cooking_world.cooking_world import CookingWorld
 from gym_cooking.cooking_world.world_objects import *
+from gym_cooking.cooking_world.actions import *
 from gym_cooking.cooking_book.recipe_drawer import RECIPES, NUM_GOALS
 
 import numpy as np
@@ -19,7 +20,7 @@ CollisionRepr = namedtuple("CollisionRepr", "time agent_names agent_locations")
 COLORS = ['blue', 'magenta', 'yellow', 'green']
 
 
-def env(level, num_agents, record, max_steps, recipes, obs_spaces=None):
+def env(level, num_agents, record, max_steps, recipes, obs_spaces=None, action_scheme="scheme1"):
     """
     The env function wraps the environment in 3 wrappers by default. These
     wrappers contain logic that is common to many pettingzoo environments.
@@ -27,7 +28,8 @@ def env(level, num_agents, record, max_steps, recipes, obs_spaces=None):
     to provide sane error messages. You can find full documentation for these methods
     elsewhere in the developer documentation.
     """
-    env_init = CookingEnvironment(level, num_agents, record, max_steps, recipes, obs_spaces)
+    env_init = CookingEnvironment(level, num_agents, record, max_steps, recipes, obs_spaces,
+                                  action_scheme=action_scheme)
     env_init = wrappers.CaptureStdoutWrapper(env_init)
     env_init = wrappers.AssertOutOfBoundsWrapper(env_init)
     env_init = wrappers.OrderEnforcingWrapper(env_init)
@@ -42,11 +44,16 @@ class CookingEnvironment(AECEnv):
 
     metadata = {'render.modes': ['human'], 'name': "cooking_zoo"}
 
-    def __init__(self, level, num_agents, record, max_steps, recipes, obs_spaces=None, allowed_objects=None):
+    action_scheme_map = {"scheme1": ActionScheme1, "scheme2": ActionScheme2}
+
+    def __init__(self, level, num_agents, record, max_steps, recipes, obs_spaces=None, allowed_objects=None,
+                 action_scheme="scheme1"):
         super().__init__()
 
         obs_spaces = obs_spaces or ["numeric"]
         self.allowed_obs_spaces = ["symbolic", "numeric"]
+        self.action_scheme = action_scheme
+        self.action_scheme_class = self.action_scheme_map[self.action_scheme]
         assert len(set(obs_spaces + self.allowed_obs_spaces)) == 2, \
             f"Selected invalid obs spaces. Allowed {self.allowed_obs_spaces}"
         assert len(obs_spaces) != 0, f"Please select an observation space from: {self.allowed_obs_spaces}"
@@ -61,7 +68,7 @@ class CookingEnvironment(AECEnv):
         self.t = 0
         self.filename = ""
         self.set_filename()
-        self.world = CookingWorld()
+        self.world = CookingWorld(self.action_scheme_class)
         self.recipes = recipes
         self.game = None
         self.recipe_graphs = [RECIPES[recipe]() for recipe in recipes]
@@ -71,13 +78,15 @@ class CookingEnvironment(AECEnv):
         self.graph_representation_length = sum([tup[1] for tup in GAME_CLASSES_STATE_LENGTH])
 
         numeric_obs_space = {'symbolic_observation': gym.spaces.Box(low=0, high=10,
-                                                            shape=(self.world.width, self.world.height,
-                                                                   self.graph_representation_length), dtype=np.int32),
+                                                                    shape=(self.world.width, self.world.height,
+                                                                           self.graph_representation_length),
+                                                                    dtype=np.int32),
                              'agent_location': gym.spaces.Box(low=0, high=max(self.world.width, self.world.height),
                                                               shape=(2,)),
                              'goal_vector': gym.spaces.MultiBinary(NUM_GOALS)}
         self.observation_spaces = {agent: gym.spaces.Dict(numeric_obs_space) for agent in self.possible_agents}
-        self.action_spaces = {agent: gym.spaces.Discrete(8) for agent in self.possible_agents}
+        self.action_spaces = {agent: gym.spaces.Discrete(len(self.action_scheme_class.ACTIONS))
+                              for agent in self.possible_agents}
         self.has_reset = True
 
         self.recipe_mapping = dict(zip(self.possible_agents, self.recipe_graphs))
@@ -102,7 +111,7 @@ class CookingEnvironment(AECEnv):
         pass
 
     def reset(self):
-        self.world = CookingWorld()
+        self.world = CookingWorld(self.action_scheme_class)
         self.t = 0
 
         # For tracking data during an episode.

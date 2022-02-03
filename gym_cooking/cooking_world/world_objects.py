@@ -72,14 +72,14 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
         return "cutboard"
 
 
-class Blender(StaticObject, ProgressingObject, ContentObject):
+class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
 
     def progress(self):
         assert len(self.content) < 2, "Too many Dynamic Objects placed into the Blender"
-        if self.content:
+        if self.content and self.toggle:
             self.content[0].blend()
 
     def accepts(self, dynamic_objects) -> bool:
@@ -88,8 +88,11 @@ class Blender(StaticObject, ProgressingObject, ContentObject):
     def add_content(self, content):
         self.content.append(content)
 
+    def action(self):
+        self.switch_toggle()
+
     def file_name(self) -> str:
-        return "blender3"
+        return "blender_on" if self.toggle else "blender3"
 
 
 class Plate(Container):
