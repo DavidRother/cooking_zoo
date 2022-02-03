@@ -3,7 +3,7 @@ from gym_cooking.cooking_world.constants import *
 from typing import List
 
 
-class Floor(StaticObject):
+class Floor(StaticObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, True)
@@ -11,23 +11,30 @@ class Floor(StaticObject):
     def accepts(self, dynamic_objects) -> bool:
         return False
 
+    def add_content(self, content):
+        assert isinstance(content, Agent), f"Floors can only hold Agents as content! not {content}"
+        self.content.append(content)
+
     def file_name(self) -> str:
         return "floor"
 
 
-class Counter(StaticObject):
+class Counter(StaticObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
 
     def accepts(self, dynamic_objects) -> bool:
         return True
+
+    def add_content(self, content):
+        self.content.append(content)
 
     def file_name(self) -> str:
         return "counter"
 
 
-class DeliverSquare(StaticObject):
+class DeliverSquare(StaticObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
@@ -35,11 +42,14 @@ class DeliverSquare(StaticObject):
     def accepts(self, dynamic_objects) -> bool:
         return True
 
+    def add_content(self, content):
+        self.content.append(content)
+
     def file_name(self) -> str:
         return "delivery"
 
 
-class CutBoard(StaticObject, ActionObject):
+class CutBoard(StaticObject, ActionObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
@@ -55,31 +65,28 @@ class CutBoard(StaticObject, ActionObject):
     def accepts(self, dynamic_objects) -> bool:
         return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], ChopFood)
 
+    def add_content(self, content):
+        self.content.append(content)
+
     def file_name(self) -> str:
         return "cutboard"
 
 
-class Blender(StaticObject, ProgressingObject):
+class Blender(StaticObject, ProgressingObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
-        self.content = None
 
-    def progress(self, dynamic_objects):
-        assert len(dynamic_objects) < 2, "Too many Dynamic Objects placed into the Blender"
-        if not dynamic_objects:
-            self.content = None
-            return
-        elif not self.content:
-            self.content = dynamic_objects
-        elif self.content:
-            if self.content[0] == dynamic_objects[0]:
-                self.content[0].blend()
-            else:
-                self.content = dynamic_objects
+    def progress(self):
+        assert len(self.content) < 2, "Too many Dynamic Objects placed into the Blender"
+        if self.content:
+            self.content[0].blend()
 
     def accepts(self, dynamic_objects) -> bool:
         return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], BlenderFood)
+
+    def add_content(self, content):
+        self.content.append(content)
 
     def file_name(self) -> str:
         return "blender3"
@@ -182,6 +189,7 @@ class Agent(Object):
         self.color = color
         self.name = name
         self.orientation = 1
+        self.interacts_with = []
 
     def grab(self, obj: DynamicObject):
         self.holding = obj

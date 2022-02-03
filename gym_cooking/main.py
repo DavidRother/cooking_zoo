@@ -7,7 +7,7 @@ max_steps = 100
 recipe = "MashedCarrot"
 
 env = gym.envs.make("gym_cooking:cookingEnv-v1", level=level, record=record, max_steps=max_steps, recipe=recipe,
-                    obs_spaces=["symbolic", "numeric"])
+                    obs_spaces=["numeric"])
 
 obs = env.reset()
 

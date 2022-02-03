@@ -55,11 +55,11 @@ class CookingWorld:
 
     def progress_world(self):
         for obj in self.abstract_index[ProgressingObject]:
-            dynamic_objects = self.get_objects_at(obj.location, DynamicObject)
-            obj.progress(dynamic_objects)
+            obj.progress()
 
     def perform_agent_actions(self, agents, actions):
         for agent, action in zip(agents, actions):
+            agent.interacts_with = []
             if action in WALK_ACTIONS:
                 agent.change_orientation(action)
         cleaned_actions = self.check_inbounds(agents, actions)
@@ -77,7 +77,12 @@ class CookingWorld:
     def resolve_walking_action(self, agent: Agent, action):
         target_location = self.get_target_location(agent, action)
         if self.square_walkable(target_location):
+            origin = self.get_objects_at(agent.location, StaticObject)
+            target = self.get_objects_at(target_location, StaticObject)
             agent.move_to(target_location)
+            agent.interacts_with = [target[0]]
+            origin[0].content = []
+            target[0].add_content(agent)
 
     def resolve_interaction(self, agent: Agent, action):
         if action == INTERACT_PRIMARY:
@@ -95,6 +100,8 @@ class CookingWorld:
             return
         elif agent.holding and not dynamic_objects:
             if static_object.accepts([agent.holding]):
+                agent.interacts_with = [agent.holding, static_object]
+                static_object.add_content(agent.holding)
                 agent.put_down(interaction_location)
         elif not agent.holding and dynamic_objects:
             object_to_grab = self.get_highest_order_object(dynamic_objects)
@@ -104,7 +111,9 @@ class CookingWorld:
                     agent.grab(object_to_grab)
             else:
                 agent.grab(object_to_grab)
+            agent.interacts_with = [object_to_grab, static_object]
         elif agent.holding and dynamic_objects:
+            agent.interacts_with.append(static_object)
             self.attempt_merge(agent, dynamic_objects, interaction_location)
 
     def resolve_interaction_pick_up_special(self, agent: Agent):
@@ -214,10 +223,12 @@ class CookingWorld:
             if agent.holding.done():
                 highest_order_obj.add_content(agent.holding)
                 agent.put_down(target_location)
+                agent.interacts_with.append(highest_order_obj)
         if isinstance(highest_order_obj, Food) and isinstance(agent.holding, Container):
             if highest_order_obj.done():
                 agent.holding.add_content(highest_order_obj)
                 highest_order_obj.move_to(agent.location)
+                agent.interacts_with.append(agent.holding)
 
     def load_new_style_level(self, level_name, num_agents):
         self.id_counter = itertools.count(start=0, step=1)
@@ -293,6 +304,7 @@ class CookingWorld:
                     if len(static_objects_loc) == 1 and not dynamic_objects_loc:
                         obj = StringToClass[name](unique_id=next(self.id_counter), location=(x, y))
                         self.add_object(obj)
+                        static_objects_loc[0].add_content(obj)
                         break
                     else:
                         time_out += 1
@@ -320,6 +332,7 @@ class CookingWorld:
                         agent = Agent(next(self.id_counter), (int(x), int(y)), self.COLORS[len(self.agents)],
                                       'agent-' + str(len(self.agents) + 1))
                         self.agents.append(agent)
+                        static_objects_loc[0].add_content(agent)
                         break
                     else:
                         time_out += 1
