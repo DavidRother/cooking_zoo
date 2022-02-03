@@ -108,6 +108,7 @@ class CookingWorld:
         elif not agent.holding and dynamic_objects:
             object_to_grab = self.get_highest_order_object(dynamic_objects)
             agent.grab(object_to_grab)
+            static_object.content.remove(object_to_grab)
             agent.interacts_with = [object_to_grab, static_object]
         elif agent.holding and dynamic_objects:
             agent.interacts_with.append(static_object)
