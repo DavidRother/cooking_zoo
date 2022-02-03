@@ -3,13 +3,17 @@ from gym_cooking.cooking_world.constants import *
 from typing import List
 
 
-class Floor(StaticObject):
+class Floor(StaticObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, True)
 
     def accepts(self, dynamic_objects) -> bool:
         return False
+
+    def add_content(self, content):
+        assert isinstance(content, Agent), f"Floors can only hold Agents as content! not {content}"
+        self.content.append(content)
 
     def file_name(self) -> str:
         return "floor"

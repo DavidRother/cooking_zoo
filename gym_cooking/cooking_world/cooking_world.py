@@ -55,8 +55,7 @@ class CookingWorld:
 
     def progress_world(self):
         for obj in self.abstract_index[ProgressingObject]:
-            dynamic_objects = self.get_objects_at(obj.location, DynamicObject)
-            obj.progress(dynamic_objects)
+            obj.progress()
 
     def perform_agent_actions(self, agents, actions):
         for agent, action in zip(agents, actions):
@@ -77,7 +76,11 @@ class CookingWorld:
     def resolve_walking_action(self, agent: Agent, action):
         target_location = self.get_target_location(agent, action)
         if self.square_walkable(target_location):
+            origin = self.get_objects_at(agent.location, StaticObject)
+            target = self.get_objects_at(target_location, StaticObject)
             agent.move_to(target_location)
+            origin[0].content = []
+            target[0].add_content(agent)
 
     def resolve_interaction(self, agent: Agent, action):
         if action == INTERACT_PRIMARY:
@@ -322,6 +325,7 @@ class CookingWorld:
                         agent = Agent(next(self.id_counter), (int(x), int(y)), self.COLORS[len(self.agents)],
                                       'agent-' + str(len(self.agents) + 1))
                         self.agents.append(agent)
+                        static_objects_loc[0].add_content(agent)
                         break
                     else:
                         time_out += 1
