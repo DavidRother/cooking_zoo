@@ -5,6 +5,7 @@ from gym_cooking.cooking_world.constants import *
 class Object(ABC):
 
     def __init__(self, unique_id, location, movable, walkable):
+        super(Object, self).__init__()
         self.unique_id = unique_id
         self.location = location
         self.movable = movable  # you can pick this one up
@@ -23,12 +24,18 @@ class Object(ABC):
 
 class ActionObject(ABC):
 
+    def __init__(self):
+        super(ActionObject, self).__init__()
+
     @abstractmethod
     def action(self, objects):
         pass
 
 
 class ProgressingObject(ABC):
+
+    def __init__(self):
+        super(ProgressingObject, self).__init__()
 
     @abstractmethod
     def progress(self):
@@ -38,6 +45,7 @@ class ProgressingObject(ABC):
 class ContentObject:
 
     def __init__(self):
+        super(ContentObject, self).__init__()
         self.content = []
 
     @abstractmethod
@@ -50,6 +58,9 @@ class ContentObject:
 
 
 class Food:
+
+    def __init__(self):
+        super(Food, self).__init__()
 
     @abstractmethod
     def done(self):

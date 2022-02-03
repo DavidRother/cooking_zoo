@@ -19,7 +19,6 @@ class Counter(StaticObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
-        self.content = []
 
     def accepts(self, dynamic_objects) -> bool:
         return True
@@ -35,7 +34,6 @@ class DeliverSquare(StaticObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
-        self.content = []
 
     def accepts(self, dynamic_objects) -> bool:
         return True
@@ -51,7 +49,6 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
-        self.content = []
 
     def action(self, dynamic_objects: List):
         if len(dynamic_objects) == 1:
@@ -75,7 +72,6 @@ class Blender(StaticObject, ProgressingObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
-        self.content = []
 
     def progress(self):
         assert len(self.content) < 2, "Too many Dynamic Objects placed into the Blender"
