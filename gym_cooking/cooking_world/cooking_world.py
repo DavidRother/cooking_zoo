@@ -126,16 +126,15 @@ class CookingWorld:
             return
         elif agent.holding and not dynamic_objects:
             if static_object.accepts([agent.holding]):
-                agent.interacts_with = [agent.holding, static_object]
+                agent.interacts_with = [static_object]
                 static_object.add_content(agent.holding)
                 agent.put_down(interaction_location)
         elif not agent.holding and dynamic_objects:
             object_to_grab = self.get_highest_order_object(dynamic_objects)
             agent.grab(object_to_grab)
             static_object.content.remove(object_to_grab)
-            agent.interacts_with = [object_to_grab, static_object]
+            agent.interacts_with = [object_to_grab]
         elif agent.holding and dynamic_objects:
-            agent.interacts_with.append(static_object)
             self.attempt_merge(agent, dynamic_objects, interaction_location)
 
     def resolve_interaction_pick_up_special(self, agent: Agent):
@@ -160,11 +159,11 @@ class CookingWorld:
         interaction_location = self.get_target_location(agent, agent.orientation)
         if any([agent.location == interaction_location for agent in self.agents]):
             return
-        dynamic_objects = self.get_objects_at(interaction_location, DynamicObject)
         static_object = self.get_objects_at(interaction_location, StaticObject)[0]
         if isinstance(static_object, ActionObject):
-            static_object.action()
-            agent.interacts_with = [static_object] + dynamic_objects
+            action_executed = static_object.action()
+            if action_executed:
+                agent.interacts_with = [static_object]
 
     def get_highest_order_object(self, objects: List[DynamicObject]):
         order = [Container, Food]
@@ -274,7 +273,7 @@ class CookingWorld:
             if highest_order_obj.done():
                 agent.holding.add_content(highest_order_obj)
                 highest_order_obj.move_to(agent.location)
-                agent.interacts_with.append(agent.holding)
+                agent.interacts_with.append(highest_order_obj)
 
     def load_new_style_level(self, level_name, num_agents):
         self.id_counter = itertools.count(start=0, step=1)
