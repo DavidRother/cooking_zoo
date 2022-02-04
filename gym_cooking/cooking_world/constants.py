@@ -17,6 +17,14 @@ TOMATO_INIT_STATE = ChopFoodStates.FRESH
 LETTUCE_INIT_STATE = ChopFoodStates.FRESH
 
 
+class Temperature(Enum):
+    FREEZING = -10
+    COLD = 0
+    MILD = 21
+    BOILING = 100
+    HOT = 200
+
+
 
 
 
