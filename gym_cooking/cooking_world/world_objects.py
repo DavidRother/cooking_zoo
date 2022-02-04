@@ -11,6 +11,9 @@ class Floor(StaticObject, ContentObject):
     def accepts(self, dynamic_objects) -> bool:
         return False
 
+    def releases(self) -> bool:
+        return True
+
     def add_content(self, content):
         assert isinstance(content, Agent), f"Floors can only hold Agents as content! not {content}"
         self.content.append(content)
@@ -25,6 +28,9 @@ class Counter(StaticObject, ContentObject):
         super().__init__(unique_id, location, False)
 
     def accepts(self, dynamic_objects) -> bool:
+        return True
+
+    def releases(self) -> bool:
         return True
 
     def add_content(self, content):
@@ -45,6 +51,9 @@ class DeliverSquare(StaticObject, ContentObject):
     def add_content(self, content):
         self.content.append(content)
 
+    def releases(self) -> bool:
+        return True
+
     def file_name(self) -> str:
         return "delivery"
 
@@ -54,7 +63,7 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
 
-    def action(self):
+    def action(self) -> bool:
         if len(self.content) == 1:
             try:
                 return self.content[0].chop()
@@ -64,6 +73,9 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
 
     def accepts(self, dynamic_objects) -> bool:
         return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], ChopFood)
+
+    def releases(self) -> bool:
+        return True
 
     def add_content(self, content):
         self.content.append(content)
@@ -81,15 +93,21 @@ class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
         assert len(self.content) < 2, "Too many Dynamic Objects placed into the Blender"
         if self.content and self.toggle:
             self.content[0].blend()
+            if self.content[0].done():
+                self.switch_toggle()
 
     def accepts(self, dynamic_objects) -> bool:
-        return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], BlenderFood)
+        return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], BlenderFood) and (not self.toggle)
+
+    def releases(self) -> bool:
+        return not self.toggle
 
     def add_content(self, content):
         self.content.append(content)
 
-    def action(self):
+    def action(self) -> bool:
         self.switch_toggle()
+        return True
 
     def file_name(self) -> str:
         return "blender_on" if self.toggle else "blender3"

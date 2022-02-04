@@ -28,7 +28,7 @@ class ActionObject(ABC):
         super(ActionObject, self).__init__()
 
     @abstractmethod
-    def action(self):
+    def action(self) -> bool:
         pass
 
 
@@ -83,7 +83,7 @@ class Food:
         pass
 
 
-class StaticObject(Object):
+class StaticObject(Object, ABC):
 
     def __init__(self, unique_id, location, walkable):
         super().__init__(unique_id, location, False, walkable)
@@ -93,6 +93,10 @@ class StaticObject(Object):
 
     @abstractmethod
     def accepts(self, dynamic_objects) -> bool:
+        pass
+
+    @abstractmethod
+    def releases(self) -> bool:
         pass
 
 
