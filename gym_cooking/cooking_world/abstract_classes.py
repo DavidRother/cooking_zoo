@@ -72,14 +72,6 @@ class ContentObject:
     def move_to(self, new_location):
         pass
 
-    @abstractmethod
-    def accepts(self, dynamic_objects) -> bool:
-        pass
-
-    @abstractmethod
-    def releases(self) -> bool:
-        pass
-
 
 class Food:
 
@@ -98,6 +90,14 @@ class StaticObject(Object, ABC):
 
     def move_to(self, new_location):
         raise Exception(f"Can't move static object {self.name()}")
+
+    @abstractmethod
+    def accepts(self, dynamic_objects) -> bool:
+        pass
+
+    @abstractmethod
+    def releases(self) -> bool:
+        pass
 
 
 class DynamicObject(Object, ABC):

@@ -130,10 +130,11 @@ class CookingWorld:
                 static_object.add_content(agent.holding)
                 agent.put_down(interaction_location)
         elif not agent.holding and dynamic_objects:
-            object_to_grab = self.get_highest_order_object(dynamic_objects)
-            agent.grab(object_to_grab)
-            static_object.content.remove(object_to_grab)
-            agent.interacts_with = [object_to_grab]
+            if static_object.releases():
+                object_to_grab = self.get_highest_order_object(dynamic_objects)
+                agent.grab(object_to_grab)
+                static_object.content.remove(object_to_grab)
+                agent.interacts_with = [object_to_grab]
         elif agent.holding and dynamic_objects:
             self.attempt_merge(agent, dynamic_objects, interaction_location)
 

@@ -93,6 +93,8 @@ class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
         assert len(self.content) < 2, "Too many Dynamic Objects placed into the Blender"
         if self.content and self.toggle:
             self.content[0].blend()
+            if self.content[0].done():
+                self.switch_toggle()
 
     def accepts(self, dynamic_objects) -> bool:
         return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], BlenderFood) and (not self.toggle)
@@ -122,15 +124,6 @@ class Plate(Container):
         if not content.done():
             raise Exception(f"Can't add food in unprepared state.")
         self.content.append(content)
-
-    def accepts(self, dynamic_objects) -> bool:
-        try:
-            return isinstance(dynamic_objects, Food) and dynamic_objects.done()
-        except:
-            return False
-
-    def releases(self) -> bool:
-        return True
 
     def file_name(self) -> str:
         return "Plate"
