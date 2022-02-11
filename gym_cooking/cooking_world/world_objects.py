@@ -113,6 +113,43 @@ class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
         return "blender_on" if self.toggle else "blender3"
 
 
+class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, False)
+
+        self.max_content = 2
+
+    def progress(self):
+        assert len(self.content) < self.max_content + 1, "Too many Dynamic Objects placed into the Blender"
+        if self.content and self.toggle:
+            for con in self.content:
+                con.toast()
+
+            if all([cont.toast_state == ToasterFoodStates.TOASTED for cont in self.content]):
+                self.switch_toggle()
+
+    def accepts(self, dynamic_objects) -> bool:
+        return len(dynamic_objects) <= self.max_content and \
+               all([isinstance(obj, ToasterFood) for obj in dynamic_objects]) and \
+               all([obj.toast_state == ToasterFoodStates.READY for obj in dynamic_objects]) \
+               and (not self.toggle)
+
+    def releases(self) -> bool:
+        return not self.toggle
+
+    def add_content(self, content):
+        if len(self.content) < self.max_content:
+            self.content.append(content)
+
+
+    def action(self) -> bool:
+        self.switch_toggle()
+        return True
+
+    def file_name(self) -> str:
+        return "toaster_on" if self.toggle else "toaster_off"
+
 class Plate(Container):
 
     def __init__(self, unique_id, location):
@@ -201,6 +238,30 @@ class Carrot(BlenderFood, ChopFood):
         else:
             return "FreshCarrot"
 
+class Bread(ToasterFood, ChopFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+        self.current_progress = 1
+
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED or self.toast_state == ToasterFoodStates.TOASTED:
+            # if self.chop_state == ChopFoodStates.CHOPPED and self.toast_state == ToasterFoodStates.FRESH:
+            #     self.toast_state == ToasterFoodStates.READY
+            return True
+        else:
+            return False
+
+    def file_name(self) -> str:
+        if self.done():
+            if self.chop_state == ChopFoodStates.CHOPPED and self.toast_state == ToasterFoodStates.FRESH:
+                return "ChoppedFreshBread"
+            elif self.chop_state == ChopFoodStates.CHOPPED and self.toast_state == ToasterFoodStates.TOASTED:
+                return "ChoppedToastedBread"
+            else:
+                return "ChoppedFreshBread"
+        else:
+            return "Bread"
 
 class Agent(Object):
 
@@ -244,7 +305,9 @@ StringToClass = {
     "Plate": Plate,
     "Agent": Agent,
     "Blender": Blender,
-    "Carrot": Carrot
+    "Carrot": Carrot,
+    "Toaster": Toaster,
+    "Bread": Bread
 }
 
 ClassToString = {
@@ -258,11 +321,13 @@ ClassToString = {
     Plate: "Plate",
     Agent: "Agent",
     Blender: "Blender",
-    Carrot: "Carrot"
+    Carrot: "Carrot",
+    Toaster: "Toaster",
+    Bread: "Bread"
 }
 
-GAME_CLASSES = [Floor, Counter, CutBoard, DeliverSquare, Tomato, Lettuce, Onion, Plate, Agent, Blender, Carrot]
+GAME_CLASSES = [Floor, Counter, CutBoard, DeliverSquare, Tomato, Lettuce, Onion, Plate, Agent, Blender, Carrot, Toaster, Bread]
 GAME_CLASSES_STATE_LENGTH = [(Floor, 1), (Counter, 1), (CutBoard, 1), (DeliverSquare, 1), (Tomato, 2),
-                             (Lettuce, 2), (Onion, 2), (Plate, 1), (Agent, 5), (Blender, 1), (Carrot, 3)]
+                             (Lettuce, 2), (Onion, 2), (Plate, 1), (Agent, 5), (Blender, 1), (Carrot, 3), (Toaster, 1), (Bread, 3)]
 
 

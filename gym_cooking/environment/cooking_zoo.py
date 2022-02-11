@@ -270,4 +270,6 @@ class CookingEnvironment(AECEnv):
             return [int(obj.chop_state == ChopFoodStates.CHOPPED)]
         if stateful_class is BlenderFood:
             return [obj.current_progress]
+        if stateful_class is ToasterFood:
+            return [obj.current_progress]
         raise ValueError(f"Could not process stateful class {stateful_class}")

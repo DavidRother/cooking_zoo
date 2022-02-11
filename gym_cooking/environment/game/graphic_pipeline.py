@@ -105,6 +105,10 @@ class GraphicPipeline:
             pygame.draw.rect(self.screen, Color.COUNTER, fill)
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
             self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
+        elif isinstance(static_object, Toaster):
+            pygame.draw.rect(self.screen, Color.COUNTER, fill)
+            pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
+            self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
         # elif isinstance(static_object, Floor):
         #     pygame.draw.rect(self.screen, Color.FLOOR, fill)
 

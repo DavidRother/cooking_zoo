@@ -167,7 +167,7 @@ class CookingWorld:
                 agent.interacts_with = [static_object]
 
     def get_highest_order_object(self, objects: List[DynamicObject]):
-        order = [Container, Food]
+        order = [Container,  Food]
         for obj_type in order:
             obj = self.filter_obj(objects, obj_type)
             if obj:

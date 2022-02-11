@@ -11,6 +11,11 @@ class BlenderFoodStates(Enum):
     IN_PROGRESS = "InProgress"
     MASHED = "Mashed"
 
+class ToasterFoodStates(Enum):
+    FRESH = "Fresh"
+    READY = "Ready"
+    IN_PROGRESS = "InProgress"
+    TOASTED = "Toasted"
 
 ONION_INIT_STATE = ChopFoodStates.FRESH
 TOMATO_INIT_STATE = ChopFoodStates.FRESH

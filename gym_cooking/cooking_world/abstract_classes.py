@@ -131,6 +131,9 @@ class ChopFood(DynamicObject, Food, ABC):
         if self.done():
             return False
         self.chop_state = ChopFoodStates.CHOPPED
+
+        if isinstance(self, ToasterFood):
+            self.toast_state = ToasterFoodStates.READY
         return True
 
 
@@ -153,7 +156,25 @@ class BlenderFood(DynamicObject, Food, ABC):
         return True
 
 
-ABSTRACT_GAME_CLASSES = (ActionObject, ProgressingObject, Container, Food, ChopFood, DynamicObject, StaticObject,
-                         BlenderFood)
+class ToasterFood(DynamicObject, Food, ABC):
 
-STATEFUL_GAME_CLASSES = (ChopFood, BlenderFood)
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+        self.current_progress = 5
+        self.max_progress = 0
+        self.min_progress = 5
+        self.toast_state = ToasterFoodStates.FRESH
+
+    def toast(self):
+        if self.toast_state == ToasterFoodStates.TOASTED:
+            return False
+        if self.toast_state == ToasterFoodStates.READY or self.toast_state == ToasterFoodStates.IN_PROGRESS:
+            self.current_progress -= 1
+            self.toast_state = ToasterFoodStates.IN_PROGRESS if self.current_progress > self.max_progress \
+                else ToasterFoodStates.TOASTED
+        return True
+
+ABSTRACT_GAME_CLASSES = (ActionObject, ProgressingObject, Container, Food, ChopFood, DynamicObject, StaticObject,
+                         BlenderFood, ToasterFood)
+
+STATEFUL_GAME_CLASSES = (ChopFood, BlenderFood, ToasterFood)
