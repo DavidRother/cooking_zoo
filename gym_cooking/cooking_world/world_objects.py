@@ -84,6 +84,35 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
         return "cutboard"
 
 
+class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject)
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, False)
+
+    def progress(self):
+        assert len(self.content) < 2, "Too many Dynamic Objects placed into the Oven"
+        if self.content and self.toggle:
+            self.content[0].apply_temperature(Temperature.HOT)
+            if self.content[0].done():
+                self.switch_toggle()
+
+    def accepts(self, dynamic_objects) -> bool:
+        return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], TemperatureObject) and (not self.toggle)
+
+    def releases(self) -> bool:
+        return not self.toggle
+
+    def add_content(self, content):
+        self.content.append(content)
+
+    def action(self) -> bool:
+        self.switch_toggle()
+        return True
+
+    def file_name(self) -> str:
+        return "blender_on" if self.toggle else "blender3"
+
+
 class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
 
     def __init__(self, unique_id, location):
@@ -145,6 +174,15 @@ class Onion(ChopFood):
             return "ChoppedOnion"
         else:
             return "FreshOnion"
+
+
+class Spaghetti(TemperatureObject):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+        self.food_state = SpaghettiStates.RAW
+
+    
         
 
 class Tomato(ChopFood):
