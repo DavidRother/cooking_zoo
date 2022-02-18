@@ -83,6 +83,9 @@ class CookingWorld:
         for agent, action in zip(agents, collision_actions):
             self.perform_agent_action(agent, action)
         self.progress_world()
+        # for agent in agents:
+        #     print(agent.interacts_with)
+        # print("-----------------------------")
 
     def perform_agent_action(self, agent: Agent, action):
         if action in self.action_scheme.WALK_ACTIONS:

@@ -17,6 +17,11 @@ class ToasterFoodStates(Enum):
     IN_PROGRESS = "InProgress"
     TOASTED = "Toasted"
 
+class SpaghettiStates(Enum):
+    RAW = "Raw"
+    COOKED = "Cooked"
+
+
 ONION_INIT_STATE = ChopFoodStates.FRESH
 TOMATO_INIT_STATE = ChopFoodStates.FRESH
 LETTUCE_INIT_STATE = ChopFoodStates.FRESH

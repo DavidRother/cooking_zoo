@@ -121,6 +121,27 @@ class Container(DynamicObject, ContentObject, ABC):
         self.content.append(content)
 
 
+class TemperatureObject:
+
+    def __init__(self):
+        super(TemperatureObject, self).__init__()
+        self.temperature = Temperature.MILD
+
+    @abstractmethod
+    def apply_temperature(self, new_temperature):
+        pass
+
+
+class TemperatureFood(DynamicObject, Food, TemperatureObject, ABC):
+
+    def __init__(self, food_state):
+        super(TemperatureFood, self).__init__()
+        self.current_progress = 10
+        self.max_progress = 0
+        self.min_progress = 10
+        self.food_state = food_state
+
+
 class ChopFood(DynamicObject, Food, ABC):
 
     def __init__(self, unique_id, location):
