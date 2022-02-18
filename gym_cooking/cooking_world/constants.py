@@ -5,7 +5,6 @@ class ChopFoodStates(Enum):
     FRESH = "Fresh"
     CHOPPED = "Chopped"
 
-
 class BlenderFoodStates(Enum):
     FRESH = "Fresh"
     IN_PROGRESS = "InProgress"

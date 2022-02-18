@@ -171,7 +171,6 @@ class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
         if len(self.content) < self.max_content:
             self.content.append(content)
 
-
     def action(self) -> bool:
         self.switch_toggle()
         return True
