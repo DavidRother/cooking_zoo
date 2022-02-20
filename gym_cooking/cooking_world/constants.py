@@ -11,11 +11,13 @@ class BlenderFoodStates(Enum):
     IN_PROGRESS = "InProgress"
     MASHED = "Mashed"
 
+
 class ToasterFoodStates(Enum):
     FRESH = "Fresh"
     READY = "Ready"
     IN_PROGRESS = "InProgress"
     TOASTED = "Toasted"
+
 
 class SpaghettiStates(Enum):
     RAW = "Raw"

@@ -91,26 +91,19 @@ class GraphicPipeline:
         sl = self.scaled_location(static_object.location)
         fill = pygame.Rect(sl[0], sl[1], self.graphics_properties.pixel_per_tile,
                            self.graphics_properties.pixel_per_tile)
+
         if isinstance(static_object, Counter):
             pygame.draw.rect(self.screen, Color.COUNTER, fill)
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
         elif isinstance(static_object, DeliverSquare):
             pygame.draw.rect(self.screen, Color.DELIVERY, fill)
             self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
-        elif isinstance(static_object, CutBoard):
+        elif isinstance(static_object, Floor):
+            pass
+        else:
             pygame.draw.rect(self.screen, Color.COUNTER, fill)
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
             self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
-        elif isinstance(static_object, Blender):
-            pygame.draw.rect(self.screen, Color.COUNTER, fill)
-            pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
-            self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
-        elif isinstance(static_object, Toaster):
-            pygame.draw.rect(self.screen, Color.COUNTER, fill)
-            pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
-            self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
-        # elif isinstance(static_object, Floor):
-        #     pygame.draw.rect(self.screen, Color.FLOOR, fill)
 
     def draw_dynamic_objects(self):
         objects = self.env.unwrapped.world.get_object_list()

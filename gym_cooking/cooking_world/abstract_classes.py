@@ -147,6 +147,7 @@ class ChopFood(DynamicObject, Food, ABC):
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
         self.chop_state = ChopFoodStates.FRESH
+        self.toast_state = ToasterFoodStates.READY
 
     def chop(self):
         if self.done():
@@ -194,6 +195,7 @@ class ToasterFood(DynamicObject, Food, ABC):
             self.toast_state = ToasterFoodStates.IN_PROGRESS if self.current_progress > self.max_progress \
                 else ToasterFoodStates.TOASTED
         return True
+
 
 ABSTRACT_GAME_CLASSES = (ActionObject, ProgressingObject, Container, Food, ChopFood, DynamicObject, StaticObject,
                          BlenderFood, ToasterFood)

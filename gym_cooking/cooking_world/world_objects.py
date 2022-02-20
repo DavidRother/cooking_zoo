@@ -84,7 +84,7 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
         return "cutboard"
 
 
-class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject)
+class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
