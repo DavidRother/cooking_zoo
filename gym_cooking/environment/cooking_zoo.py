@@ -75,7 +75,7 @@ class CookingEnvironment(AECEnv):
 
         self.termination_info = ""
         self.world.load_level(level=self.level, num_agents=num_agents)
-        self.graph_representation_length = sum([tup[1] for tup in GAME_CLASSES_STATE_LENGTH])
+        self.graph_representation_length = sum([cls.state_length() for cls in GAME_CLASSES])
 
         numeric_obs_space = {'symbolic_observation': gym.spaces.Box(low=0, high=10,
                                                                     shape=(self.world.width, self.world.height,
@@ -235,14 +235,14 @@ class CookingEnvironment(AECEnv):
         for game_class in GAME_CLASSES:
             if game_class is Agent:
                 continue
-            for obj in objects[ClassToString[game_class]]:
+            for obj in objects[game_class.__name__]:
                 x, y = obj.location
                 tensor[x, y, idx] += 1
             idx += 1
             for stateful_class in STATEFUL_GAME_CLASSES:
                 if issubclass(game_class, stateful_class):
                     n = 1
-                    for obj in objects[ClassToString[game_class]]:
+                    for obj in objects[game_class.__name__]:
                         representation = self.handle_stateful_class_representation(obj, stateful_class)
                         n = len(representation)
                         x, y = obj.location

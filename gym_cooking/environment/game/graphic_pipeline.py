@@ -124,10 +124,10 @@ class GraphicPipeline:
                                                self.container_location(location))
 
     def draw_dynamic_object_stack(self, dynamic_objects, base_size, base_location, holding_size, holding_location):
-        highest_order_object = self.env.unwrapped.world.get_highest_order_object(dynamic_objects)
-        if isinstance(highest_order_object, Container):
-            self.draw(highest_order_object.file_name(), base_size, base_location)
-            rest_stack = [obj for obj in dynamic_objects if obj != highest_order_object]
+        content_obj_l = self.env.unwrapped.world.filter_obj(dynamic_objects, ContentObject)
+        if len(content_obj_l) == 1:
+            self.draw(content_obj_l[0].file_name(), base_size, base_location)
+            rest_stack = [obj for obj in dynamic_objects if obj != content_obj_l[0]]
             if rest_stack:
                 self.draw_food_stack(rest_stack, holding_size, holding_location)
         else:

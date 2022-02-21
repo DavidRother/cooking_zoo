@@ -18,6 +18,15 @@ class Object(ABC):
         self.location = new_location
 
     @abstractmethod
+    def numeric_state_representation(self):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def state_length():
+        pass
+
+    @abstractmethod
     def file_name(self) -> str:
         pass
 
@@ -42,10 +51,15 @@ class ToggleObject(ABC):
         self.toggle = not self.toggle
 
 
-class TemperatureObject(ABC):
+class TemperatureObject:
 
     def __init__(self):
-        super(TemperatureObject).__init__()
+        super(TemperatureObject, self).__init__()
+        self.temperature = Temperature.MILD
+
+    @abstractmethod
+    def apply_temperature(self, new_temperature):
+        pass
 
 
 class ProgressingObject(ABC):
@@ -70,6 +84,10 @@ class ContentObject:
 
     @abstractmethod
     def move_to(self, new_location):
+        pass
+
+    @abstractmethod
+    def accepts(self, dynamic_object) -> bool:
         pass
 
 
@@ -106,32 +124,6 @@ class DynamicObject(Object, ABC):
         super().__init__(unique_id, location, True, False)
 
 
-class Container(DynamicObject, ContentObject, ABC):
-
-    def __init__(self, unique_id, location, content=None):
-        super().__init__(unique_id, location)
-        self.content = content or []
-
-    def move_to(self, new_location):
-        for content in self.content:
-            content.move_to(new_location)
-        self.location = new_location
-
-    def add_content(self, content):
-        self.content.append(content)
-
-
-class TemperatureObject:
-
-    def __init__(self):
-        super(TemperatureObject, self).__init__()
-        self.temperature = Temperature.MILD
-
-    @abstractmethod
-    def apply_temperature(self, new_temperature):
-        pass
-
-
 class TemperatureFood(DynamicObject, Food, TemperatureObject, ABC):
 
     def __init__(self, food_state):
@@ -147,15 +139,11 @@ class ChopFood(DynamicObject, Food, ABC):
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
         self.chop_state = ChopFoodStates.FRESH
-        self.toast_state = ToasterFoodStates.READY
 
     def chop(self):
-        if self.done():
+        if self.chop_state == ChopFoodStates.CHOPPED:
             return False
         self.chop_state = ChopFoodStates.CHOPPED
-
-        if isinstance(self, ToasterFood):
-            self.toast_state = ToasterFoodStates.READY
         return True
 
 
@@ -188,16 +176,15 @@ class ToasterFood(DynamicObject, Food, ABC):
         self.toast_state = ToasterFoodStates.FRESH
 
     def toast(self):
-        if self.toast_state == ToasterFoodStates.TOASTED:
-            return False
-        if self.toast_state == ToasterFoodStates.READY or self.toast_state == ToasterFoodStates.IN_PROGRESS:
+        if self.toast_state == ToasterFoodStates.FRESH or self.toast_state == ToasterFoodStates.IN_PROGRESS:
             self.current_progress -= 1
             self.toast_state = ToasterFoodStates.IN_PROGRESS if self.current_progress > self.max_progress \
                 else ToasterFoodStates.TOASTED
-        return True
+            return True
+        return False
 
 
-ABSTRACT_GAME_CLASSES = (ActionObject, ProgressingObject, Container, Food, ChopFood, DynamicObject, StaticObject,
+ABSTRACT_GAME_CLASSES = (ActionObject, ProgressingObject, ContentObject, Food, ChopFood, DynamicObject, StaticObject,
                          BlenderFood, ToasterFood)
 
 STATEFUL_GAME_CLASSES = (ChopFood, BlenderFood, ToasterFood)

@@ -1,5 +1,7 @@
 from gym_cooking.cooking_world.abstract_classes import *
 from gym_cooking.cooking_world.constants import *
+import inspect
+import sys
 from typing import List
 
 
@@ -8,7 +10,7 @@ class Floor(StaticObject, ContentObject):
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, True)
 
-    def accepts(self, dynamic_objects) -> bool:
+    def accepts(self, dynamic_object) -> bool:
         return False
 
     def releases(self) -> bool:
@@ -17,6 +19,13 @@ class Floor(StaticObject, ContentObject):
     def add_content(self, content):
         assert isinstance(content, Agent), f"Floors can only hold Agents as content! not {content}"
         self.content.append(content)
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
 
     def file_name(self) -> str:
         return "floor"
@@ -27,14 +36,21 @@ class Counter(StaticObject, ContentObject):
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
 
-    def accepts(self, dynamic_objects) -> bool:
-        return True
+    def accepts(self, dynamic_object) -> bool:
+        return not bool(self.content)
 
     def releases(self) -> bool:
         return True
 
     def add_content(self, content):
         self.content.append(content)
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
 
     def file_name(self) -> str:
         return "counter"
@@ -45,7 +61,7 @@ class DeliverSquare(StaticObject, ContentObject):
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
 
-    def accepts(self, dynamic_objects) -> bool:
+    def accepts(self, dynamic_object) -> bool:
         return True
 
     def add_content(self, content):
@@ -53,6 +69,13 @@ class DeliverSquare(StaticObject, ContentObject):
 
     def releases(self) -> bool:
         return True
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
 
     def file_name(self) -> str:
         return "delivery"
@@ -71,14 +94,21 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
                 return False
         return False
 
-    def accepts(self, dynamic_objects) -> bool:
-        return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], ChopFood)
+    def accepts(self, dynamic_object) -> bool:
+        return isinstance(dynamic_object, ChopFood)
 
     def releases(self) -> bool:
         return True
 
     def add_content(self, content):
         self.content.append(content)
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
 
     def file_name(self) -> str:
         return "cutboard"
@@ -96,8 +126,8 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
             if self.content[0].done():
                 self.switch_toggle()
 
-    def accepts(self, dynamic_objects) -> bool:
-        return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], TemperatureObject) and (not self.toggle)
+    def accepts(self, dynamic_object) -> bool:
+        return isinstance(dynamic_object, TemperatureObject) and (not self.toggle)
 
     def releases(self) -> bool:
         return not self.toggle
@@ -108,6 +138,13 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
     def action(self) -> bool:
         self.switch_toggle()
         return True
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
 
     def file_name(self) -> str:
         return "blender_on" if self.toggle else "blender3"
@@ -125,8 +162,8 @@ class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
             if self.content[0].done():
                 self.switch_toggle()
 
-    def accepts(self, dynamic_objects) -> bool:
-        return len(dynamic_objects) == 1 and isinstance(dynamic_objects[0], BlenderFood) and (not self.toggle)
+    def accepts(self, dynamic_object) -> bool:
+        return isinstance(dynamic_object, BlenderFood) and (not self.toggle)
 
     def releases(self) -> bool:
         return not self.toggle
@@ -137,6 +174,13 @@ class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
     def action(self) -> bool:
         self.switch_toggle()
         return True
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
 
     def file_name(self) -> str:
         return "blender_on" if self.toggle else "blender3"
@@ -150,7 +194,7 @@ class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
         self.max_content = 2
 
     def progress(self):
-        assert len(self.content) < self.max_content + 1, "Too many Dynamic Objects placed into the Blender"
+        assert len(self.content) < self.max_content + 1, "Too many Dynamic Objects placed into the Toaster"
         if self.content and self.toggle:
             for con in self.content:
                 con.toast()
@@ -158,30 +202,43 @@ class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
             if all([cont.toast_state == ToasterFoodStates.TOASTED for cont in self.content]):
                 self.switch_toggle()
 
-    def accepts(self, dynamic_objects) -> bool:
-        return len(dynamic_objects) <= self.max_content and \
-               all([isinstance(obj, ToasterFood) for obj in dynamic_objects]) and \
-               all([obj.toast_state == ToasterFoodStates.READY for obj in dynamic_objects]) \
-               and (not self.toggle)
+    def accepts(self, dynamic_object) -> bool:
+        return len(self.content) + 1 <= self.max_content and (not self.toggle) and \
+               isinstance(dynamic_object, ToasterFood) and dynamic_object.toast_state == ToasterFoodStates.READY
 
     def releases(self) -> bool:
         return not self.toggle
 
     def add_content(self, content):
-        if len(self.content) < self.max_content:
+        if self.accepts(content):
             self.content.append(content)
+        else:
+            raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
 
     def action(self) -> bool:
         self.switch_toggle()
         return True
 
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
+
     def file_name(self) -> str:
         return "toaster_on" if self.toggle else "toaster_off"
 
-class Plate(Container):
+
+class Plate(DynamicObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
+
+    def move_to(self, new_location):
+        for content in self.content:
+            content.move_to(new_location)
+        self.location = new_location
 
     def add_content(self, content):
         if not isinstance(content, Food):
@@ -189,6 +246,16 @@ class Plate(Container):
         if not content.done():
             raise Exception(f"Can't add food in unprepared state.")
         self.content.append(content)
+
+    def accepts(self, dynamic_object):
+        return isinstance(dynamic_object, Food) and dynamic_object.done()
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
 
     def file_name(self) -> str:
         return "Plate"
@@ -205,6 +272,13 @@ class Onion(ChopFood):
         else:
             return False
 
+    def numeric_state_representation(self):
+        return 1, 1
+
+    @staticmethod
+    def state_length():
+        return 2
+
     def file_name(self) -> str:
         if self.done():
             return "ChoppedOnion"
@@ -214,12 +288,20 @@ class Onion(ChopFood):
 
 class Spaghetti(TemperatureObject):
 
+    def apply_temperature(self, new_temperature):
+        pass
+
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
         self.food_state = SpaghettiStates.RAW
 
-    
-        
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
+
 
 class Tomato(ChopFood):
 
@@ -231,6 +313,13 @@ class Tomato(ChopFood):
             return True
         else:
             return False
+
+    def numeric_state_representation(self):
+        return 1, 0
+
+    @staticmethod
+    def state_length():
+        return 2
 
     def file_name(self) -> str:
         if self.done():
@@ -249,6 +338,13 @@ class Lettuce(ChopFood):
             return True
         else:
             return False
+
+    def numeric_state_representation(self):
+        return 1, 0
+
+    @staticmethod
+    def state_length():
+        return 2
 
     def file_name(self) -> str:
         if self.done():
@@ -269,11 +365,19 @@ class Carrot(BlenderFood, ChopFood):
         else:
             return False
 
+    def numeric_state_representation(self):
+        return 1, 0, 1
+
+    @staticmethod
+    def state_length():
+        return 3
+
     def file_name(self) -> str:
         if self.done():
             return "ChoppedCarrot"
         else:
             return "FreshCarrot"
+
 
 class Bread(ToasterFood, ChopFood):
 
@@ -282,23 +386,39 @@ class Bread(ToasterFood, ChopFood):
         self.current_progress = 1
 
     def done(self):
-        if self.chop_state == ChopFoodStates.CHOPPED or self.toast_state == ToasterFoodStates.TOASTED:
-            # if self.chop_state == ChopFoodStates.CHOPPED and self.toast_state == ToasterFoodStates.FRESH:
-            #     self.toast_state == ToasterFoodStates.READY
-            return True
-        else:
+        return self.toast_state == ToasterFoodStates.TOASTED
+
+    def chop(self):
+        if self.chop_state == ChopFoodStates.CHOPPED:
             return False
+        self.toast_state = ToasterFoodStates.READY
+        self.chop_state = ChopFoodStates.CHOPPED
+        return True
+
+    def toast(self):
+        if self.chop_state == ChopFoodStates.CHOPPED and \
+                (self.toast_state == ToasterFoodStates.READY or self.toast_state == ToasterFoodStates.IN_PROGRESS):
+            self.current_progress -= 1
+            self.toast_state = ToasterFoodStates.IN_PROGRESS if self.current_progress > self.max_progress \
+                else ToasterFoodStates.TOASTED
+            return True
+        return False
+
+    def numeric_state_representation(self):
+        return 1, 0, 0
+
+    @staticmethod
+    def state_length():
+        return 3
 
     def file_name(self) -> str:
-        if self.done():
-            if self.chop_state == ChopFoodStates.CHOPPED and self.toast_state == ToasterFoodStates.FRESH:
-                return "ChoppedFreshBread"
-            elif self.chop_state == ChopFoodStates.CHOPPED and self.toast_state == ToasterFoodStates.TOASTED:
-                return "ChoppedToastedBread"
-            else:
-                return "ChoppedFreshBread"
+        if self.chop_state == ChopFoodStates.CHOPPED and self.toast_state == ToasterFoodStates.TOASTED:
+            return "ChoppedToastedBread"
+        elif self.chop_state == ChopFoodStates.CHOPPED:
+            return "ChoppedFreshBread"
         else:
             return "Bread"
+
 
 class Agent(Object):
 
@@ -327,44 +447,21 @@ class Agent(Object):
         assert 0 < new_orientation < 5
         self.orientation = new_orientation
 
+    def numeric_state_representation(self):
+        return 1, int(self.orientation == 1), int(self.orientation == 2), int(self.orientation == 3), \
+               int(self.orientation == 4)
+
+    @staticmethod
+    def state_length():
+        return 5
+
     def file_name(self) -> str:
         pass
 
 
-StringToClass = {
-    "Floor": Floor,
-    "Counter": Counter,
-    "CutBoard": CutBoard,
-    "DeliverSquare": DeliverSquare,
-    "Tomato": Tomato,
-    "Lettuce": Lettuce,
-    "Onion": Onion,
-    "Plate": Plate,
-    "Agent": Agent,
-    "Blender": Blender,
-    "Carrot": Carrot,
-    "Toaster": Toaster,
-    "Bread": Bread
-}
+GAME_CLASSES = [m[1] for m in inspect.getmembers(sys.modules[__name__], inspect.isclass) if m[1].__module__ == __name__]
 
-ClassToString = {
-    Floor: "Floor",
-    Counter: "Counter",
-    CutBoard: "CutBoard",
-    DeliverSquare: "DeliverSquare",
-    Tomato: 'Tomato',
-    Lettuce: "Lettuce",
-    Onion: "Onion",
-    Plate: "Plate",
-    Agent: "Agent",
-    Blender: "Blender",
-    Carrot: "Carrot",
-    Toaster: "Toaster",
-    Bread: "Bread"
-}
-
-GAME_CLASSES = [Floor, Counter, CutBoard, DeliverSquare, Tomato, Lettuce, Onion, Plate, Agent, Blender, Carrot, Toaster, Bread]
-GAME_CLASSES_STATE_LENGTH = [(Floor, 1), (Counter, 1), (CutBoard, 1), (DeliverSquare, 1), (Tomato, 2),
-                             (Lettuce, 2), (Onion, 2), (Plate, 1), (Agent, 5), (Blender, 1), (Carrot, 3), (Toaster, 1), (Bread, 3)]
+StringToClass = {game_cls.__name__: game_cls for game_cls in GAME_CLASSES}
+ClassToString = {game_cls: game_cls.__name__ for game_cls in GAME_CLASSES}
 
 
