@@ -147,7 +147,7 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
         return 1
 
     def file_name(self) -> str:
-        return "blender_on" if self.toggle else "blender3"
+        return "Oven_on" if self.toggle else "Oven"
 
 
 class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
@@ -303,6 +303,7 @@ class Spaghetti(TemperatureObject):
         return 1
 
 
+
 class Tomato(ChopFood):
 
     def __init__(self, unique_id, location):
@@ -374,7 +375,10 @@ class Carrot(BlenderFood, ChopFood):
 
     def file_name(self) -> str:
         if self.done():
-            return "ChoppedCarrot"
+            if self.chop_state == ChopFoodStates.CHOPPED:
+                return "ChoppedCarrot"
+            elif self.blend_state == BlenderFoodStates.MASHED:
+                return "CarrotMashed"
         else:
             return "FreshCarrot"
 
