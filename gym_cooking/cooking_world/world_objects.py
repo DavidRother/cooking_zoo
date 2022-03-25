@@ -2,6 +2,7 @@ from gym_cooking.cooking_world.abstract_classes import *
 from gym_cooking.cooking_world.constants import *
 import inspect
 import sys
+import numpy as np
 from typing import List
 
 
@@ -126,6 +127,9 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
             if self.content[0].done():
                 self.switch_toggle()
 
+                for cont in self.content:
+                    cont.current_progress = cont.min_progress
+
     def accepts(self, dynamic_object) -> bool:
         return isinstance(dynamic_object, TemperatureObject) and (not self.toggle)
 
@@ -161,6 +165,9 @@ class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
             self.content[0].blend()
             if self.content[0].done():
                 self.switch_toggle()
+
+                for cont in self.content:
+                    cont.current_progress = cont.min_progress
 
     def accepts(self, dynamic_object) -> bool:
         return isinstance(dynamic_object, BlenderFood) and (not self.toggle)
@@ -202,6 +209,9 @@ class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
             if all([cont.toast_state == ToasterFoodStates.TOASTED for cont in self.content]):
                 self.switch_toggle()
 
+                for cont in self.content:
+                    cont.current_progress = cont.min_progress
+
     def accepts(self, dynamic_object) -> bool:
         return len(self.content) + 1 <= self.max_content and (not self.toggle) and \
                isinstance(dynamic_object, ToasterFood) and dynamic_object.toast_state == ToasterFoodStates.READY
@@ -228,6 +238,98 @@ class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
 
     def file_name(self) -> str:
         return "toaster_on" if self.toggle else "toaster_off"
+
+
+class Microwave(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, False)
+
+        self.max_content = 1
+
+    def progress(self):
+        assert len(self.content) < self.max_content + 1, "Too many Dynamic Objects placed into the Toaster"
+        if self.content and self.toggle:
+            for con in self.content:
+                con.microwave()
+
+            if all([cont.microwave_state == MicrowaveFoodStates.HOT for cont in self.content]):
+                self.switch_toggle()
+                for cont in self.content:
+                    cont.current_progress = cont.min_progress
+
+    def accepts(self, dynamic_object) -> bool:
+        return len(self.content) + 1 <= self.max_content and (not self.toggle) and \
+               isinstance(dynamic_object, MicrowaveFood) and dynamic_object.microwave_state == MicrowaveFoodStates.READY
+
+    def releases(self) -> bool:
+        return not self.toggle
+
+    def add_content(self, content):
+        if self.accepts(content):
+            self.content.append(content)
+        else:
+            raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
+
+    def action(self) -> bool:
+        self.switch_toggle()
+        return True
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
+
+    def file_name(self) -> str:
+        return "Microwave_on" if self.toggle else "Microwave"
+
+
+class Pot(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, False)
+
+        self.max_content = 1
+
+    def progress(self):
+        assert len(self.content) < self.max_content + 1, "Too many Dynamic Objects placed into the Toaster"
+        if self.content and self.toggle:
+            for con in self.content:
+                con.boil()
+
+            if all([cont.boil_state == PotFoodStates.COOKED for cont in self.content]):
+                self.switch_toggle()
+                for cont in self.content:
+                    cont.current_progress = cont.min_progress
+
+    def accepts(self, dynamic_object) -> bool:
+        return len(self.content) + 1 <= self.max_content and (not self.toggle) and \
+               isinstance(dynamic_object, PotFood) and dynamic_object.boil_state == PotFoodStates.READY
+
+    def releases(self) -> bool:
+        return not self.toggle
+
+    def add_content(self, content):
+        if self.accepts(content):
+            self.content.append(content)
+        else:
+            raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
+
+    def action(self) -> bool:
+        self.switch_toggle()
+        return True
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
+
+    def file_name(self) -> str:
+        return "Pot_on" if self.toggle else "Pot"
 
 
 class Plate(DynamicObject, ContentObject):
@@ -286,23 +388,6 @@ class Onion(ChopFood):
             return "FreshOnion"
 
 
-class Spaghetti(TemperatureObject):
-
-    def apply_temperature(self, new_temperature):
-        pass
-
-    def __init__(self, unique_id, location):
-        super().__init__(unique_id, location)
-        self.food_state = SpaghettiStates.RAW
-
-    def numeric_state_representation(self):
-        return 1
-
-    @staticmethod
-    def state_length():
-        return 1
-
-
 
 class Tomato(ChopFood):
 
@@ -358,7 +443,6 @@ class Carrot(BlenderFood, ChopFood):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
-        self.current_progress = 1
 
     def done(self):
         if self.chop_state == ChopFoodStates.CHOPPED or self.blend_state == BlenderFoodStates.MASHED:
@@ -387,10 +471,9 @@ class Bread(ToasterFood, ChopFood):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
-        self.current_progress = 1
 
     def done(self):
-        return self.toast_state == ToasterFoodStates.TOASTED
+        return self.chop_state == ChopFoodStates.CHOPPED
 
     def chop(self):
         if self.chop_state == ChopFoodStates.CHOPPED:
@@ -422,6 +505,72 @@ class Bread(ToasterFood, ChopFood):
             return "ChoppedFreshBread"
         else:
             return "Bread"
+
+
+class Spaghetti(MicrowaveFood, PotFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+
+        start_state = np.random.randint(0, 2)
+        if start_state == 0:
+            self.microwave_state = MicrowaveFoodStates.FRESH
+            self.boil_state = PotFoodStates.READY
+        else:
+            self.microwave_state = MicrowaveFoodStates.READY
+            self.boil_state = PotFoodStates.COOKED
+
+    # only used for determing if food can be on plate
+    def done(self):
+        return True
+
+    def numeric_state_representation(self):
+        return 1, 1, 1
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        if self.microwave_state == MicrowaveFoodStates.READY or self.microwave_state == MicrowaveFoodStates.IN_PROGRESS:
+            return "SpaghettiCookedCold"
+        elif self.microwave_state == MicrowaveFoodStates.HOT or self.boil_state == PotFoodStates.COOKED:
+            return "SpaghettiCooked"
+        else:
+            return "SpaghettiRaw"
+
+
+class Penne(MicrowaveFood, PotFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+
+        start_state = np.random.randint(0, 2)
+        if start_state == 0:
+            self.microwave_state = MicrowaveFoodStates.FRESH
+            self.boil_state = PotFoodStates.READY
+        else:
+            self.microwave_state = MicrowaveFoodStates.READY
+            self.boil_state = PotFoodStates.COOKED
+
+    # only used for determing if food can be on plate
+    def done(self):
+        return True
+
+    def numeric_state_representation(self):
+        return 1, 1, 1
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        if self.microwave_state == MicrowaveFoodStates.READY or self.microwave_state == MicrowaveFoodStates.IN_PROGRESS:
+            return "PenneCookedCold"
+        elif self.microwave_state == MicrowaveFoodStates.HOT or self.boil_state == PotFoodStates.COOKED:
+            return "PenneCooked"
+        else:
+            return "PenneRaw"
 
 
 class Agent(Object):

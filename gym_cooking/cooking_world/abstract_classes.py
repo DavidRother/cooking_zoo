@@ -128,9 +128,9 @@ class TemperatureFood(DynamicObject, Food, TemperatureObject, ABC):
 
     def __init__(self, food_state):
         super(TemperatureFood, self).__init__()
-        self.current_progress = 10
+        self.current_progress = 1
         self.max_progress = 0
-        self.min_progress = 10
+        self.min_progress = 1
         self.food_state = food_state
 
 
@@ -151,9 +151,9 @@ class BlenderFood(DynamicObject, Food, ABC):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
-        self.current_progress = 10
+        self.current_progress = 1
         self.max_progress = 0
-        self.min_progress = 10
+        self.min_progress = 1
         self.blend_state = BlenderFoodStates.FRESH
 
     def blend(self):
@@ -170,16 +170,51 @@ class ToasterFood(DynamicObject, Food, ABC):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
-        self.current_progress = 5
+        self.current_progress = 1
         self.max_progress = 0
-        self.min_progress = 5
+        self.min_progress = 1
         self.toast_state = ToasterFoodStates.FRESH
 
     def toast(self):
-        if self.toast_state == ToasterFoodStates.FRESH or self.toast_state == ToasterFoodStates.IN_PROGRESS:
+        if self.toast_state == ToasterFoodStates.READY or self.toast_state == ToasterFoodStates.IN_PROGRESS:
             self.current_progress -= 1
             self.toast_state = ToasterFoodStates.IN_PROGRESS if self.current_progress > self.max_progress \
                 else ToasterFoodStates.TOASTED
+            return True
+        return False
+
+
+class MicrowaveFood(DynamicObject, Food, ABC):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+        self.current_progress = 1
+        self.max_progress = 0
+        self.min_progress = 1
+        self.microwave_state = MicrowaveFoodStates.FRESH
+
+    def microwave(self):
+        if self.microwave_state == MicrowaveFoodStates.READY or self.microwave_state == MicrowaveFoodStates.IN_PROGRESS:
+            self.current_progress -= 1
+            self.microwave_state = MicrowaveFoodStates.IN_PROGRESS if self.current_progress > self.max_progress \
+                else MicrowaveFoodStates.HOT
+            return True
+        return False
+
+class PotFood(DynamicObject, Food, ABC):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+        self.current_progress = 1
+        self.max_progress = 0
+        self.min_progress = 1
+        self.boil_state = PotFoodStates.FRESH
+
+    def boil(self):
+        if self.boil_state == PotFoodStates.READY or self.boil_state == PotFoodStates.IN_PROGRESS:
+            self.current_progress -= 1
+            self.boil_state = PotFoodStates.IN_PROGRESS if self.current_progress > self.max_progress \
+                else PotFoodStates.COOKED
             return True
         return False
 

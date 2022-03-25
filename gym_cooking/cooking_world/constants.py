@@ -18,23 +18,37 @@ class ToasterFoodStates(Enum):
     TOASTED = "Toasted"
 
 
-class SpaghettiStates(Enum):
-    RAW = "Raw"
+class MicrowaveFoodStates(Enum):
+    FRESH = "Fresh"
+    READY = "Ready"
+    IN_PROGRESS = "InProgress"
+    HOT = "Hot"
+
+class PotFoodStates(Enum):
+    FRESH = "Fresh"
+    READY = "Ready"
+    IN_PROGRESS = "InProgress"
     COOKED = "Cooked"
 
-
-ONION_INIT_STATE = ChopFoodStates.FRESH
-TOMATO_INIT_STATE = ChopFoodStates.FRESH
-LETTUCE_INIT_STATE = ChopFoodStates.FRESH
-
+# add foodstates, tempstates, and more?, basic attributes to all foods automatically?
+class FoodStates(Enum):
+    RAW = "Raw"
+    FRESH = "Fresh"
+    COOKED = "Cooked"
+    ROTTEN = "Rotten"
 
 class Temperature(Enum):
     FREEZING = -10
     COLD = 0
     MILD = 21
+    EATABLE = 60
     BOILING = 100
     HOT = 200
 
+
+ONION_INIT_STATE = ChopFoodStates.FRESH
+TOMATO_INIT_STATE = ChopFoodStates.FRESH
+LETTUCE_INIT_STATE = ChopFoodStates.FRESH
 
 
 
