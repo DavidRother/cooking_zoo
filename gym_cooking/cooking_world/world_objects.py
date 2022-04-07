@@ -31,6 +31,9 @@ class Floor(StaticObject, ContentObject):
     def file_name(self) -> str:
         return "floor"
 
+    def get_physical_state(self) -> List[str]:
+        return []
+
 
 class Counter(StaticObject, ContentObject):
 
@@ -55,6 +58,9 @@ class Counter(StaticObject, ContentObject):
 
     def file_name(self) -> str:
         return "counter"
+
+    def get_physical_state(self) -> List[str]:
+        return []
 
 
 class DeliverSquare(StaticObject, ContentObject):
@@ -81,22 +87,29 @@ class DeliverSquare(StaticObject, ContentObject):
     def file_name(self) -> str:
         return "delivery"
 
+    def get_physical_state(self) -> List[str]:
+        return []
+
 
 class CutBoard(StaticObject, ActionObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
+        self.max_content = 8
 
-    def action(self) -> bool:
-        if len(self.content) == 1:
-            try:
-                return self.content[0].chop()
-            except AttributeError:
-                return False
-        return False
+    def action(self) -> Tuple[List, List, bool]:
+        for obj in self.content:
+            if isinstance(obj, ChopFood):
+                new_obj_list, deleted_obj_list, action_executed = obj.chop()
+                for del_obj in deleted_obj_list:
+                    self.content.remove(del_obj)
+                for new_obj in new_obj_list:
+                    self.content.append(new_obj)
+                return new_obj_list, deleted_obj_list, action_executed
+        return [], [], False
 
     def accepts(self, dynamic_object) -> bool:
-        return isinstance(dynamic_object, ChopFood)
+        return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content
 
     def releases(self) -> bool:
         return True
@@ -114,14 +127,18 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
     def file_name(self) -> str:
         return "cutboard"
 
+    def get_physical_state(self) -> List[str]:
+        return []
 
-class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
+
+class Oven(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
+        self.max_content = 1
 
-    def progress(self):
-        assert len(self.content) < 2, "Too many Dynamic Objects placed into the Oven"
+    def process(self):
+        assert len(self.content) <= self.max_content, "Too many Dynamic Objects placed into the Oven"
         if self.content and self.toggle:
             self.content[0].apply_temperature(Temperature.HOT)
             if self.content[0].done():
@@ -131,7 +148,8 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
                     cont.current_progress = cont.min_progress
 
     def accepts(self, dynamic_object) -> bool:
-        return isinstance(dynamic_object, TemperatureObject) and (not self.toggle)
+        return isinstance(dynamic_object, TemperatureObject) and (not self.toggle) \
+               and len(self.content) < self.max_content
 
     def releases(self) -> bool:
         return not self.toggle
@@ -139,9 +157,9 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
     def add_content(self, content):
         self.content.append(content)
 
-    def action(self) -> bool:
+    def action(self) -> Tuple[List, List, bool]:
         self.switch_toggle()
-        return True
+        return [], [], True
 
     def numeric_state_representation(self):
         return 1
@@ -153,14 +171,18 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
     def file_name(self) -> str:
         return "Oven_on" if self.toggle else "Oven"
 
+    def get_physical_state(self) -> List[str]:
+        return []
 
-class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
+
+class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
+        self.max_content = 1
 
-    def progress(self):
-        assert len(self.content) < 2, "Too many Dynamic Objects placed into the Blender"
+    def process(self):
+        assert len(self.content) <= self.max_content, "Too many Dynamic Objects placed into the Blender"
         if self.content and self.toggle:
             self.content[0].blend()
             if self.content[0].done():
@@ -170,7 +192,7 @@ class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
                     cont.current_progress = cont.min_progress
 
     def accepts(self, dynamic_object) -> bool:
-        return isinstance(dynamic_object, BlenderFood) and (not self.toggle)
+        return isinstance(dynamic_object, BlenderFood) and (not self.toggle) and len(self.content) < self.max_content
 
     def releases(self) -> bool:
         return not self.toggle
@@ -178,9 +200,9 @@ class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
     def add_content(self, content):
         self.content.append(content)
 
-    def action(self) -> bool:
+    def action(self) -> Tuple[List, List, bool]:
         self.switch_toggle()
-        return True
+        return [], [], True
 
     def numeric_state_representation(self):
         return 1
@@ -192,16 +214,18 @@ class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
     def file_name(self) -> str:
         return "blender_on" if self.toggle else "blender3"
 
+    def get_physical_state(self) -> List[str]:
+        return []
 
-class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
+
+class Toaster(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
-
         self.max_content = 2
 
-    def progress(self):
-        assert len(self.content) < self.max_content + 1, "Too many Dynamic Objects placed into the Toaster"
+    def process(self):
+        assert len(self.content) <= self.max_content, "Too many Dynamic Objects placed into the Toaster"
         if self.content and self.toggle:
             for con in self.content:
                 con.toast()
@@ -213,7 +237,7 @@ class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
                     cont.current_progress = cont.min_progress
 
     def accepts(self, dynamic_object) -> bool:
-        return len(self.content) + 1 <= self.max_content and (not self.toggle) and \
+        return len(self.content) < self.max_content and (not self.toggle) and \
                isinstance(dynamic_object, ToasterFood) and dynamic_object.toast_state == ToasterFoodStates.READY
 
     def releases(self) -> bool:
@@ -225,9 +249,9 @@ class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
         else:
             raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
 
-    def action(self) -> bool:
+    def action(self) -> Tuple[List, List, bool]:
         self.switch_toggle()
-        return True
+        return [], [], True
 
     def numeric_state_representation(self):
         return 1
@@ -239,16 +263,18 @@ class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
     def file_name(self) -> str:
         return "toaster_on" if self.toggle else "toaster_off"
 
+    def get_physical_state(self) -> List[str]:
+        return []
 
-class Microwave(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
+
+class Microwave(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
-
         self.max_content = 1
 
-    def progress(self):
-        assert len(self.content) < self.max_content + 1, "Too many Dynamic Objects placed into the Toaster"
+    def process(self):
+        assert len(self.content) <= self.max_content, "Too many Dynamic Objects placed into the Toaster"
         if self.content and self.toggle:
             for con in self.content:
                 con.microwave()
@@ -271,9 +297,9 @@ class Microwave(StaticObject, ProgressingObject, ContentObject, ToggleObject, Ac
         else:
             raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
 
-    def action(self) -> bool:
+    def action(self) -> Tuple[List, List, bool]:
         self.switch_toggle()
-        return True
+        return [], [], True
 
     def numeric_state_representation(self):
         return 1
@@ -285,16 +311,18 @@ class Microwave(StaticObject, ProgressingObject, ContentObject, ToggleObject, Ac
     def file_name(self) -> str:
         return "Microwave_on" if self.toggle else "Microwave"
 
+    def get_physical_state(self) -> List[str]:
+        return []
 
-class Pot(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
+
+class Pot(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
-
         self.max_content = 1
 
-    def progress(self):
-        assert len(self.content) < self.max_content + 1, "Too many Dynamic Objects placed into the Toaster"
+    def process(self):
+        assert len(self.content) <= self.max_content, "Too many Dynamic Objects placed into the Pot"
         if self.content and self.toggle:
             for con in self.content:
                 con.boil()
@@ -305,7 +333,7 @@ class Pot(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionOb
                     cont.current_progress = cont.min_progress
 
     def accepts(self, dynamic_object) -> bool:
-        return len(self.content) + 1 <= self.max_content and (not self.toggle) and \
+        return len(self.content) < self.max_content and (not self.toggle) and \
                isinstance(dynamic_object, PotFood) and dynamic_object.boil_state == PotFoodStates.READY
 
     def releases(self) -> bool:
@@ -315,11 +343,11 @@ class Pot(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionOb
         if self.accepts(content):
             self.content.append(content)
         else:
-            raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
+            raise Exception(f"Tried to add invalid object {content.__name__} to Pot")
 
-    def action(self) -> bool:
+    def action(self) -> Tuple[List, List, bool]:
         self.switch_toggle()
-        return True
+        return [], [], True
 
     def numeric_state_representation(self):
         return 1
@@ -331,11 +359,15 @@ class Pot(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionOb
     def file_name(self) -> str:
         return "Pot_on" if self.toggle else "Pot"
 
+    def get_physical_state(self) -> List[str]:
+        return []
+
 
 class Plate(DynamicObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
+        self.max_content = 64
 
     def move_to(self, new_location):
         for content in self.content:
@@ -350,7 +382,7 @@ class Plate(DynamicObject, ContentObject):
         self.content.append(content)
 
     def accepts(self, dynamic_object):
-        return isinstance(dynamic_object, Food) and dynamic_object.done()
+        return isinstance(dynamic_object, Food) and dynamic_object.done() and len(self.content) < self.max_content
 
     def numeric_state_representation(self):
         return 1
@@ -361,6 +393,9 @@ class Plate(DynamicObject, ContentObject):
 
     def file_name(self) -> str:
         return "Plate"
+
+    def get_physical_state(self) -> List[str]:
+        return []
 
 
 class Onion(ChopFood):
@@ -387,6 +422,8 @@ class Onion(ChopFood):
         else:
             return "FreshOnion"
 
+    def get_physical_state(self) -> List[str]:
+        return [self.chop_state.value]
 
 
 class Tomato(ChopFood):
@@ -413,6 +450,9 @@ class Tomato(ChopFood):
         else:
             return "FreshTomato"
 
+    def get_physical_state(self) -> List[str]:
+        return [self.chop_state.value]
+
 
 class Lettuce(ChopFood):
 
@@ -437,6 +477,9 @@ class Lettuce(ChopFood):
             return "ChoppedLettuce"
         else:
             return "FreshLettuce"
+
+    def get_physical_state(self) -> List[str]:
+        return [self.chop_state.value]
 
 
 class Carrot(BlenderFood, ChopFood):
@@ -466,27 +509,54 @@ class Carrot(BlenderFood, ChopFood):
         else:
             return "FreshCarrot"
 
+    def get_physical_state(self) -> List[str]:
+        return [self.chop_state.value]
 
-class Bread(ToasterFood, ChopFood):
+
+class Bread(ChopFood):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
+        self.slices = 5
 
     def done(self):
-        return self.chop_state == ChopFoodStates.CHOPPED
+        return False
 
     def chop(self):
-        if self.chop_state == ChopFoodStates.CHOPPED:
-            return False
+        new_slice = BreadSlice(unique_id=-1, location=self.location)
+        self.slices -= 1
+        if self.slices == 0:
+            return [new_slice], [self], True
+        else:
+            return [new_slice], [], True
+
+    def numeric_state_representation(self):
+        return 1, 0, 0
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        return "Bread"
+
+    def get_physical_state(self) -> List[str]:
+        return [self.chop_state.value, f"slices: {self.slices}"]
+
+
+class BreadSlice(ToasterFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
         self.toast_state = ToasterFoodStates.READY
-        self.chop_state = ChopFoodStates.CHOPPED
-        return True
+
+    def done(self):
+        return self.toast_state == ToasterFoodStates.TOASTED
 
     def toast(self):
-        if self.chop_state == ChopFoodStates.CHOPPED and \
-                (self.toast_state == ToasterFoodStates.READY or self.toast_state == ToasterFoodStates.IN_PROGRESS):
+        if self.toast_state == ToasterFoodStates.READY or self.toast_state == ToasterFoodStates.IN_PROGRESS:
             self.current_progress -= 1
-            self.toast_state = ToasterFoodStates.IN_PROGRESS if self.current_progress > self.max_progress \
+            self.toast_state = ToasterFoodStates.IN_PROGRESS if self.current_progress < self.max_progress \
                 else ToasterFoodStates.TOASTED
             return True
         return False
@@ -499,12 +569,13 @@ class Bread(ToasterFood, ChopFood):
         return 3
 
     def file_name(self) -> str:
-        if self.chop_state == ChopFoodStates.CHOPPED and self.toast_state == ToasterFoodStates.TOASTED:
+        if self.toast_state == ToasterFoodStates.TOASTED:
             return "ChoppedToastedBread"
-        elif self.chop_state == ChopFoodStates.CHOPPED:
-            return "ChoppedFreshBread"
         else:
-            return "Bread"
+            return "ChoppedFreshBread"
+
+    def get_physical_state(self) -> List[str]:
+        return [self.toast_state.value]
 
 
 class Spaghetti(MicrowaveFood, PotFood):
@@ -539,6 +610,9 @@ class Spaghetti(MicrowaveFood, PotFood):
         else:
             return "SpaghettiRaw"
 
+    def get_physical_state(self) -> List[str]:
+        return [self.microwave_state.value, self.boil_state.value]
+
 
 class Penne(MicrowaveFood, PotFood):
 
@@ -571,6 +645,9 @@ class Penne(MicrowaveFood, PotFood):
             return "PenneCooked"
         else:
             return "PenneRaw"
+
+    def get_physical_state(self) -> List[str]:
+        return [self.microwave_state.value, self.boil_state.value]
 
 
 class Agent(Object):
@@ -610,6 +687,9 @@ class Agent(Object):
 
     def file_name(self) -> str:
         pass
+
+    def get_physical_state(self) -> List[str]:
+        return []
 
 
 GAME_CLASSES = [m[1] for m in inspect.getmembers(sys.modules[__name__], inspect.isclass) if m[1].__module__ == __name__]

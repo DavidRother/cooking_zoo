@@ -10,6 +10,7 @@ setup(name='cooking-gym',
             'gym==0.19.0',
             'numpy>=1.21.2',
             'pygame==2.0.1',
-            'pettingzoo==1.11.2'
+            'pettingzoo==1.11.2',
+            'Pillow'
       ]
       )
