@@ -98,6 +98,9 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
 
         self.max_content = 8
 
+    def get_physical_state(self) -> List[str]:
+        return []
+
     def action(self) -> Tuple[List, List, bool]:
         for obj in self.content:
             if isinstance(obj, ChopFood):
