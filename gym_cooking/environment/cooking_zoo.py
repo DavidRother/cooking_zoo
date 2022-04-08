@@ -111,7 +111,7 @@ class CookingEnvironment(AECEnv):
         pass
 
     def reset(self):
-        self.world = CookingWorld(self.action_scheme_class)
+        # self.world = CookingWorld(self.action_scheme_class)
         self.t = 0
 
         # For tracking data during an episode.

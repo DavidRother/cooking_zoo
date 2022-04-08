@@ -1,3 +1,4 @@
+import copy
 from collections import defaultdict
 from gym_cooking.cooking_world.world_objects import *
 from gym_cooking.cooking_world.actions import *
@@ -45,6 +46,7 @@ class CookingWorld:
         self.abstract_index = defaultdict(list)
         self.id_counter = itertools.count(start=0, step=1)
         self.action_scheme = action_scheme_class
+        self.init_world = None
 
     def add_object(self, obj):
         self.world_objects[type(obj).__name__].append(obj)
@@ -375,5 +377,13 @@ class CookingWorld:
                             raise ValueError(f"Can't find valid position for agent: {agent_object} in {time_out} steps")
 
     def load_level(self, level, num_agents):
-        self.load_new_style_level(level, num_agents)
+        if self.init_world is not None:
+            self.world_objects = defaultdict(list)
+            self.world_objects.update(copy.deepcopy(self.init_world))
+            self.agents = copy.deepcopy(self.init_agents)
+        else:
+            self.load_new_style_level(level, num_agents)
+            self.init_world = defaultdict(list)
+            self.init_world.update(copy.deepcopy(self.world_objects))
+            self.init_agents = copy.deepcopy(self.agents)
         self.index_objects()

@@ -35,6 +35,7 @@ class ActionObject(ABC):
 
     def __init__(self):
         super(ActionObject, self).__init__()
+        self.status = ActionObjectState.NOT_USABLE
 
     @abstractmethod
     def action(self) -> bool:
@@ -77,6 +78,7 @@ class ContentObject:
     def __init__(self):
         super(ContentObject, self).__init__()
         self.content = []
+        self.max_content = 1
 
     @abstractmethod
     def add_content(self, content):

@@ -87,22 +87,37 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
 
+        self.max_content = 1
+
     def action(self) -> bool:
-        if len(self.content) == 1:
+        valid = self.status == ActionObjectState.READY
+        if valid:
+        # if len(self.content) == 1:
             try:
+                self.status = ActionObjectState.NOT_USABLE
                 return self.content[0].chop()
             except AttributeError:
                 return False
         return False
 
     def accepts(self, dynamic_object) -> bool:
-        return isinstance(dynamic_object, ChopFood)
+        return isinstance(dynamic_object, ChopFood) and \
+               len(self.content) + 1 <= self.max_content and \
+                dynamic_object.chop_state == ChopFoodStates.FRESH
+
 
     def releases(self) -> bool:
+        self.status = ActionObjectState.NOT_USABLE
         return True
 
     def add_content(self, content):
-        self.content.append(content)
+        # self.content.append(content)
+
+        if self.accepts(content):
+            self.status = ActionObjectState.READY
+            self.content.append(content)
+        else:
+            raise Exception(f"Tried to add invalid object {content.__name__} to CutBoard")
 
     def numeric_state_representation(self):
         return 1
@@ -114,24 +129,27 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
     def file_name(self) -> str:
         return "cutboard"
 
-
+#TODO not finished
 class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
+        self.max_content = 1
 
     def progress(self):
-        assert len(self.content) < 2, "Too many Dynamic Objects placed into the Oven"
+        assert len(self.content) < self.max_content + 1, "Too many Dynamic Objects placed into the Oven"
         if self.content and self.toggle:
             self.content[0].apply_temperature(Temperature.HOT)
             if self.content[0].done():
                 self.switch_toggle()
 
+                self.status = ActionObjectState.NOT_USABLE
+
                 for cont in self.content:
                     cont.current_progress = cont.min_progress
 
     def accepts(self, dynamic_object) -> bool:
-        return isinstance(dynamic_object, TemperatureObject) and (not self.toggle)
+        return isinstance(dynamic_object, TemperatureObject) and (not self.toggle) and len(self.content) + 1 <= self.max_content
 
     def releases(self) -> bool:
         return not self.toggle
@@ -158,29 +176,44 @@ class Blender(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
+        self.max_content = 1
 
     def progress(self):
-        assert len(self.content) < 2, "Too many Dynamic Objects placed into the Blender"
+        assert len(self.content) < self.max_content + 1, "Too many Dynamic Objects placed into the Blender"
         if self.content and self.toggle:
-            self.content[0].blend()
-            if self.content[0].done():
+
+            for con in self.content:
+                con.blend()
+
+            if all([cont.blend_state == BlenderFoodStates.MASHED for cont in self.content]):
                 self.switch_toggle()
+
+                self.status = ActionObjectState.NOT_USABLE
 
                 for cont in self.content:
                     cont.current_progress = cont.min_progress
 
     def accepts(self, dynamic_object) -> bool:
-        return isinstance(dynamic_object, BlenderFood) and (not self.toggle)
+        return isinstance(dynamic_object, BlenderFood) and (not self.toggle) and len(self.content) + 1 <= self.max_content and dynamic_object.blend_state == BlenderFoodStates.FRESH
 
     def releases(self) -> bool:
-        return not self.toggle
+        valid = not self.toggle
+        if valid:
+            # if last removed, not usable
+            if len(self.content) - 1 == 0:
+                self.status = ActionObjectState.NOT_USABLE
+        return valid
 
     def add_content(self, content):
-        self.content.append(content)
+        if self.accepts(content):
+            self.status = ActionObjectState.READY
+            self.content.append(content)
 
     def action(self) -> bool:
-        self.switch_toggle()
-        return True
+        valid = self.status == ActionObjectState.READY
+        if valid:
+            self.switch_toggle()
+        return valid
 
     def numeric_state_representation(self):
         return 1
@@ -197,7 +230,6 @@ class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
-
         self.max_content = 2
 
     def progress(self):
@@ -209,25 +241,40 @@ class Toaster(StaticObject, ProgressingObject, ContentObject, ToggleObject, Acti
             if all([cont.toast_state == ToasterFoodStates.TOASTED for cont in self.content]):
                 self.switch_toggle()
 
+                self.status = ActionObjectState.NOT_USABLE
+
+                # reset progress, to be prooessed again.. different counters for different tools actually?
                 for cont in self.content:
                     cont.current_progress = cont.min_progress
 
     def accepts(self, dynamic_object) -> bool:
-        return len(self.content) + 1 <= self.max_content and (not self.toggle) and \
-               isinstance(dynamic_object, ToasterFood) and dynamic_object.toast_state == ToasterFoodStates.READY
+        added = len(self.content) + 1 <= self.max_content and \
+                (not self.toggle) and \
+                isinstance(dynamic_object, ToasterFood) and \
+                dynamic_object.toast_state == ToasterFoodStates.READY and \
+                all([c.toast_state == ToasterFoodStates.READY for c in self.content])
+        return added
 
     def releases(self) -> bool:
-        return not self.toggle
+        valid = not self.toggle
+        if valid:
+            # if last removed, not usable
+            if len(self.content) - 1 == 0:
+                self.status = ActionObjectState.NOT_USABLE
+        return valid
 
     def add_content(self, content):
         if self.accepts(content):
+            self.status = ActionObjectState.READY
             self.content.append(content)
         else:
             raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
 
     def action(self) -> bool:
-        self.switch_toggle()
-        return True
+        valid = self.status == ActionObjectState.READY
+        if valid:
+            self.switch_toggle()
+        return valid
 
     def numeric_state_representation(self):
         return 1
@@ -255,6 +302,9 @@ class Microwave(StaticObject, ProgressingObject, ContentObject, ToggleObject, Ac
 
             if all([cont.microwave_state == MicrowaveFoodStates.HOT for cont in self.content]):
                 self.switch_toggle()
+
+                self.status = ActionObjectState.NOT_USABLE
+
                 for cont in self.content:
                     cont.current_progress = cont.min_progress
 
@@ -263,17 +313,25 @@ class Microwave(StaticObject, ProgressingObject, ContentObject, ToggleObject, Ac
                isinstance(dynamic_object, MicrowaveFood) and dynamic_object.microwave_state == MicrowaveFoodStates.READY
 
     def releases(self) -> bool:
-        return not self.toggle
+        valid = not self.toggle
+        if valid:
+            # if last removed, not usable
+            if len(self.content) - 1 == 0:
+                self.status = ActionObjectState.NOT_USABLE
+        return valid
 
     def add_content(self, content):
         if self.accepts(content):
+            self.status = ActionObjectState.READY
             self.content.append(content)
         else:
             raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
 
     def action(self) -> bool:
-        self.switch_toggle()
-        return True
+        valid = self.status == ActionObjectState.READY
+        if valid:
+            self.switch_toggle()
+        return valid
 
     def numeric_state_representation(self):
         return 1
@@ -301,6 +359,9 @@ class Pot(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionOb
 
             if all([cont.boil_state == PotFoodStates.COOKED for cont in self.content]):
                 self.switch_toggle()
+
+                self.status = ActionObjectState.NOT_USABLE
+
                 for cont in self.content:
                     cont.current_progress = cont.min_progress
 
@@ -309,17 +370,25 @@ class Pot(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionOb
                isinstance(dynamic_object, PotFood) and dynamic_object.boil_state == PotFoodStates.READY
 
     def releases(self) -> bool:
-        return not self.toggle
+        valid = not self.toggle
+        if valid:
+            # if last removed, not usable
+            if len(self.content) - 1 == 0:
+                self.status = ActionObjectState.NOT_USABLE
+        return valid
 
     def add_content(self, content):
         if self.accepts(content):
+            self.status = ActionObjectState.READY
             self.content.append(content)
         else:
             raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
 
     def action(self) -> bool:
-        self.switch_toggle()
-        return True
+        valid = self.status == ActionObjectState.READY
+        if valid:
+            self.switch_toggle()
+        return valid
 
     def numeric_state_representation(self):
         return 1

@@ -37,6 +37,11 @@ class FoodStates(Enum):
     COOKED = "Cooked"
     ROTTEN = "Rotten"
 
+# status of action objects, if they can be used
+class ActionObjectState(Enum):
+    READY = "Ready"
+    NOT_USABLE = "NotUsable"
+
 class Temperature(Enum):
     FREEZING = -10
     COLD = 0
