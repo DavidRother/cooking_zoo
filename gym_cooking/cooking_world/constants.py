@@ -5,6 +5,7 @@ class ChopFoodStates(Enum):
     FRESH = "Fresh"
     CHOPPED = "Chopped"
 
+
 class BlenderFoodStates(Enum):
     FRESH = "Fresh"
     IN_PROGRESS = "InProgress"
@@ -24,11 +25,13 @@ class MicrowaveFoodStates(Enum):
     IN_PROGRESS = "InProgress"
     HOT = "Hot"
 
+
 class PotFoodStates(Enum):
     FRESH = "Fresh"
     READY = "Ready"
     IN_PROGRESS = "InProgress"
     COOKED = "Cooked"
+
 
 # add foodstates, tempstates, and more?, basic attributes to all foods automatically?
 class FoodStates(Enum):
@@ -37,10 +40,12 @@ class FoodStates(Enum):
     COOKED = "Cooked"
     ROTTEN = "Rotten"
 
+
 # status of action objects, if they can be used
 class ActionObjectState(Enum):
     READY = "Ready"
     NOT_USABLE = "NotUsable"
+
 
 class Temperature(Enum):
     FREEZING = -10

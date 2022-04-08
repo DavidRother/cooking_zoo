@@ -60,6 +60,19 @@ class CookingWorld:
                 if issubclass(StringToClass[type_name], abstract_class):
                     self.abstract_index[abstract_class].extend(obj_list)
 
+    def delete_from_index(self, obj):
+        for abstract_class in ABSTRACT_GAME_CLASSES:
+            if isinstance(obj, abstract_class):
+                try:
+                    self.abstract_index[abstract_class].remove(obj)
+                except ValueError:
+                    pass
+
+    def add_to_index(self, obj):
+        for abstract_class in ABSTRACT_GAME_CLASSES:
+            if isinstance(obj, abstract_class):
+                self.abstract_index[abstract_class].append(obj)
+
     def get_object_list(self):
         object_list = []
         for value in self.world_objects.values():
@@ -67,6 +80,8 @@ class CookingWorld:
         return object_list
 
     def progress_world(self):
+        for obj in self.abstract_index[ProcessingObject]:
+            obj.process()
         for obj in self.abstract_index[ProgressingObject]:
             obj.progress()
 
@@ -163,9 +178,16 @@ class CookingWorld:
             return
         static_object = self.get_objects_at(interaction_location, StaticObject)[0]
         if isinstance(static_object, ActionObject):
-            action_executed = static_object.action()
+            obj_list_created, obj_list_deleted, action_executed = static_object.action()
             if action_executed:
                 agent.interacts_with = [static_object]
+            for del_obj in obj_list_deleted:
+                self.delete_object(del_obj)
+                self.delete_from_index(del_obj)
+            for new_obj in obj_list_created:
+                new_obj.unique_id = next(self.id_counter)
+                self.add_object(new_obj)
+                self.add_to_index(new_obj)
 
     @staticmethod
     def get_target_location(agent, action):

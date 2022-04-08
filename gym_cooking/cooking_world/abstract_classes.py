@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
 from gym_cooking.cooking_world.constants import *
+from typing import List, Tuple
 
 
 class Object(ABC):
@@ -17,6 +18,10 @@ class Object(ABC):
     def move_to(self, new_location):
         self.location = new_location
 
+    @property
+    def physical_state(self):
+        return self.get_physical_state()
+
     @abstractmethod
     def numeric_state_representation(self):
         pass
@@ -30,6 +35,10 @@ class Object(ABC):
     def file_name(self) -> str:
         pass
 
+    @abstractmethod
+    def get_physical_state(self) -> List[str]:
+        pass
+
 
 class ActionObject(ABC):
 
@@ -38,7 +47,7 @@ class ActionObject(ABC):
         self.status = ActionObjectState.NOT_USABLE
 
     @abstractmethod
-    def action(self) -> bool:
+    def action(self) -> Tuple[List, List, bool]:
         pass
 
 
@@ -63,6 +72,16 @@ class TemperatureObject:
         pass
 
 
+class ProcessingObject(ABC):
+
+    def __init__(self):
+        super(ProcessingObject, self).__init__()
+
+    @abstractmethod
+    def process(self):
+        pass
+
+
 class ProgressingObject(ABC):
 
     def __init__(self):
@@ -75,10 +94,10 @@ class ProgressingObject(ABC):
 
 class ContentObject:
 
-    def __init__(self):
+    def __init__(self, max_content=1):
         super(ContentObject, self).__init__()
         self.content = []
-        self.max_content = 1
+        self.max_content = max_content
 
     @abstractmethod
     def add_content(self, content):
@@ -144,9 +163,9 @@ class ChopFood(DynamicObject, Food, ABC):
 
     def chop(self):
         if self.chop_state == ChopFoodStates.CHOPPED:
-            return False
+            return [], [], False
         self.chop_state = ChopFoodStates.CHOPPED
-        return True
+        return [], [], True
 
 
 class BlenderFood(DynamicObject, Food, ABC):
@@ -203,6 +222,7 @@ class MicrowaveFood(DynamicObject, Food, ABC):
             return True
         return False
 
+
 class PotFood(DynamicObject, Food, ABC):
 
     def __init__(self, unique_id, location):
@@ -221,7 +241,7 @@ class PotFood(DynamicObject, Food, ABC):
         return False
 
 
-ABSTRACT_GAME_CLASSES = (ActionObject, ProgressingObject, ContentObject, Food, ChopFood, DynamicObject, StaticObject,
-                         BlenderFood, ToasterFood)
+ABSTRACT_GAME_CLASSES = (ActionObject, ProcessingObject, ProgressingObject, ContentObject, Food, ChopFood,
+                         DynamicObject, StaticObject, BlenderFood, ToasterFood)
 
 STATEFUL_GAME_CLASSES = (ChopFood, BlenderFood, ToasterFood)
