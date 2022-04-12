@@ -116,7 +116,8 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
         return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content
 
     def releases(self) -> bool:
-        self.status = ActionObjectState.NOT_USABLE
+        if len(self.content) == 1:
+            self.status = ActionObjectState.NOT_USABLE
         return True
 
     def add_content(self, content):
@@ -232,7 +233,6 @@ class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
         if valid:
             self.switch_toggle()
         return [], [], valid
-
 
     def numeric_state_representation(self):
         return 1
