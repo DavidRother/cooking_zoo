@@ -358,7 +358,6 @@ class Microwave(StaticObject, ProcessingObject, ContentObject, ToggleObject, Act
             self.switch_toggle()
         return [], [], valid
 
-
     def numeric_state_representation(self):
         return 1
 
@@ -583,7 +582,7 @@ class Carrot(BlenderFood, ChopFood):
         return [self.chop_state.value]
 
 
-class Bread(ChopFood):
+class Bread(ChopFood, ToasterFood):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location)
@@ -593,12 +592,20 @@ class Bread(ChopFood):
         return False
 
     def chop(self):
-        new_slice = BreadSlice(unique_id=-1, location=self.location)
+        if self.slices == 1:
+            return [], [], False
+        new_slice = Bread(unique_id=-1, location=self.location)
+        new_slice.slices = 1
         self.slices -= 1
-        if self.slices == 0:
-            return [new_slice], [self], True
-        else:
-            return [new_slice], [], True
+        return [new_slice], [], True
+
+    def toast(self):
+        if self.toast_state == ToasterFoodStates.READY or self.toast_state == ToasterFoodStates.IN_PROGRESS:
+            self.current_progress -= 1
+            self.toast_state = ToasterFoodStates.IN_PROGRESS if self.current_progress < self.max_progress \
+                else ToasterFoodStates.TOASTED
+            return True
+        return False
 
     def numeric_state_representation(self):
         return 1, 0, 0

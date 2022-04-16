@@ -16,5 +16,5 @@
                       {"Spaghetti": {"COUNT": 0, "X_POSITION": [0, 1 ,2, 3, 4, 5, 6], "Y_POSITION":  [1 ,2, 3, 4, 5]}},
                       {"Penne": {"COUNT": 0, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [0, 1 ,2, 3, 4, 5, 6]}}
   ],
-  "AGENTS": [{"MAX_COUNT": 1, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [1 ,2, 3, 4, 5]}]
+  "AGENTS": [{"MAX_COUNT": 2, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [1 ,2, 3, 4, 5]}]
 }
