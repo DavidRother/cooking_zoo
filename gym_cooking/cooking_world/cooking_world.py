@@ -144,10 +144,11 @@ class CookingWorld:
         elif not agent.holding and dynamic_objects:
             if static_object.releases():
                 content_obj_l = self.filter_obj(dynamic_objects, ContentObject)
+                pick_index = -1 #pick the last object put on
                 if content_obj_l:
-                    object_to_grab = content_obj_l[0]
+                    object_to_grab = content_obj_l[pick_index]
                 else:
-                    object_to_grab = dynamic_objects[0]
+                    object_to_grab = dynamic_objects[pick_index]
                 agent.grab(object_to_grab)
                 static_object.content.remove(object_to_grab)
                 agent.interacts_with = [object_to_grab]

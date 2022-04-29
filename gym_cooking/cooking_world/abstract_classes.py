@@ -36,7 +36,7 @@ class Object(ABC):
         pass
 
     @abstractmethod
-    def get_physical_state(self) -> List[str]:
+    def get_physical_state(self) -> dict:
         pass
 
 
