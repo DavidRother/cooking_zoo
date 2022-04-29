@@ -164,7 +164,7 @@ class CookingWorld:
             content_obj_l = self.filter_obj(dynamic_objects, ContentObject)
             if len(content_obj_l) == 1:
                 try:
-                    obj = content_obj_l[0].content.pop(0)
+                    obj = content_obj_l[0].content.pop(-1) #pick the last object put on
                     agent.grab(obj)
                 except IndexError:
                     pass
@@ -280,10 +280,12 @@ class CookingWorld:
                 agent.put_down(target_location)
                 agent.interacts_with.append(content_obj[0])
         elif isinstance(agent.holding, ContentObject) and dynamic_objects:
-            if agent.holding.accepts(dynamic_objects[0]):
-                agent.holding.add_content(dynamic_objects[0])
-                dynamic_objects[0].move_to(agent.location)
-                agent.interacts_with.append(dynamic_objects[0])
+            pick_index = -1  # pick the last object put on
+            if agent.holding.accepts(dynamic_objects[pick_index]):
+                agent.holding.add_content(dynamic_objects[pick_index])
+                dynamic_objects[pick_index].move_to(agent.location)
+                agent.interacts_with.append(dynamic_objects[pick_index])
+                static_object.content.remove(dynamic_objects[pick_index])
         elif isinstance(static_object, ContentObject):
             if static_object.accepts(agent.holding):
                 static_object.add_content(agent.holding)
