@@ -107,15 +107,22 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
             for obj in self.content:
                 if isinstance(obj, ChopFood):
                     new_obj_list, deleted_obj_list, action_executed = obj.chop()
+
+                if action_executed:
                     for del_obj in deleted_obj_list:
                         self.content.remove(del_obj)
                     for new_obj in new_obj_list:
                         self.content.append(new_obj)
+
                     self.status = ActionObjectState.NOT_USABLE
+
                     return new_obj_list, deleted_obj_list, action_executed
-            return [], [], False
+                else:
+                    return [], [], False
         else:
             return [], [], False
+
+
     def accepts(self, dynamic_object) -> bool:
         return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content and \
                 dynamic_object.chop_state == ChopFoodStates.FRESH
@@ -151,9 +158,6 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
         self.max_content = 1
-
-    def get_physical_state(self) -> dict:
-        return {}
 
     def process(self):
         assert len(self.content) <= self.max_content, "Too many Dynamic Objects placed into the Oven"
@@ -362,7 +366,6 @@ class Microwave(StaticObject, ProcessingObject, ContentObject, ToggleObject, Act
         if valid:
             self.switch_toggle()
         return [], [], valid
-
 
     def numeric_state_representation(self):
         return 1
@@ -600,18 +603,16 @@ class Bread(ChopFood, ToasterFood):
         return self.chop_state == ChopFoodStates.CHOPPED
 
     def chop(self):
-        if self.slices >= 1:
-            # new_slice = BreadSlice(unique_id=-1, location=self.location)
-            # new_slice = Bread(unique_id=-1, location=self.location)
-            # new_slice.slices = 1
-            # new_slice.chop_state = ChopFoodStates.CHOPPED
-            # new_slice.toast_state = ToasterFoodStates.READY
+        if self.slices > 1:
+            # new_bread = Bread(unique_id=-1, location=self.location)
+            # new_bread.slices = 1
+            # new_bread.chop_state = ChopFoodStates.CHOPPED
+            # new_bread.toast_state = ToasterFoodStates.READY
 
             self.slices -= 1
             if self.slices == 1:
                 self.chop_state = ChopFoodStates.CHOPPED
                 self.toast_state = ToasterFoodStates.READY
-
             return [], [], True
         else:
             return [], [], False
