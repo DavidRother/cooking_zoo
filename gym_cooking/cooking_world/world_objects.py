@@ -96,24 +96,29 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
 
-        self.max_content = 8
+        self.max_content = 1
 
     def get_physical_state(self) -> dict:
         return {}
 
     def action(self) -> Tuple[List, List, bool]:
-        for obj in self.content:
-            if isinstance(obj, ChopFood):
-                new_obj_list, deleted_obj_list, action_executed = obj.chop()
-                for del_obj in deleted_obj_list:
-                    self.content.remove(del_obj)
-                for new_obj in new_obj_list:
-                    self.content.append(new_obj)
-                return new_obj_list, deleted_obj_list, action_executed
-        return [], [], False
-
+        valid = self.status == ActionObjectState.READY
+        if valid:
+            for obj in self.content:
+                if isinstance(obj, ChopFood):
+                    new_obj_list, deleted_obj_list, action_executed = obj.chop()
+                    for del_obj in deleted_obj_list:
+                        self.content.remove(del_obj)
+                    for new_obj in new_obj_list:
+                        self.content.append(new_obj)
+                    self.status = ActionObjectState.NOT_USABLE
+                    return new_obj_list, deleted_obj_list, action_executed
+            return [], [], False
+        else:
+            return [], [], False
     def accepts(self, dynamic_object) -> bool:
-        return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content
+        return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content and \
+                dynamic_object.chop_state == ChopFoodStates.FRESH
 
     def releases(self) -> bool:
         if len(self.content) == 1:
