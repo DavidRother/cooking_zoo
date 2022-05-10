@@ -255,6 +255,12 @@ class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
     def file_name(self) -> str:
         return "blender_on" if self.toggle else "blender3"
 
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return self.name()
+
     # def get_physical_state(self) -> dict:
     #     return {}
 

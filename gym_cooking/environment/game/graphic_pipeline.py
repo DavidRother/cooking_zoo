@@ -163,7 +163,7 @@ class GraphicPipeline:
                 raise ValueError(f"Agent orientation invalid ({agent.orientation})")
             self.draw(file_name, size, location)
 
-    def draw(self, path, text, icons, size, location):
+    def draw(self, path, size, location):
         image_path = f'{self.root_dir}/{self.graphics_dir}/{path}.png'
         image = pygame.transform.scale(get_image(image_path), (int(size[0]), int(size[1])))
         self.screen.blit(image, location)
@@ -173,7 +173,7 @@ class GraphicPipeline:
         size = (base_size[0] // tiles, base_size[1] // tiles)
         for idx, obj in enumerate(dynamic_objects):
             location = (base_loc[0] + size[0] * (idx % tiles), base_loc[1] + size[1] * (idx // tiles))
-            self.draw(obj.file_name(), "", None, size, location)
+            self.draw(obj.file_name(), size, location)
 
     def scaled_location(self, loc):
         """Return top-left corner of scaled location given coordinates loc, e.g. (3, 4)"""
