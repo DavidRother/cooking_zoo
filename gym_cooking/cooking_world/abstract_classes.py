@@ -35,10 +35,31 @@ class Object(ABC):
     def file_name(self) -> str:
         pass
 
-    @abstractmethod
+    # @abstractmethod
     def get_physical_state(self) -> dict:
-        pass
+        state = {}
+        # in state observation
+        state_attributes = [
+            "location",
+            "orientation",
+            "holding",
+            "walkable",
+            "movable",
+            "content",
+            "chop_state",
+            "blend_state",
+            "toast_state",
+            "interacts_with",
+            "toggle",
+            "status",
+        ]
+        for attr in state_attributes:
+            if hasattr(self, attr):
+                ent_attr = getattr(self, attr)
+                value = getattr(ent_attr, "value", ent_attr)
+                state[attr] = value
 
+        return state
 
 class ActionObject(ABC):
 

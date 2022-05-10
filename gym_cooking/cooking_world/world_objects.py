@@ -31,17 +31,19 @@ class Floor(StaticObject, ContentObject):
     def file_name(self) -> str:
         return "floor"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Counter(StaticObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
+        self.max_content = 1
 
     def accepts(self, dynamic_object) -> bool:
-        return not bool(self.content)
+        # return not bool(self.content)
+        return len(self.content) < self.max_content
 
     def releases(self) -> bool:
         return True
@@ -59,8 +61,8 @@ class Counter(StaticObject, ContentObject):
     def file_name(self) -> str:
         return "counter"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class DeliverSquare(StaticObject, ContentObject):
@@ -87,8 +89,8 @@ class DeliverSquare(StaticObject, ContentObject):
     def file_name(self) -> str:
         return "delivery"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class CutBoard(StaticObject, ActionObject, ContentObject):
@@ -98,8 +100,8 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
 
         self.max_content = 1
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
     def action(self) -> Tuple[List, List, bool]:
         valid = self.status == ActionObjectState.READY
@@ -195,8 +197,8 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
     def file_name(self) -> str:
         return "Oven_on" if self.toggle else "Oven"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
@@ -253,8 +255,8 @@ class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
     def file_name(self) -> str:
         return "blender_on" if self.toggle else "blender3"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Toaster(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
@@ -318,8 +320,8 @@ class Toaster(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
     def file_name(self) -> str:
         return "toaster_on" if self.toggle else "toaster_off"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Microwave(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
@@ -377,8 +379,8 @@ class Microwave(StaticObject, ProcessingObject, ContentObject, ToggleObject, Act
     def file_name(self) -> str:
         return "Microwave_on" if self.toggle else "Microwave"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Pot(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
@@ -437,8 +439,8 @@ class Pot(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObj
     def file_name(self) -> str:
         return "Pot_on" if self.toggle else "Pot"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Plate(DynamicObject, ContentObject):
@@ -472,8 +474,8 @@ class Plate(DynamicObject, ContentObject):
     def file_name(self) -> str:
         return "Plate"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Onion(ChopFood):
@@ -528,8 +530,8 @@ class Tomato(ChopFood):
         else:
             return "FreshTomato"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Lettuce(ChopFood):
@@ -556,8 +558,8 @@ class Lettuce(ChopFood):
         else:
             return "FreshLettuce"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Carrot(BlenderFood, ChopFood):
@@ -587,8 +589,8 @@ class Carrot(BlenderFood, ChopFood):
         else:
             return "FreshCarrot"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Bread(ChopFood, ToasterFood):
@@ -632,8 +634,8 @@ class Bread(ChopFood, ToasterFood):
         else:
             return "Bread"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 # class BreadSlice(ToasterFood):
@@ -702,8 +704,8 @@ class Spaghetti(MicrowaveFood, PotFood):
         else:
             return "SpaghettiRaw"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Penne(MicrowaveFood, PotFood):
@@ -738,8 +740,8 @@ class Penne(MicrowaveFood, PotFood):
         else:
             return "PenneRaw"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Agent(Object):
@@ -780,8 +782,8 @@ class Agent(Object):
     def file_name(self) -> str:
         pass
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 GAME_CLASSES = [m[1] for m in inspect.getmembers(sys.modules[__name__], inspect.isclass) if m[1].__module__ == __name__]
