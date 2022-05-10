@@ -35,13 +35,13 @@ class Object(ABC):
     def file_name(self) -> str:
         pass
 
-    @abstractmethod
-    def icons(self) -> List[str]:
-        return []
-
-    @abstractmethod
-    def display_text(self) -> str:
-        return self.name()
+    # @abstractmethod
+    # def icons(self) -> List[str]:
+    #     return []
+    #
+    # @abstractmethod
+    # def display_text(self) -> str:
+    #     return self.name()
 
     # @abstractmethod
     def get_physical_state(self) -> dict:
