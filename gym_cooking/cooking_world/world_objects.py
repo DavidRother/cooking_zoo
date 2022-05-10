@@ -573,7 +573,7 @@ class Tomato(ChopFood):
         return []
 
     def display_text(self) -> str:
-        return ""
+        return "Tomato"
 
 
 class Lettuce(ChopFood):
@@ -837,7 +837,7 @@ class Agent(Object):
         return []
 
     def display_text(self) -> str:
-        return "Agent"
+        return ""
 
 
 GAME_CLASSES = [m[1] for m in inspect.getmembers(sys.modules[__name__], inspect.isclass) if m[1].__module__ == __name__]

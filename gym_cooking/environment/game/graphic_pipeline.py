@@ -66,7 +66,7 @@ class GraphicPipeline:
             self.screen = pygame.Surface((self.graphics_properties.width_pixel, self.graphics_properties.height_pixel))
         self.screen = self.screen
         pygame.display.set_caption('Cooking Zoo')
-        self.font = pygame.font.Font('freesansbold.ttf', 32)
+        self.font = pygame.font.Font('freesansbold.ttf', 18)
         return True
 
     def on_render(self):
@@ -143,7 +143,7 @@ class GraphicPipeline:
     def draw_agents(self):
         for agent in self.env.unwrapped.world.agents:
             self.draw('agent-{}'.format(agent.color), self.graphics_properties.tile_size,
-                      self.scaled_location(agent.location), "", [])
+                      self.scaled_location(agent.location), agent.display_text(), agent.icons())
             if agent.orientation == 1:
                 file_name = "arrow_left"
                 location = self.scaled_location(agent.location)
@@ -179,7 +179,7 @@ class GraphicPipeline:
             text_surface_object = self.font.render(text, True, (0, 0, 0), None)
             text_field = text_surface_object.get_rect()
             text_field.center = (location[0] + size[0] // 2, location[1] + size[1] // 2)
-            self.screen.blit(text, text_field)
+            self.screen.blit(text_surface_object, text_field)
 
         for idx, icon in enumerate(icons):
             icon_path = f'{self.root_dir}/{self.graphics_dir}/{icon}.png'
