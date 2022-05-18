@@ -31,8 +31,11 @@ class Floor(StaticObject, ContentObject):
     def file_name(self) -> str:
         return "floor"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class Counter(StaticObject, ContentObject):
@@ -61,8 +64,11 @@ class Counter(StaticObject, ContentObject):
     def file_name(self) -> str:
         return "counter"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class DeliverSquare(StaticObject, ContentObject):
@@ -89,8 +95,11 @@ class DeliverSquare(StaticObject, ContentObject):
     def file_name(self) -> str:
         return "delivery"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class CutBoard(StaticObject, ActionObject, ContentObject):
@@ -99,9 +108,6 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
         super().__init__(unique_id, location, False)
 
         self.max_content = 1
-
-    # def get_physical_state(self) -> dict:
-    #     return {}
 
     def action(self) -> Tuple[List, List, bool]:
         valid = self.status == ActionObjectState.READY
@@ -153,6 +159,12 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
     def file_name(self) -> str:
         return "cutboard"
 
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
 
 #TODO not finished
 class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
@@ -197,8 +209,11 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
     def file_name(self) -> str:
         return "Oven_on" if self.toggle else "Oven"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
@@ -259,10 +274,7 @@ class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
         return []
 
     def display_text(self) -> str:
-        return self.name()
-
-    # def get_physical_state(self) -> dict:
-    #     return {}
+        return ""
 
 
 class Toaster(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
@@ -326,8 +338,11 @@ class Toaster(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
     def file_name(self) -> str:
         return "toaster_on" if self.toggle else "toaster_off"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class Microwave(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
@@ -385,8 +400,11 @@ class Microwave(StaticObject, ProcessingObject, ContentObject, ToggleObject, Act
     def file_name(self) -> str:
         return "Microwave_on" if self.toggle else "Microwave"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class Pot(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
@@ -445,8 +463,11 @@ class Pot(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObj
     def file_name(self) -> str:
         return "Pot_on" if self.toggle else "Pot"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class Plate(DynamicObject, ContentObject):
@@ -480,8 +501,11 @@ class Plate(DynamicObject, ContentObject):
     def file_name(self) -> str:
         return "Plate"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class Onion(ChopFood):
@@ -508,8 +532,11 @@ class Onion(ChopFood):
         else:
             return "FreshOnion"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class Tomato(ChopFood):
@@ -536,8 +563,11 @@ class Tomato(ChopFood):
         else:
             return "FreshTomato"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return "Tomato"
 
 
 class Lettuce(ChopFood):
@@ -564,8 +594,11 @@ class Lettuce(ChopFood):
         else:
             return "FreshLettuce"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class Carrot(BlenderFood, ChopFood):
@@ -595,8 +628,11 @@ class Carrot(BlenderFood, ChopFood):
         else:
             return "FreshCarrot"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 class Bread(ChopFood, ToasterFood):
@@ -640,8 +676,11 @@ class Bread(ChopFood, ToasterFood):
         else:
             return "Bread"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 # class BreadSlice(ToasterFood):
@@ -674,8 +713,6 @@ class Bread(ChopFood, ToasterFood):
 #         else:
 #             return "ChoppedFreshBread"
 #
-# def get_physical_state(self) -> dict:
-#     return {}
 
 
 class Spaghetti(MicrowaveFood, PotFood):
@@ -710,8 +747,6 @@ class Spaghetti(MicrowaveFood, PotFood):
         else:
             return "SpaghettiRaw"
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
 
 
 class Penne(MicrowaveFood, PotFood):
@@ -745,9 +780,6 @@ class Penne(MicrowaveFood, PotFood):
             return "PenneCooked"
         else:
             return "PenneRaw"
-
-    # def get_physical_state(self) -> dict:
-    #     return {}
 
 
 class Agent(Object):
@@ -788,8 +820,11 @@ class Agent(Object):
     def file_name(self) -> str:
         pass
 
-    # def get_physical_state(self) -> dict:
-    #     return {}
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
 
 GAME_CLASSES = [m[1] for m in inspect.getmembers(sys.modules[__name__], inspect.isclass) if m[1].__module__ == __name__]

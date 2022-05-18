@@ -34,6 +34,7 @@ class GraphicPipeline:
     PIXEL_PER_TILE = 80
     HOLDING_SCALE = 0.5
     CONTAINER_SCALE = 0.7
+    ICON_SCALE = 1/16
 
     def __init__(self, env, display=False):
         self.env = env
@@ -54,6 +55,7 @@ class GraphicPipeline:
         dir_name = os.path.dirname(my_path)
         path = pathlib.Path(dir_name)
         self.root_dir = path.parent.parent
+        self.font = None
 
     def on_init(self):
         if self.display:
@@ -63,6 +65,8 @@ class GraphicPipeline:
             # Create a hidden surface
             self.screen = pygame.Surface((self.graphics_properties.width_pixel, self.graphics_properties.height_pixel))
         self.screen = self.screen
+        pygame.display.set_caption('Cooking Zoo')
+        self.font = pygame.font.Font('freesansbold.ttf', 18)
         return True
 
     def on_render(self):
@@ -97,13 +101,15 @@ class GraphicPipeline:
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
         elif isinstance(static_object, DeliverSquare):
             pygame.draw.rect(self.screen, Color.DELIVERY, fill)
-            self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
+            self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl,
+                      static_object.display_text(), static_object.icons())
         elif isinstance(static_object, Floor):
             pass
         else:
             pygame.draw.rect(self.screen, Color.COUNTER, fill)
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
-            self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl)
+            self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl,
+                      static_object.display_text(), static_object.icons())
 
     def draw_dynamic_objects(self):
         objects = self.env.unwrapped.world.get_object_list()
@@ -126,7 +132,8 @@ class GraphicPipeline:
     def draw_dynamic_object_stack(self, dynamic_objects, base_size, base_location, holding_size, holding_location):
         content_obj_l = self.env.unwrapped.world.filter_obj(dynamic_objects, ContentObject)
         if len(content_obj_l) == 1:
-            self.draw(content_obj_l[0].file_name(), base_size, base_location)
+            obj = content_obj_l[0]
+            self.draw(obj.file_name(), base_size, base_location, obj.display_text(), obj.icons())
             rest_stack = [obj for obj in dynamic_objects if obj != content_obj_l[0]]
             if rest_stack:
                 self.draw_food_stack(rest_stack, holding_size, holding_location)
@@ -136,7 +143,7 @@ class GraphicPipeline:
     def draw_agents(self):
         for agent in self.env.unwrapped.world.agents:
             self.draw('agent-{}'.format(agent.color), self.graphics_properties.tile_size,
-                      self.scaled_location(agent.location))
+                      self.scaled_location(agent.location), agent.display_text(), agent.icons())
             if agent.orientation == 1:
                 file_name = "arrow_left"
                 location = self.scaled_location(agent.location)
@@ -161,19 +168,33 @@ class GraphicPipeline:
                 size = (self.graphics_properties.tile_size[0] // 4, self.graphics_properties.tile_size[1] // 4)
             else:
                 raise ValueError(f"Agent orientation invalid ({agent.orientation})")
-            self.draw(file_name, size, location)
+            self.draw(file_name, size, location, "", [])
 
-    def draw(self, path, size, location):
+    def draw(self, path, size, location, text, icons):
         image_path = f'{self.root_dir}/{self.graphics_dir}/{path}.png'
         image = pygame.transform.scale(get_image(image_path), (int(size[0]), int(size[1])))
         self.screen.blit(image, location)
+
+        if text:
+            text_surface_object = self.font.render(text, True, (0, 0, 0), None)
+            text_field = text_surface_object.get_rect()
+            text_field.center = (location[0] + size[0] // 2, location[1] + size[1] // 2)
+            self.screen.blit(text_surface_object, text_field)
+
+        for idx, icon in enumerate(icons):
+            icon_path = f'{self.root_dir}/{self.graphics_dir}/{icon}.png'
+            icon_size = (int(int(size[0]) * self.ICON_SCALE), int(int(size[1]) * self.ICON_SCALE))
+            icon_tiles = int(math.sqrt(1 / self.ICON_SCALE))
+            new_loc = (location[0] + size[0] * (idx % icon_tiles), location[1] + size[1] * (idx // icon_tiles))
+            icon_image = pygame.transform.scale(get_image(icon_path), icon_size)
+            self.screen.blit(icon_image, new_loc)
 
     def draw_food_stack(self, dynamic_objects, base_size, base_loc):
         tiles = int(math.floor(math.sqrt(len(dynamic_objects) - 1)) + 1)
         size = (base_size[0] // tiles, base_size[1] // tiles)
         for idx, obj in enumerate(dynamic_objects):
             location = (base_loc[0] + size[0] * (idx % tiles), base_loc[1] + size[1] * (idx // tiles))
-            self.draw(obj.file_name(), size, location)
+            self.draw(obj.file_name(), size, location, obj.display_text(), obj.icons())
 
     def scaled_location(self, loc):
         """Return top-left corner of scaled location given coordinates loc, e.g. (3, 4)"""
