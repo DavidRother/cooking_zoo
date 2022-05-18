@@ -508,8 +508,8 @@ class Onion(ChopFood):
         else:
             return "FreshOnion"
 
-    def get_physical_state(self) -> dict:
-        return {}
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Tomato(ChopFood):

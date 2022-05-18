@@ -370,7 +370,7 @@ class CookingWorld:
                         break
                     else:
                         time_out += 1
-                        if time_out > 100:
+                        if time_out > 1000:
                             raise ValueError(f"Can't find valid position for object: "
                                              f"{dynamic_object} in {time_out} steps")
                         continue

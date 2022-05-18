@@ -43,6 +43,9 @@ TomatoLettuceOnionSalad = RecipeNode(root_type=DeliverSquare, id_num=next(id_gen
 MashedCarrot = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), name="DeliverSquare",
                           conditions=None, contains=[CarrotPlate])
 
+floor = RecipeNode(root_type=Floor, id_num=next(id_generator), name="Floor", conditions=None, contains=[])
+no_recipe_node = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), name='DeliverSquare', conditions=None, contains=[floor])
+
 # this one increments one further and is thus the amount of ids we have given since
 # we started counting at zero.
 NUM_GOALS = next(id_generator)
@@ -50,4 +53,6 @@ NUM_GOALS = next(id_generator)
 RECIPES = {"TomatoSalad": lambda: deepcopy(Recipe(TomatoSalad)),
            "TomatoLettuceSalad": lambda: deepcopy(Recipe(TomatoLettuceSalad)),
            "TomatoLettuceOnionSalad": lambda: deepcopy(Recipe(TomatoLettuceOnionSalad)),
-           "MashedCarrot": lambda: deepcopy(Recipe(MashedCarrot))}
+           "MashedCarrot": lambda: deepcopy(Recipe(MashedCarrot)),
+           "no_recipe": lambda: deepcopy(Recipe(no_recipe_node))
+           }

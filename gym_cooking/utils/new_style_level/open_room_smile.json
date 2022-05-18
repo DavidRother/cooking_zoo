@@ -1,5 +1,5 @@
 {
-  "LEVEL_LAYOUT": "-------\n-     -\n-     -\n-     -\n-     -\n-     -\n-------",
+  "LEVEL_LAYOUT": " ----- \n-     -\n-     -\n-     -\n-     -\n-     -\n ----- ",
   "STATIC_OBJECTS": [{"CutBoard": {"COUNT": 1, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [0, 6]}},
                      {"Blender": {"COUNT": 1, "X_POSITION": [0, 6], "Y_POSITION":  [1 ,2, 3, 4, 5]}},
                      {"Toaster": {"COUNT": 1, "X_POSITION": [0, 6], "Y_POSITION":  [1 ,2, 3, 4, 5]}},
