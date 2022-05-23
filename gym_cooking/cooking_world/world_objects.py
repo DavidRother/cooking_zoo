@@ -53,6 +53,9 @@ class Counter(StaticObject, ContentObject):
 
     def add_content(self, content):
         self.content.append(content)
+        for c in self.content:
+            c.free = False
+        self.content[-1].free = True
 
     def numeric_state_representation(self):
         return 1
@@ -77,10 +80,14 @@ class DeliverSquare(StaticObject, ContentObject):
         super().__init__(unique_id, location, False)
 
     def accepts(self, dynamic_object) -> bool:
-        return True
+        return len(self.content) < self.max_content
 
     def add_content(self, content):
-        self.content.append(content)
+        if self.accepts(content):
+            self.content.append(content)
+            for c in self.content:
+                c.free = False
+            self.content[-1].free = True
 
     def releases(self) -> bool:
         return True
@@ -146,6 +153,9 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
         if self.accepts(content):
             self.status = ActionObjectState.READY
             self.content.append(content)
+            for c in self.content:
+                c.free = False
+            self.content[-1].free = True
         else:
             raise Exception(f"Tried to add invalid object {content.__name__} to CutBoard")
 
@@ -194,6 +204,9 @@ class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionO
 
     def add_content(self, content):
         self.content.append(content)
+        for c in self.content:
+            c.free = False
+        self.content[-1].free = True
 
     def action(self) -> Tuple[List, List, bool]:
         self.switch_toggle()
@@ -253,6 +266,9 @@ class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
         if self.accepts(content):
             self.status = ActionObjectState.READY
             self.content.append(content)
+            for c in self.content:
+                c.free = False
+            self.content[-1].free = True
 
     def action(self) -> Tuple[List, List, bool]:
         valid = self.status == ActionObjectState.READY
@@ -319,6 +335,9 @@ class Toaster(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
         if self.accepts(content):
             self.status = ActionObjectState.READY
             self.content.append(content)
+            for c in self.content:
+                c.free = False
+            self.content[-1].free = True
         else:
             raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
 
@@ -381,6 +400,9 @@ class Microwave(StaticObject, ProcessingObject, ContentObject, ToggleObject, Act
         if self.accepts(content):
             self.status = ActionObjectState.READY
             self.content.append(content)
+            for c in self.content:
+                c.free = False
+            self.content[-1].free = True
         else:
             raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
 
@@ -443,6 +465,9 @@ class Pot(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObj
         if self.accepts(content):
             self.status = ActionObjectState.READY
             self.content.append(content)
+            for c in self.content:
+                c.free = False
+            self.content[-1].free = True
         else:
             raise Exception(f"Tried to add invalid object {content.__name__} to Pot")
 
@@ -487,6 +512,9 @@ class Plate(DynamicObject, ContentObject):
         if not content.done():
             raise Exception(f"Can't add food in unprepared state.")
         self.content.append(content)
+        for c in self.content:
+            c.free = False
+        self.content[-1].free = True
 
     def accepts(self, dynamic_object):
         return isinstance(dynamic_object, Food) and dynamic_object.done() and len(self.content) < self.max_content
@@ -680,7 +708,7 @@ class Bread(ChopFood, ToasterFood):
         return []
 
     def display_text(self) -> str:
-        return ""
+        return f"{self.unique_id} {'T' if self.free else 'F'}"
 
 
 # class BreadSlice(ToasterFood):

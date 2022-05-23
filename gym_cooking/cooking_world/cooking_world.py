@@ -84,6 +84,10 @@ class CookingWorld:
             obj.process()
         for obj in self.abstract_index[ProgressingObject]:
             obj.progress()
+        for obj in self.abstract_index[ContentObject]:
+            if len(obj.content) > 0:
+                if hasattr(obj.content[-1], 'free') and not obj.content[-1].free:
+                    obj.content[-1].free = True
 
     def perform_agent_actions(self, agents, actions):
         for agent, action in zip(agents, actions):
