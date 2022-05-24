@@ -86,8 +86,12 @@ class CookingWorld:
             obj.progress()
         for obj in self.abstract_index[ContentObject]:
             if len(obj.content) > 0:
-                if hasattr(obj.content[-1], 'free') and not obj.content[-1].free:
+                for c in obj.content:
+                    if hasattr(c, "free"):
+                        c.free = False
+                if hasattr(obj.content[-1], 'free'):
                     obj.content[-1].free = True
+
 
     def perform_agent_actions(self, agents, actions):
         for agent, action in zip(agents, actions):
@@ -143,16 +147,24 @@ class CookingWorld:
             return
         dynamic_objects = self.get_objects_at(interaction_location, DynamicObject)
         static_object = self.get_objects_at(interaction_location, StaticObject)[0]
+
+
         if not agent.holding and not dynamic_objects:
             return
         elif not agent.holding and dynamic_objects:
             if static_object.releases():
-                content_obj_l = self.filter_obj(dynamic_objects, ContentObject)
-                pick_index = -1 #pick the last object put on
-                if content_obj_l:
-                    object_to_grab = content_obj_l[pick_index]
-                else:
-                    object_to_grab = dynamic_objects[pick_index]
+                # changed, to preserve content order when picking up again (LIFO)
+                object_to_grab = dynamic_objects[-1]
+                for obj in dynamic_objects:
+                    if hasattr(obj, "free") and obj.free:
+                        object_to_grab = obj
+                        break
+                # content_obj_l = self.filter_obj(dynamic_objects, ContentObject)
+                # pick_index = -1 #pick the last object put on
+                # if content_obj_l:
+                #     object_to_grab = content_obj_l[pick_index]
+                # else:
+                #     object_to_grab = dynamic_objects[pick_index]
                 agent.grab(object_to_grab)
                 static_object.content.remove(object_to_grab)
                 agent.interacts_with = [object_to_grab]
@@ -274,6 +286,7 @@ class CookingWorld:
             for obj in objects:
                 if obj.location == location:
                     located_objects.append(obj)
+
         return located_objects
 
     def attempt_merge(self, agent: Agent, dynamic_objects: List[DynamicObject], target_location, static_object):

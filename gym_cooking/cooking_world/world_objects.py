@@ -335,9 +335,6 @@ class Toaster(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
         if self.accepts(content):
             self.status = ActionObjectState.READY
             self.content.append(content)
-            for c in self.content:
-                c.free = False
-            self.content[-1].free = True
         else:
             raise Exception(f"Tried to add invalid object {content.__name__} to Toaster")
 
