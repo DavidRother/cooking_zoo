@@ -27,8 +27,8 @@ class CookingWorld:
     SymbolToClass = {
         ' ': Floor,
         '-': Counter,
-        '/': CutBoard,
-        '*': DeliverSquare,
+        '/': Cutboard,
+        '*': Deliversquare,
         't': Tomato,
         'l': Lettuce,
         'o': Onion,
@@ -165,9 +165,10 @@ class CookingWorld:
                 #     object_to_grab = content_obj_l[pick_index]
                 # else:
                 #     object_to_grab = dynamic_objects[pick_index]
-                agent.grab(object_to_grab)
-                static_object.content.remove(object_to_grab)
-                agent.interacts_with = [object_to_grab]
+                if object_to_grab in static_object.content:
+                    agent.grab(object_to_grab)
+                    static_object.content.remove(object_to_grab)
+                    agent.interacts_with = [object_to_grab]
         elif agent.holding:
             self.attempt_merge(agent, dynamic_objects, interaction_location, static_object)
 
@@ -351,7 +352,8 @@ class CookingWorld:
                         raise ValueError(f"Position {x} {y} of object {name} is out of bounds set by the level layout!")
                     static_objects_loc = self.get_objects_at((x, y), StaticObject)
 
-                    counter = [obj for obj in static_objects_loc if isinstance(obj, (Counter, Floor))]
+                    # counter = [obj for obj in static_objects_loc if isinstance(obj, (Counter, Floor))] remove Floor, to keep the initialized level layout
+                    counter = [obj for obj in static_objects_loc if isinstance(obj, Counter)]
                     if counter:
                         if len(counter) != 1:
                             raise ValueError("Too many counter in one place detected during initialization")
@@ -361,7 +363,7 @@ class CookingWorld:
                         break
                     else:
                         time_out += 1
-                        if time_out > 100:
+                        if time_out > 10000:
                             raise ValueError(f"Can't find valid position for object: "
                                              f"{static_object} in {time_out} steps")
                         continue
@@ -387,7 +389,7 @@ class CookingWorld:
                         break
                     else:
                         time_out += 1
-                        if time_out > 1000:
+                        if time_out > 10000:
                             raise ValueError(f"Can't find valid position for object: "
                                              f"{dynamic_object} in {time_out} steps")
                         continue
@@ -415,7 +417,7 @@ class CookingWorld:
                         break
                     else:
                         time_out += 1
-                        if time_out > 100:
+                        if time_out > 1000:
                             raise ValueError(f"Can't find valid position for agent: {agent_object} in {time_out} steps")
 
     def load_level(self, level, num_agents):

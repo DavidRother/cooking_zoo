@@ -74,7 +74,7 @@ class Counter(StaticObject, ContentObject):
         return ""
 
 
-class DeliverSquare(StaticObject, ContentObject):
+class Deliversquare(StaticObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
@@ -109,7 +109,7 @@ class DeliverSquare(StaticObject, ContentObject):
         return ""
 
 
-class CutBoard(StaticObject, ActionObject, ContentObject):
+class Cutboard(StaticObject, ActionObject, ContentObject):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
@@ -136,7 +136,6 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
                     return [], [], False
         else:
             return [], [], False
-
 
     def accepts(self, dynamic_object) -> bool:
         return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content and \
@@ -175,6 +174,70 @@ class CutBoard(StaticObject, ActionObject, ContentObject):
     def display_text(self) -> str:
         return ""
 
+class Breadslicer(StaticObject, ActionObject, ContentObject):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, False)
+
+        self.max_content = 1
+
+    def action(self) -> Tuple[List, List, bool]:
+        valid = self.status == ActionObjectState.READY
+        if valid:
+            for obj in self.content:
+                if isinstance(obj, ChopFood):
+                    new_obj_list, deleted_obj_list, action_executed = obj.chop()
+
+                if action_executed:
+                    for del_obj in deleted_obj_list:
+                        self.content.remove(del_obj)
+                    for new_obj in new_obj_list:
+                        self.content.append(new_obj)
+
+                    self.status = ActionObjectState.NOT_USABLE
+
+                    return new_obj_list, deleted_obj_list, action_executed
+                else:
+                    return [], [], False
+        else:
+            return [], [], False
+
+    def accepts(self, dynamic_object) -> bool:
+        return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content and \
+                dynamic_object.chop_state == ChopFoodStates.FRESH
+
+    def releases(self) -> bool:
+        if len(self.content) == 1:
+            self.status = ActionObjectState.NOT_USABLE
+        return True
+
+    def add_content(self, content):
+        # self.content.append(content)
+
+        if self.accepts(content):
+            self.status = ActionObjectState.READY
+            self.content.append(content)
+            for c in self.content:
+                c.free = False
+            self.content[-1].free = True
+        else:
+            raise Exception(f"Tried to add invalid object {content.__name__} to CutBoard")
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
+
+    def file_name(self) -> str:
+        return "default_static"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return "BS"
 
 #TODO not finished
 class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
@@ -595,6 +658,34 @@ class Tomato(ChopFood):
         return "Tomato"
 
 
+class Cucumber(ChopFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED:
+            return True
+        else:
+            return False
+
+    def numeric_state_representation(self):
+        return 1, 0
+
+    @staticmethod
+    def state_length():
+        return 2
+
+    def file_name(self) -> str:
+        return "default_dynamic"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return "Cu " + str(self.chop_state.value[:3])
+
+
 class Lettuce(ChopFood):
 
     def __init__(self, unique_id, location):
@@ -658,6 +749,129 @@ class Carrot(BlenderFood, ChopFood):
 
     def display_text(self) -> str:
         return ""
+
+
+class Banana(BlenderFood, ChopFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED or self.blend_state == BlenderFoodStates.MASHED:
+            return True
+        else:
+            return False
+
+    def numeric_state_representation(self):
+        return 1, 0, 1
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        return "default_dynamic"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return f"BN {self.chop_state.value[:3]} {self.blend_state.value[:3]}"
+
+
+class Apple(BlenderFood, ChopFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED or self.blend_state == BlenderFoodStates.MASHED:
+            return True
+        else:
+            return False
+
+    def numeric_state_representation(self):
+        return 1, 0, 1
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        return "default_dynamic"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return f"AP {self.chop_state.value[:3]} {self.blend_state.value[:3]}"
+
+
+class Watermelon(ChopFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED:
+            return True
+        else:
+            return False
+
+    def numeric_state_representation(self):
+        return 1, 0, 1
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        return "default_dynamic"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return f"WM {self.chop_state.value[:3]}"
+
+
+class Bagel(ChopFood, ToasterFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+        self.slices = 2
+        self.chop_state = ChopFoodStates.FRESH
+        self.toast_state = ToasterFoodStates.FRESH
+
+    def done(self):
+        return self.chop_state == ChopFoodStates.CHOPPED
+
+    def chop(self):
+        if self.slices > 1:
+
+            self.slices -= 1
+            if self.slices == 1:
+                self.chop_state = ChopFoodStates.CHOPPED
+                self.toast_state = ToasterFoodStates.READY
+            return [], [], True
+        else:
+            return [], [], False
+
+    def numeric_state_representation(self):
+        return 1, 0, 0
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        return "default_dynamic"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return f"BG {self.chop_state.value[:3]} {self.toast_state.value[:3]}"
 
 
 class Bread(ChopFood, ToasterFood):

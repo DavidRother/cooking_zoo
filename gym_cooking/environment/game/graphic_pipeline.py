@@ -99,7 +99,7 @@ class GraphicPipeline:
         if isinstance(static_object, Counter):
             pygame.draw.rect(self.screen, Color.COUNTER, fill)
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
-        elif isinstance(static_object, DeliverSquare):
+        elif isinstance(static_object, Deliversquare):
             pygame.draw.rect(self.screen, Color.DELIVERY, fill)
             self.draw(static_object.file_name(), self.graphics_properties.tile_size, sl,
                       static_object.display_text(), static_object.icons())

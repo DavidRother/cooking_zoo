@@ -34,17 +34,17 @@ CarrotPlate = RecipeNode(root_type=Plate, id_num=next(id_generator), name="Plate
                          contains=[MashedCarrot])
 
 # Delivered Salads
-TomatoSalad = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), name="DeliverSquare", conditions=None,
+TomatoSalad = RecipeNode(root_type=Deliversquare, id_num=next(id_generator), name="Deliversquare", conditions=None,
                          contains=[TomatoSaladPlate])
-TomatoLettuceSalad = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), name="DeliverSquare",
+TomatoLettuceSalad = RecipeNode(root_type=Deliversquare, id_num=next(id_generator), name="Deliversquare",
                                 conditions=None, contains=[TomatoLettucePlate])
-TomatoLettuceOnionSalad = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), name="DeliverSquare",
+TomatoLettuceOnionSalad = RecipeNode(root_type=Deliversquare, id_num=next(id_generator), name="Deliversquare",
                                      conditions=None, contains=[TomatoLettuceOnionPlate])
-MashedCarrot = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), name="DeliverSquare",
+MashedCarrot = RecipeNode(root_type=Deliversquare, id_num=next(id_generator), name="Deliversquare",
                           conditions=None, contains=[CarrotPlate])
 
 floor = RecipeNode(root_type=Floor, id_num=next(id_generator), name="Floor", conditions=None, contains=[])
-no_recipe_node = RecipeNode(root_type=DeliverSquare, id_num=next(id_generator), name='DeliverSquare', conditions=None, contains=[floor])
+no_recipe_node = RecipeNode(root_type=Deliversquare, id_num=next(id_generator), name='Deliversquare', conditions=None, contains=[floor])
 
 # this one increments one further and is thus the amount of ids we have given since
 # we started counting at zero.
