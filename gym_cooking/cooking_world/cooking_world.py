@@ -27,8 +27,8 @@ class CookingWorld:
     SymbolToClass = {
         ' ': Floor,
         '-': Counter,
-        '/': CutBoard,
-        '*': DeliverSquare,
+        '/': Cutboard,
+        '*': Deliversquare,
         't': Tomato,
         'l': Lettuce,
         'o': Onion,
@@ -84,6 +84,14 @@ class CookingWorld:
             obj.process()
         for obj in self.abstract_index[ProgressingObject]:
             obj.progress()
+        for obj in self.abstract_index[ContentObject]:
+            if len(obj.content) > 0:
+                for c in obj.content:
+                    if hasattr(c, "free"):
+                        c.free = False
+                if hasattr(obj.content[-1], 'free'):
+                    obj.content[-1].free = True
+
 
     def perform_agent_actions(self, agents, actions):
         for agent, action in zip(agents, actions):
@@ -139,19 +147,28 @@ class CookingWorld:
             return
         dynamic_objects = self.get_objects_at(interaction_location, DynamicObject)
         static_object = self.get_objects_at(interaction_location, StaticObject)[0]
+
+
         if not agent.holding and not dynamic_objects:
             return
         elif not agent.holding and dynamic_objects:
             if static_object.releases():
-                content_obj_l = self.filter_obj(dynamic_objects, ContentObject)
-                pick_index = -1 #pick the last object put on
-                if content_obj_l:
-                    object_to_grab = content_obj_l[pick_index]
-                else:
-                    object_to_grab = dynamic_objects[pick_index]
-                agent.grab(object_to_grab)
-                static_object.content.remove(object_to_grab)
-                agent.interacts_with = [object_to_grab]
+                # changed, to preserve content order when picking up again (LIFO)
+                object_to_grab = dynamic_objects[-1]
+                for obj in dynamic_objects:
+                    if hasattr(obj, "free") and obj.free:
+                        object_to_grab = obj
+                        break
+                # content_obj_l = self.filter_obj(dynamic_objects, ContentObject)
+                # pick_index = -1 #pick the last object put on
+                # if content_obj_l:
+                #     object_to_grab = content_obj_l[pick_index]
+                # else:
+                #     object_to_grab = dynamic_objects[pick_index]
+                if object_to_grab in static_object.content:
+                    agent.grab(object_to_grab)
+                    static_object.content.remove(object_to_grab)
+                    agent.interacts_with = [object_to_grab]
         elif agent.holding:
             self.attempt_merge(agent, dynamic_objects, interaction_location, static_object)
 
@@ -270,6 +287,7 @@ class CookingWorld:
             for obj in objects:
                 if obj.location == location:
                     located_objects.append(obj)
+
         return located_objects
 
     def attempt_merge(self, agent: Agent, dynamic_objects: List[DynamicObject], target_location, static_object):
@@ -334,7 +352,8 @@ class CookingWorld:
                         raise ValueError(f"Position {x} {y} of object {name} is out of bounds set by the level layout!")
                     static_objects_loc = self.get_objects_at((x, y), StaticObject)
 
-                    counter = [obj for obj in static_objects_loc if isinstance(obj, (Counter, Floor))]
+                    # counter = [obj for obj in static_objects_loc if isinstance(obj, (Counter, Floor))] remove Floor, to keep the initialized level layout
+                    counter = [obj for obj in static_objects_loc if isinstance(obj, Counter)]
                     if counter:
                         if len(counter) != 1:
                             raise ValueError("Too many counter in one place detected during initialization")
@@ -344,7 +363,7 @@ class CookingWorld:
                         break
                     else:
                         time_out += 1
-                        if time_out > 100:
+                        if time_out > 10000:
                             raise ValueError(f"Can't find valid position for object: "
                                              f"{static_object} in {time_out} steps")
                         continue
@@ -370,7 +389,7 @@ class CookingWorld:
                         break
                     else:
                         time_out += 1
-                        if time_out > 100:
+                        if time_out > 10000:
                             raise ValueError(f"Can't find valid position for object: "
                                              f"{dynamic_object} in {time_out} steps")
                         continue
@@ -398,7 +417,7 @@ class CookingWorld:
                         break
                     else:
                         time_out += 1
-                        if time_out > 100:
+                        if time_out > 1000:
                             raise ValueError(f"Can't find valid position for agent: {agent_object} in {time_out} steps")
 
     def load_level(self, level, num_agents):

@@ -1,0 +1,16 @@
+{
+  "LEVEL_LAYOUT": " --- \n-   -\n-   -\n-   -\n --- ",
+  "STATIC_OBJECTS": [{"CutBoard": {"COUNT": 0, "X_POSITION": [0, 4], "Y_POSITION":  [1 ,2, 3, 4]}},
+                     {"Blender": {"COUNT": 0, "X_POSITION": [0, 4], "Y_POSITION":  [1 ,2, 3, 4]}},
+                     {"Toaster": {"COUNT": 0, "X_POSITION": [0, 4], "Y_POSITION":  [1 ,2, 3, 4]}},
+                     {"DeliverSquare": {"COUNT": 0, "X_POSITION": [1 ,2, 3, 4], "Y_POSITION":  [0, 4]}}
+  ],
+  "DYNAMIC_OBJECTS": [{"Plate":  {"COUNT": 0, "X_POSITION": [1 ,2, 3, 4], "Y_POSITION":  [0, 4]}},
+                      {"Tomato": {"COUNT": 0, "X_POSITION": [1 ,2, 3, 4], "Y_POSITION":  [0, 4]}},
+                      {"Onion": {"COUNT": 0, "X_POSITION": [1 ,2, 3, 4], "Y_POSITION":  [0, 4]}},
+                      {"Lettuce": {"COUNT": 0, "X_POSITION": [1 ,2, 3, 4], "Y_POSITION":  [0, 4]}},
+                      {"Carrot": {"COUNT": 0, "X_POSITION": [0, 4], "Y_POSITION":  [1 ,2, 3, 4]}},
+                      {"Bread": {"COUNT": 0, "X_POSITION": [0, 4], "Y_POSITION":  [1 ,2, 3, 4]}}
+  ],
+  "AGENTS": [{"MAX_COUNT": 1, "X_POSITION": [1 ,2, 3], "Y_POSITION":  [1 ,2, 3]}]
+}

@@ -60,13 +60,15 @@ class Object(ABC):
             "interacts_with",
             "toggle",
             "status",
+            "notFull",
+            "notEmpty",
+            "free",
         ]
         for attr in state_attributes:
             if hasattr(self, attr):
                 ent_attr = getattr(self, attr)
                 value = getattr(ent_attr, "value", ent_attr)
                 state[attr] = value
-
         return state
 
 
@@ -129,6 +131,14 @@ class ContentObject:
         self.content = []
         self.max_content = max_content
 
+    @property
+    def notFull(self):
+        return len(self.content) < self.max_content
+
+    @property
+    def notEmpty(self):
+        return len(self.content) > 0
+
     @abstractmethod
     def add_content(self, content):
         pass
@@ -173,6 +183,7 @@ class DynamicObject(Object, ABC):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, True, False)
+        self.free = True
 
 
 class TemperatureFood(DynamicObject, Food, TemperatureObject, ABC):
