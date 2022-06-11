@@ -69,6 +69,7 @@ class Object(ABC):
 
         return state
 
+
 class ActionObject(ABC):
 
     def __init__(self):

@@ -7,7 +7,7 @@ n_agents = 1
 num_humans = 1
 render = False
 
-level = 'open_room_smile'
+level = 'open_room_david'
 seed = 1
 record = False
 max_num_timesteps = 1000

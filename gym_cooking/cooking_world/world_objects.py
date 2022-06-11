@@ -573,7 +573,7 @@ class Tomato(ChopFood):
         return []
 
     def display_text(self) -> str:
-        return "Tomato"
+        return ""
 
 
 class Lettuce(ChopFood):
@@ -633,6 +633,31 @@ class Carrot(BlenderFood, ChopFood):
                 return "CarrotMashed"
         else:
             return "FreshCarrot"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class Salt(DynamicObject, Food):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+
+    def done(self):
+        return True
+
+    def numeric_state_representation(self):
+        return 1, 0, 0
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        return "Salt"
 
     def icons(self) -> List[str]:
         return []
@@ -755,6 +780,12 @@ class Spaghetti(MicrowaveFood, PotFood):
         else:
             return "SpaghettiRaw"
 
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
     # def get_physical_state(self) -> dict:
     #     return {}
 
@@ -790,6 +821,12 @@ class Penne(MicrowaveFood, PotFood):
             return "PenneCooked"
         else:
             return "PenneRaw"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
 
     # def get_physical_state(self) -> dict:
     #     return {}

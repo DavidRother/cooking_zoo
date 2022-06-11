@@ -1,0 +1,24 @@
+{
+  "LEVEL_LAYOUT": "-------\n-     -\n-     -\n-     -\n-     -\n-     -\n-------",
+  "STATIC_OBJECTS": [{"CutBoard": {"COUNT": 1, "X_POSITION": [6], "Y_POSITION":  [1]}},
+                     {"Blender": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [1]}},
+                     {"Toaster": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [5]}},
+                     {"DeliverSquare": {"COUNT": 1, "X_POSITION": [3], "Y_POSITION":  [6]}},
+                     {"Microwave": {"COUNT": 0, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [0, 6]}},
+                     {"Pot": {"COUNT": 0, "X_POSITION": [0,6], "Y_POSITION":  [1 ,2, 3, 4, 5]}},
+                     {"Oven": {"COUNT": 0, "X_POSITION": [0,6], "Y_POSITION":  [1 ,2, 3, 4, 5]}},
+                     {"Pot": {"COUNT": 1, "X_POSITION": [6], "Y_POSITION":  [5]}}
+  ],
+  "DYNAMIC_OBJECTS": [{"Plate":  {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [3]}},
+                      {"Plate": {"COUNT": 1, "X_POSITION": [3], "Y_POSITION":  [0]}},
+                      {"Tomato": {"COUNT": 1, "X_POSITION": [4], "Y_POSITION":  [6]}},
+                      {"Onion": {"COUNT": 1, "X_POSITION": [6], "Y_POSITION":  [2, 4]}},
+                      {"Lettuce": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [2, 4]}},
+                      {"Carrot": {"COUNT": 0, "X_POSITION": [0, 1 ,2, 3, 4, 5, 6], "Y_POSITION":  [1 ,2, 3, 4, 5]}},
+                      {"Bread": {"COUNT": 1, "X_POSITION": [5], "Y_POSITION":  [0]}},
+                      {"Spaghetti": {"COUNT": 1, "X_POSITION": [1], "Y_POSITION":  [6]}},
+                      {"Penne": {"COUNT": 0, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [0, 1 ,2, 3, 4, 5, 6]}},
+                      {"Salt": {"COUNT": 0, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [0, 1 ,2, 3, 4, 5, 6]}}
+  ],
+  "AGENTS": [{"MAX_COUNT": 2, "X_POSITION": [1 ,2, 3, 4, 5], "Y_POSITION":  [1 ,2, 3, 4, 5]}]
+}
