@@ -116,9 +116,11 @@ class Cutboard(StaticObject, ActionObject, ContentObject):
 
         self.max_content = 1
 
+        self.broken = False
+
     def action(self) -> Tuple[List, List, bool]:
         valid = self.status == ActionObjectState.READY
-        if valid:
+        if valid and not self.broken:
             for obj in self.content:
                 if isinstance(obj, ChopFood):
                     new_obj_list, deleted_obj_list, action_executed = obj.chop()
@@ -138,7 +140,7 @@ class Cutboard(StaticObject, ActionObject, ContentObject):
             return [], [], False
 
     def accepts(self, dynamic_object) -> bool:
-        return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content and \
+        return isinstance(dynamic_object, ChopFood) and not isinstance(dynamic_object, Coconut) and not isinstance(dynamic_object, Hokkaido) and len(self.content) < self.max_content and \
                 dynamic_object.chop_state == ChopFoodStates.FRESH
 
     def releases(self) -> bool:
@@ -203,6 +205,72 @@ class Breadslicer(StaticObject, ActionObject, ContentObject):
             return [], [], False
 
     def accepts(self, dynamic_object) -> bool:
+        return isinstance(dynamic_object, ChopFood) and not isinstance(dynamic_object, Coconut) and not isinstance(dynamic_object, Hokkaido) and len(self.content) < self.max_content and \
+                dynamic_object.chop_state == ChopFoodStates.FRESH
+
+    def releases(self) -> bool:
+        if len(self.content) == 1:
+            self.status = ActionObjectState.NOT_USABLE
+        return True
+
+    def add_content(self, content):
+        # self.content.append(content)
+
+        if self.accepts(content):
+            self.status = ActionObjectState.READY
+            self.content.append(content)
+            for c in self.content:
+                c.free = False
+            self.content[-1].free = True
+        else:
+            raise Exception(f"Tried to add invalid object {content.__name__} to Breadslicer")
+
+    def numeric_state_representation(self):
+        return 1
+
+    @staticmethod
+    def state_length():
+        return 1
+
+    def file_name(self) -> str:
+        return "default_static"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return "BS"
+
+
+class Machete(StaticObject, ActionObject, ContentObject):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location, False)
+
+        self.max_content = 1
+
+    def action(self) -> Tuple[List, List, bool]:
+        valid = self.status == ActionObjectState.READY
+        if valid:
+            for obj in self.content:
+                if isinstance(obj, ChopFood):
+                    new_obj_list, deleted_obj_list, action_executed = obj.chop()
+
+                if action_executed:
+                    for del_obj in deleted_obj_list:
+                        self.content.remove(del_obj)
+                    for new_obj in new_obj_list:
+                        self.content.append(new_obj)
+
+                    self.status = ActionObjectState.NOT_USABLE
+
+                    return new_obj_list, deleted_obj_list, action_executed
+                else:
+                    return [], [], False
+        else:
+            return [], [], False
+
+    def accepts(self, dynamic_object) -> bool:
         return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content and \
                 dynamic_object.chop_state == ChopFoodStates.FRESH
 
@@ -221,7 +289,7 @@ class Breadslicer(StaticObject, ActionObject, ContentObject):
                 c.free = False
             self.content[-1].free = True
         else:
-            raise Exception(f"Tried to add invalid object {content.__name__} to CutBoard")
+            raise Exception(f"Tried to add invalid object {content.__name__} to Machete")
 
     def numeric_state_representation(self):
         return 1
@@ -237,7 +305,8 @@ class Breadslicer(StaticObject, ActionObject, ContentObject):
         return []
 
     def display_text(self) -> str:
-        return "BS"
+        return "MA"
+
 
 #TODO not finished
 class Oven(StaticObject, ProgressingObject, ContentObject, ToggleObject, ActionObject):
@@ -361,10 +430,11 @@ class Toaster(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, False)
         self.max_content = 2
+        self.broken = False
 
     def process(self):
         assert len(self.content) <= self.max_content, "Too many Dynamic Objects placed into the Toaster"
-        if self.content and self.toggle:
+        if self.content and self.toggle and not self.broken:
             for con in self.content:
                 con.toast()
 
@@ -422,6 +492,23 @@ class Toaster(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
 
     def display_text(self) -> str:
         return ""
+
+
+class Contactgrill(Toaster):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+        self.max_content = 2
+        self.broken = False
+
+    def file_name(self) -> str:
+        return "default_static"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return f"CG"
 
 
 class Microwave(StaticObject, ProcessingObject, ContentObject, ToggleObject, ActionObject):
@@ -655,7 +742,7 @@ class Tomato(ChopFood):
         return []
 
     def display_text(self) -> str:
-        return "Tomato"
+        return ""
 
 
 class Cucumber(ChopFood):
@@ -835,6 +922,62 @@ class Watermelon(ChopFood):
         return f"WM {self.chop_state.value[:3]}"
 
 
+class Coconut(ChopFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED:
+            return True
+        else:
+            return False
+
+    def numeric_state_representation(self):
+        return 1, 0, 1
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        return "default_dynamic"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return f"CO {self.chop_state.value[:3]}"
+
+
+class Hokkaido(ChopFood):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+
+    def done(self):
+        if self.chop_state == ChopFoodStates.CHOPPED:
+            return True
+        else:
+            return False
+
+    def numeric_state_representation(self):
+        return 1, 0, 1
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        return "default_dynamic"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return f"HO {self.chop_state.value[:3]}"
+
+
 class Bagel(ChopFood, ToasterFood):
 
     def __init__(self, unique_id, location):
@@ -919,7 +1062,8 @@ class Bread(ChopFood, ToasterFood):
         return []
 
     def display_text(self) -> str:
-        return f"{self.unique_id} {'T' if self.free else 'F'}"
+        # return f"{self.unique_id} {'T' if self.free else 'F'}"
+        return ""
 
 
 # class BreadSlice(ToasterFood):
