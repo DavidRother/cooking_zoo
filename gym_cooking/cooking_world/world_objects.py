@@ -838,6 +838,31 @@ class Carrot(BlenderFood, ChopFood):
         return ""
 
 
+class Salt(Food, DynamicObject):
+
+    def __init__(self, unique_id, location):
+        super().__init__(unique_id, location)
+
+    def done(self):
+        return True
+
+    def numeric_state_representation(self):
+        return 1, 0, 0
+
+    @staticmethod
+    def state_length():
+        return 3
+
+    def file_name(self) -> str:
+        return "Salt"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
 class Banana(BlenderFood, ChopFood):
 
     def __init__(self, unique_id, location):
@@ -1131,7 +1156,6 @@ class Spaghetti(MicrowaveFood, PotFood):
             return "SpaghettiRaw"
 
 
-
 class Penne(MicrowaveFood, PotFood):
 
     def __init__(self, unique_id, location):
@@ -1163,6 +1187,15 @@ class Penne(MicrowaveFood, PotFood):
             return "PenneCooked"
         else:
             return "PenneRaw"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+    # def get_physical_state(self) -> dict:
+    #     return {}
 
 
 class Agent(Object):

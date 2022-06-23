@@ -141,8 +141,15 @@ class GraphicPipeline:
             self.draw_food_stack(dynamic_objects, base_size, base_location)
 
     def draw_agents(self):
-        for agent in self.env.unwrapped.world.agents:
-            self.draw('agent-{}'.format(agent.color), self.graphics_properties.tile_size,
+        for idx, agent in enumerate(self.env.unwrapped.world.agents):
+            if len(self.env.unwrapped.world.agents) >= 2:
+                if idx == 0:
+                    agent_string = "robot"
+                else:
+                    agent_string = "agent"
+            else:
+                agent_string = "agent"
+            self.draw(f'{agent_string}-{agent.color}', self.graphics_properties.tile_size,
                       self.scaled_location(agent.location), agent.display_text(), agent.icons())
             if agent.orientation == 1:
                 file_name = "arrow_left"

@@ -71,6 +71,7 @@ class Object(ABC):
                 state[attr] = value
         return state
 
+
 class ActionObject(ABC):
 
     def __init__(self):
