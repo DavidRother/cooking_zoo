@@ -1,0 +1,22 @@
+{
+  "LEVEL_LAYOUT": "-------\n-     -\n-     -\n-     -\n-     -\n-     -\n-------",
+
+  "STATIC_OBJECTS": [{"Cutboard": {"COUNT": 1, "X_POSITION": [6], "Y_POSITION":  [4]}},
+                     {"Cutboard": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [1]}},
+                     {"Blender": {"COUNT": 1, "X_POSITION": [4], "Y_POSITION":  [6]}},
+                     {"Deliversquare": {"COUNT": 2, "X_POSITION": [2, 4], "Y_POSITION":  [0]}},
+                     {"Block": {"COUNT": 1, "X_POSITION": [2], "Y_POSITION":  [3],
+                       "ATTRIBUTES": {"walkable": false, "linked_group_id": 1}}},
+                     {"Switch":  {"COUNT": 1, "X_POSITION": [4], "Y_POSITION":  [3],
+                       "ATTRIBUTES": {"linked_group_id": 1}}}],
+  "DYNAMIC_OBJECTS": [{"Plate":  {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [4]}},
+                      {"Plate": {"COUNT": 1, "X_POSITION": [6], "Y_POSITION":  [3]}},
+                      {"Lettuce": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [5]}},
+                      {"Tomato": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [2]}},
+                      {"Banana": {"COUNT": 1, "X_POSITION": [6], "Y_POSITION":  [1]}},
+                      {"Carrot": {"COUNT": 1, "X_POSITION": [3, 4, 5, 6], "Y_POSITION":  [0, 1, 2, 3, 4, 5, 6]}}
+  ],
+  "AGENTS": [{"MAX_COUNT": 1, "X_POSITION": [1 ,2], "Y_POSITION":  [1 ,2, 3, 4, 5]},
+             {"MAX_COUNT": 1, "X_POSITION": [4, 5], "Y_POSITION":  [1 ,2, 3, 4, 5]}],
+  "DYNAMIC_EXCLUDED_POSITIONS": [[0, 0], [3, 0], [6, 0], [0, 6], [3, 6], [6, 6]]
+}

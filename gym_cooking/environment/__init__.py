@@ -1,2 +1,0 @@
-from gym_cooking.environment.environment import GymCookingEnvironment
-from gym_cooking.environment.cooking_zoo import CookingEnvironment as CookingZooEnvironment

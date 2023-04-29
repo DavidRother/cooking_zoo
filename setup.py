@@ -3,13 +3,16 @@ from setuptools import setup, find_packages
 setup(name='cooking-gym',
       version='0.0.1',
       description='Cooking gym with graphics and ideas based on: "Too Many Cooks: Overcooked environment"',
-      author='David Rother, Rose E. Wang',
-      email='david@edv-drucksysteme.de',
+      author='David Rother',
+      email='david.rother@tu-darmstadt.de',
       packages=find_packages() + [""],
+      python_requires='>3.7',
       install_requires=[
-            'gym==0.19.0',
-            'numpy>=1.21.2',
-            'pygame==2.0.1',
-            'pettingzoo==1.11.2'
+            'gym',
+            'numpy',
+            'pygame',
+            'pettingzoo',
+            'Pillow',
+            'Gymnasium'
       ]
       )
