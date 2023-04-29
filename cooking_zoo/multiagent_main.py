@@ -19,8 +19,8 @@ env = gym.envs.make("cooking_zoo:cookingEnvMA-v1", level=level, meta_file=meta_f
 
 obs = env.reset()
 action_space = env.action_space
-done = [False, False]
+terminated = [False, False]
 
-while not all(done):
+while not all(terminated):
     actions = [action_space.sample() for idx in range(num_agents)]
-    observation, reward, done, info = env.step(actions)
+    observation, reward, terminated, truncated, info = env.step(actions)

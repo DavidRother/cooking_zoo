@@ -23,7 +23,7 @@ obs = env.reset()
 
 env.render()
 
-action_space = env.action_spaces["player_0"]
+action_space = env.action_space("player_0")
 
 manual_policy = ManualPolicy(env, agent_id="player_0")
 

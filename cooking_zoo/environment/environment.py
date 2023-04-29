@@ -1,5 +1,5 @@
 from cooking_zoo.environment import cooking_env
-import gym
+import gymnasium as gym
 
 
 class GymCookingEnvironment(gym.Env):
@@ -21,7 +21,7 @@ class GymCookingEnvironment(gym.Env):
     def step(self, action):
         converted_action = {"player_0": action}
         obs, reward, termination, truncation, info = self.zoo_env.step(converted_action)
-        return obs["player_0"], reward["player_0"], termination["player_0"] or truncation["player_0"], info["player_0"]
+        return obs["player_0"], reward["player_0"], termination["player_0"], truncation["player_0"], info["player_0"]
 
     def reset(self):
         return self.zoo_env.reset()["player_0"]

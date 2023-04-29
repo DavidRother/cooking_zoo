@@ -8,11 +8,10 @@ setup(name='cooking_zoo',
       packages=find_packages() + [""],
       python_requires='>3.7',
       install_requires=[
-            'gym',
             'numpy',
             'pygame',
             'pettingzoo>=1.22',
             'Pillow',
-            'Gymnasium'
+            'Gymnasium>=0.26'
       ]
       )

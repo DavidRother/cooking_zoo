@@ -21,8 +21,9 @@ obs = env.reset()
 
 action_space = env.action_space
 
-done = False
+terminated = False
+truncated = False
 
-while not done:
+while not terminated or truncated:
     action = action_space.sample()
-    observation, reward, done, info = env.step(action)
+    observation, reward, terminated, truncated, info = env.step(action)

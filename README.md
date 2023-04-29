@@ -17,7 +17,7 @@ The advantages of using this environment are listed below:
 
 ```
 - Extensive Library of existing recipes and room with extensibility to add more
-- Different Observation spaces (RGB, Feature Vector, symbolic)
+- Different Observation spaces (Feature Vector, symbolic)
 - Customizable Level design
 - Observation spaces can be same size for different levels with fixed object location
 - Variable number of agents
@@ -98,10 +98,22 @@ a multi-agent environment library and is compatible with big frameworks such as
 [MushroomRL](https://github.com/MushroomRL/mushroom-rl), and others that support the gym single-agent interface, 
 the gym multi-agent convention as found in EPyMARL or the more general PettingZoo interface.
 
+Please note that we use the updated gym conventions of version 0.26.1 and upwards, where done is replaced with 
+termination and truncation variables. During test a small wrapper was necessary with EPyMARL for 
+compatibility reasons.
+
 A single-agent usage example is shown in the main.py file.
 To get a playable demo in a single agent environment view the demo_gameplay.py file
 and for a playable multi-agent demo, where another agent is controlled by a random movement AI view 
 the demo_multiplayer_gameplay.py file.
+
+## Observation Spaces
+
+# Feature Vector
+a numpy vector containing a feature representation of all objects in the world
+
+# Symbolic
+A copy of all objects in the world for reasoning purposes
 
 ## Extending the environment
 

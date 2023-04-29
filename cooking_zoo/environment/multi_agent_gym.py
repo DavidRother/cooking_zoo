@@ -1,6 +1,5 @@
 from cooking_zoo.environment import cooking_env
-
-import gym
+import gymnasium as gym
 
 
 class GymCookingEnvironment(gym.Env):
@@ -23,7 +22,8 @@ class GymCookingEnvironment(gym.Env):
         action_dict = {f"player_{i}": actions[i] for i in range(len(actions))}
         obs, reward, termination, truncation, info = self.zoo_env.step(action_dict)
         return [obs[f"player_{i}"] for i in range(len(obs))], [reward[f"player_{i}"] for i in range(len(reward))], \
-               [termination[f"player_{i}"] or truncation[f"player_{i}"] for i in range(len(termination))], \
+               [termination[f"player_{i}"] for i in range(len(termination))], \
+               [truncation[f"player_{i}"] for i in range(len(truncation))], \
                [info[f"player_{i}"] for i in range(len(info))]
 
     def reset(self):
