@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
-setup(name='cooking-gym',
-      version='0.0.1',
+setup(name='cooking_zoo',
+      version='1.0.1',
       description='Cooking gym with graphics and ideas based on: "Too Many Cooks: Overcooked environment"',
       author='David Rother',
       email='david.rother@tu-darmstadt.de',
@@ -11,7 +11,7 @@ setup(name='cooking-gym',
             'gym',
             'numpy',
             'pygame',
-            'pettingzoo',
+            'pettingzoo>=1.22',
             'Pillow',
             'Gymnasium'
       ]
