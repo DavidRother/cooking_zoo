@@ -1,4 +1,4 @@
-from gym.envs.registration import register
+from gymnasium.envs.registration import register
 
 register(id="cookingEnv-v1",
          entry_point="cooking_zoo.environment:GymCookingEnvironment")
