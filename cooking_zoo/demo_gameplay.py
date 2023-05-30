@@ -21,10 +21,11 @@ env.reset()
 env.render()
 
 terminations = {"player_0": False}
+truncations = {"player_0": False}
 
 manual_policy = ManualPolicy(env, agent_id="player_0")
 
-while not all(terminations.values()):
+while not all(terminations.values()) or all(truncations.values()):
     action = {"player_0": manual_policy("player_0")}
     observations, rewards, terminations, truncations, infos = env.step(action)
     env.render()

@@ -141,11 +141,15 @@ class CookingEnvironment(AECEnv):
                                                     self.graph_representation_length))
         self.render_mode = "human"
         self.np_random = None
-        recipe_list = list(self.recipes.keys())
+        self.loaded_recipes = []
+        if not RECIPE_STORE:
+            self.loaded_recipes = list(RECIPES.keys())
+        else:
+            self.loaded_recipes = list(RECIPE_STORE.keys())
         # get index of recipe in recipe_list
-        idx = [recipe_list.index(recipe) for recipe in self.recipes]
+        idx = [self.loaded_recipes.index(recipe) for recipe in self.recipes]
         # get one hot numpy vector
-        self.goal_vectors = dict(zip(self.agents, [np.eye(len(self.recipes))[i] for i in idx]))
+        self.goal_vectors = dict(zip(self.agents, [np.eye(len(self.loaded_recipes))[i] for i in idx]))
 
     def set_filename(self):
         self.filename = f"{self.level}_agents{self.num_agents}"

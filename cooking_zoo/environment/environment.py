@@ -23,8 +23,9 @@ class GymCookingEnvironment(gym.Env):
         obs, reward, termination, truncation, info = self.zoo_env.step(converted_action)
         return obs["player_0"], reward["player_0"], termination["player_0"], truncation["player_0"], info["player_0"]
 
-    def reset(self):
-        return self.zoo_env.reset()["player_0"]
+    def reset(self, **kwargs):
+        obs, info = self.zoo_env.reset()
+        return obs["player_0"], info["player_0"]
 
     def render(self, mode='human'):
         self.zoo_env.render()

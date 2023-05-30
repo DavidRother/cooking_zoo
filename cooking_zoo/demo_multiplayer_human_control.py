@@ -19,7 +19,7 @@ env = parallel_env(level=level, meta_file=meta_file, num_agents=num_agents, max_
                    end_condition_all_dishes=end_condition_all_dishes, action_scheme=action_scheme, render=render,
                    reward_scheme=reward_scheme)
 
-obs = env.reset()
+obs, info = env.reset()
 
 env.render()
 

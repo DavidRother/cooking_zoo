@@ -26,9 +26,9 @@ class GymCookingEnvironment(gym.Env):
                [truncation[f"player_{i}"] for i in range(len(truncation))], \
                [info[f"player_{i}"] for i in range(len(info))]
 
-    def reset(self):
-        obs = self.zoo_env.reset()
-        return [obs[f"player_{i}"] for i in range(len(obs))]
+    def reset(self, **kwargs):
+        obs, info = self.zoo_env.reset()
+        return [obs[f"player_{i}"] for i in range(len(obs))], [info[f"player_{i}"] for i in range(len(info))]
 
     def render(self, mode='human'):
         self.zoo_env.render()

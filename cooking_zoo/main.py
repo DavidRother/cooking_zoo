@@ -17,7 +17,7 @@ env = gym.envs.make("cooking_zoo:cookingEnv-v1", level=level, meta_file=meta_fil
                     obs_spaces=obs_spaces, end_condition_all_dishes=end_condition_all_dishes,
                     action_scheme=action_scheme, render=render, reward_scheme=reward_scheme)
 
-obs = env.reset()
+obs, info = env.reset()
 
 action_space = env.action_space
 
