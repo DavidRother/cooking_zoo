@@ -25,7 +25,19 @@ The advantages of using this environment are listed below:
 - Multi-agent support with PettingZoo and gymnasium latest versions
 - Human controllable agent
 ```
-You can use this bibtex if you would like to cite the original paper this fork is derived from (Wu and Wang et al., 2021):
+
+Please cite this paper when using this environment using bibtex:
+
+```
+@inproceedings{rother2023disentangling,
+  title={Disentangling Interaction using MaximumEntropy Reinforcement Learning in Multi-Agent Systems},
+  author={Rother, David and Weisswange, Thomas and Peters, Jan},
+  booktitle={European Conference on Artificial Intelligence},
+  year={2023}
+}
+```
+
+You can use this bibtex if you would like to cite the original paper this work is derived from (Wu and Wang et al., 2021):
 ```
 @article{wu_wang2021too,
   author = {Wu, Sarah A. and Wang, Rose E. and Evans, James A. and Tenenbaum, Joshua B. and Parkes, David C. and Kleiman-Weiner, Max},
@@ -38,11 +50,6 @@ You can use this bibtex if you would like to cite the original paper this fork i
   doi = {https://doi.org/10.1111/tops.12525},
   url = {https://onlinelibrary.wiley.com/doi/abs/10.1111/tops.12525},
 }
-```
-Another citation for the original paper will follow shortly here, 
-which should please be cited after publication.
-
-```
 ```
 
 ## Installation
