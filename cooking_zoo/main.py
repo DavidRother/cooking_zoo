@@ -3,7 +3,7 @@ import gym
 num_agents = 1
 max_steps = 400
 render = False
-obs_spaces = ["feature_vector"]
+obs_spaces = ["symbolic"]
 action_scheme = "scheme3"
 meta_file = "example"
 level = "switch_test"

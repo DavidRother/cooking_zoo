@@ -3,7 +3,7 @@ import gym
 num_agents = 2
 max_steps = 400
 render = False
-obs_spaces = ["feature_vector", "feature_vector"]
+obs_spaces = ["symbolic", "feature_vector"]
 action_scheme = "scheme3"
 meta_file = "example"
 level = "coexistence_test"

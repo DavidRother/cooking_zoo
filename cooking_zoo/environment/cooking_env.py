@@ -116,7 +116,8 @@ class CookingEnvironment(AECEnv):
         self.feature_obs_space = gym.spaces.Box(low=-1, high=1,
                                                 shape=(self.feature_vector_representation_length,))
         obs_space_dict = {"full": numeric_obs_space,
-                          "feature_vector": self.feature_obs_space}
+                          "feature_vector": self.feature_obs_space,
+                          "symbolic": {}}
         self.observation_spaces = {agent: obs_space_dict[obs_space]
                                    for agent, obs_space in zip(self.possible_agents, self.obs_spaces)}
         self.action_spaces = {agent: gym.spaces.Discrete(len(self.action_scheme_class.ACTIONS))
@@ -230,19 +231,20 @@ class CookingEnvironment(AECEnv):
             self.infos[agent] = {"goal_vector": self.goal_vectors[agent], **info, **infos[idx]}
 
     def observe(self, agent):
+        obs_space = self.obs_spaces[self.possible_agents.index(agent)]
         observation = []
-        if "full" in self.obs_spaces:
+        if "full" == obs_space:
             num_observation = {'feature_vector': self.current_tensor_observation,
                                'agent_location': np.asarray(self.world_agent_mapping[agent].location, np.int32),
                                'goal_vector': self.recipe_mapping[agent].goals_completed(self.num_goals)}
             observation.append(num_observation)
-        if "symbolic" in self.obs_spaces:
+        if "symbolic" == obs_space:
             objects = defaultdict(list)
             objects.update(self.world.world_objects)
             objects["Agent"] = self.world.agents
             sym_observation = copy.deepcopy(objects)
             observation.append(sym_observation)
-        if "feature_vector" in self.obs_spaces:
+        if "feature_vector" == obs_space:
             observation.append(self.get_feature_vector(agent))
         returned_observation = observation if not len(observation) == 1 else observation[0]
         return returned_observation
