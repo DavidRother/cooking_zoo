@@ -1,18 +1,10 @@
 from cooking_zoo.cooking_agents.base_agent import BaseAgent, CustomObject
-from cooking_zoo.cooking_book.recipe_drawer import RECIPES, NUM_GOALS, RECIPE_STORE, DEFAULT_NUM_GOALS
-import numpy as np
-from collections import deque
 
 
 class CookingAgent(BaseAgent):
 
     def __init__(self, recipe, name):
-        super().__init__()
-        self.name = name
-        self.recipe = recipe
-        self.recipe_graph = RECIPES[recipe]()
-        self.location = None
-        self.agent = None
+        super().__init__(recipe, name)
 
     def step(self, observation):
         self.update_location(observation)
@@ -24,15 +16,27 @@ class CookingAgent(BaseAgent):
         action = self.compute_optimal_action(node, observation)
         return action
 
-    def find_node(self):
-        for node in reversed(self.recipe_graph.node_list):
-            if not node.marked:
-                return node
-        return None
-
     def compute_optimal_action(self, node, observation):
         condition_based_action = self.compute_condition_action(node, observation)
-        return 0
+        if condition_based_action:
+            return condition_based_action
+        contains_based_action = self.compute_contains_action(node, observation)
+        return contains_based_action
+
+    def compute_contains_action(self, node, observation):
+        # check if contained node is already on plate
+        node_obj, contains_obj = self.compute_closest_node_in_contains_to_get(node, observation)
+        if not contains_obj:
+            return 0
+        if contains_obj.location == self.location:
+            return self.walk_to_location(node_obj.location, observation)
+        else:
+            return self.walk_to_location(contains_obj.location, observation)
+
+    def compute_closest_node_in_contains_to_get(self, node, observation):
+        node_obj = self.get_location_with_most_objects(node, observation)
+        closest_contains = self.get_best_contains_obj(node, observation, node_obj)
+        return node_obj, closest_contains
 
     def compute_condition_action(self, node, observation):
         world_objects = []
@@ -42,64 +46,77 @@ class CookingAgent(BaseAgent):
             dist = self.distance(self.location, obj.location)
             world_objects.append((obj, num_conditions, dist))
         best_world_object = sorted(world_objects, key=lambda x: (x[1], x[2]))[0][0]
-
+        if best_world_object:
+            for condition in node.conditions:
+                if getattr(best_world_object, condition[0]) != condition[1]:
+                    return self.handle_condition_sequence(best_world_object, observation, condition)
         return 0
 
-    @staticmethod
-    def check_node_conditions(node, world_object):
-        num_cond = 0
-        for condition in node.conditions:
-            if getattr(world_object, condition[0]) == condition[1]:
-                num_cond += 1
-        return num_cond
+    def get_best_contains_obj(self, node, observation, node_world_object):
+        closest_object = None
+        min_distance = float('inf')  # initialize to infinity
 
-    def update_location(self, observation):
-        for agent in observation["Agent"]:
-            if agent.name == self.name:
-                self.agent = agent
-                self.location = agent.location
-                return
+        # Loop over each child node in node.contains
+        for child_node in node.contains:
+            # Convert child node to world objects
+            child_world_objects = [obj for obj in self.convert_node_to_world_objects(child_node, observation)
+                                   if node_world_object.location != obj.location]
 
-    def chop_sequence(self, obj, observation):
-        # check if obj is on Cutboard
-        # if yes walk to it
-        # if no check if is in hand
-        # if no walk to obj
-        # if yes walk to Cutboard
-        for cutboard in observation["Cutboard"]:
-            if obj in cutboard.content:
-                return self.walk_to_location(obj.location, observation)
-        
+            # For each world object, compute the distance and check if it's the closest so far
+            for obj in child_world_objects:
+                distance = self.distance(self.location, obj.location)
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_object = obj
 
-    def walk_to_location(self, location, observation):
-        start = tuple(self.location)
-        goal = tuple(location)
+        return closest_object
 
-        if start == goal:
-            return 0  # Stand still
+    def convert_node_to_world_objects(self, node, observation):
+        world_objects = [obj for obj in observation[node.name]
+                         if self.reachable(obj.location, self.location, observation)]
+        return world_objects
 
-        visited = set()
-        queue = deque([(start, [])])
+    def get_closest_world_object(self, node, observation):
+        # Convert the node to world objects that are reachable from the agent's current location
+        world_objects = self.convert_node_to_world_objects(node, observation)
 
-        floor_tiles = set(tuple(tile) for tile in observation["Floor"])
+        # Initialize variables to keep track of the closest object and its distance
+        closest_object = None
+        min_distance = float('inf')  # Initialize to infinity
 
-        while queue:
-            current, path = queue.popleft()
-            if current == goal:
-                if path:
-                    next_step = path[0]
-                    for action, delta in self.action_dict.items():
-                        if tuple(np.add(current, delta)) == next_step:
-                            return action
-                return 0  # Stand still if path is empty (should not happen as we check start == goal initially)
+        # Loop through the world objects to find the closest one
+        for obj in world_objects:
+            distance = self.distance(self.location, obj.location)
+            if distance < min_distance:
+                min_distance = distance
+                closest_object = obj
 
-            visited.add(current)
+        return closest_object  # Returns None if no objects are reachable
 
-            for action, delta in self.action_dict.items():
-                next_tile = tuple(np.add(current, delta))
-                if next_tile not in visited and next_tile in floor_tiles:
-                    queue.append((next_tile, path + [next_tile]))
+    def get_location_with_most_objects(self, node, observation):
+        main_world_objects = self.convert_node_to_world_objects(node, observation)
 
-        # If there's no path found
-        return 0
+        # For each world object of the main node, check how many contained objects are there
+        best_count = -1
+        best_obj = None
+        for main_obj in main_world_objects:
+            count = 0
+            for contained_node in node.contains:
+                # Convert each contained node to its world objects
+                contained_world_objects = self.convert_node_to_world_objects(contained_node, observation)
+                # Check for objects that are at the same location as the main object and fulfill the conditions
+                for obj in contained_world_objects:
+                    if obj.location == main_obj.location and all(
+                            getattr(obj, condition[0]) == condition[1] for condition in contained_node.conditions):
+                        count += 1
+            # Update best_obj if the current main_obj has more matched contained objects
+            if count > best_count or (
+                    count == best_count and self.distance(self.location, main_obj.location) < self.distance(
+                    self.location, best_obj.location)):
+                best_count = count
+                best_obj = main_obj
+
+        return best_obj
+
+
 

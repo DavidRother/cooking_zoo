@@ -15,7 +15,7 @@ end_condition_all_dishes = True
 agent_visualization = ["robot", "human"]
 reward_scheme = {"recipe_reward": 20, "max_time_penalty": -5, "recipe_penalty": -40, "recipe_node_reward": 0}
 
-cooking_agent = CookingAgent(recipes[1])
+cooking_agent = CookingAgent(recipes[1], "agent-2")
 
 env = parallel_env(level=level, meta_file=meta_file, num_agents=num_agents, max_steps=max_steps, recipes=recipes,
                    agent_visualization=agent_visualization, obs_spaces=obs_spaces,
