@@ -24,7 +24,8 @@ FPS = 20
 
 
 def env(level, meta_file, num_agents, max_steps, recipes, agent_visualization=None, obs_spaces=None,
-        end_condition_all_dishes=False, action_scheme="scheme1", render=False, reward_scheme=None):
+        end_condition_all_dishes=False, action_scheme="scheme1", render=False, reward_scheme=None,
+        agent_respawn_rate=0.0, grace_period=20, agent_despawn_rate=0.0):
     """
     The env function wraps the environment in 3 wrappers by default. These
     wrappers contain logic that is common to many pettingzoo environments.
@@ -34,7 +35,9 @@ def env(level, meta_file, num_agents, max_steps, recipes, agent_visualization=No
     """
     env_init = CookingEnvironment(level, meta_file, num_agents, max_steps, recipes, agent_visualization,
                                   obs_spaces, end_condition_all_dishes=end_condition_all_dishes,
-                                  action_scheme=action_scheme, render=render, reward_scheme=reward_scheme)
+                                  action_scheme=action_scheme, render=render, reward_scheme=reward_scheme,
+                                  agent_respawn_rate=agent_respawn_rate, grace_period=grace_period,
+                                  agent_despawn_rate=agent_despawn_rate)
     env_init = wrappers.CaptureStdoutWrapper(env_init)
     env_init = wrappers.OrderEnforcingWrapper(env_init)
     return env_init
@@ -58,7 +61,7 @@ class CookingEnvironment(AECEnv):
 
     def __init__(self, level, meta_file, num_agents, max_steps, recipes, agent_visualization=None, obs_spaces=None,
                  end_condition_all_dishes=False, allowed_objects=None, action_scheme="scheme1", render=False,
-                 reward_scheme=None):
+                 reward_scheme=None, agent_respawn_rate=0.0, grace_period=20, agent_despawn_rate=0.0):
         super().__init__()
 
         obs_spaces = obs_spaces or ["feature_vector"]
@@ -75,6 +78,9 @@ class CookingEnvironment(AECEnv):
         self.agent_visualization = agent_visualization or ["human"] * num_agents
         self.reward_scheme = reward_scheme or {"recipe_reward": 20, "max_time_penalty": -5, "recipe_penalty": -40,
                                                "recipe_node_reward": 0}
+        self.agent_respawn_rate = agent_respawn_rate
+        self.agent_despawn_rate = agent_despawn_rate
+        self.grace_period = grace_period
 
         self.level = level
         self.max_steps = max_steps
@@ -82,7 +88,8 @@ class CookingEnvironment(AECEnv):
         self.filename = ""
         self.set_filename()
         self.meta_file = meta_file
-        self.world = CookingWorld(self.action_scheme_class, meta_file)
+        self.world = CookingWorld(self.action_scheme_class, meta_file, agent_respawn_rate=agent_respawn_rate,
+                                  grace_period=grace_period, agent_despawn_rate=agent_despawn_rate)
         assert self.num_agents <= self.world.meta_object_information["Agent"], \
             "Too many agents for this level"
         self.recipes = recipes
@@ -181,7 +188,9 @@ class CookingEnvironment(AECEnv):
         
         # Load world & distances.
         if options["full_reset"]:
-            self.world = CookingWorld(self.action_scheme_class, self.meta_file)
+            self.world = CookingWorld(self.action_scheme_class, self.meta_file,
+                                      agent_respawn_rate=self.agent_respawn_rate, grace_period=self.grace_period,
+                                      agent_despawn_rate=self.agent_despawn_rate)
         self.world.load_level(level=self.level, num_agents=self.num_agents)
 
         for recipe in self.recipe_graphs:
@@ -203,6 +212,15 @@ class CookingEnvironment(AECEnv):
         return
 
     def step(self, action):
+        if action is None:
+            if any(self.world.status_changed):
+                self.agents = [agent for idx, agent in enumerate(self.possible_agents[:])
+                               if self.world.active_agents[idx]]
+                self._agent_selector = agent_selector(self.agents)
+                if not self.agents:
+                    return
+                self.agent_selection = self._agent_selector.next()
+            return
         if self.terminations[self.agent_selection] or self.truncations[self.agent_selection]:
             self._was_dead_step(action)
             return
@@ -213,22 +231,40 @@ class CookingEnvironment(AECEnv):
         if self._agent_selector.is_last():
             self.accumulated_step(self.accumulated_actions)
             self.accumulated_actions = []
+            for ag in self.agents:
+                if self.terminations[ag] or self.truncations[ag]:
+                    self.agent_selection = ag
+                    self._cumulative_rewards[agent] = 0
+                    return
         self.agent_selection = self._agent_selector.next()
         self._cumulative_rewards[agent] = 0
 
     def accumulated_step(self, actions):
-        # Track internal environment info.
         self.t += 1
-        # translated_actions = [action_translation_dict[actions[f"player_{idx}"]] for idx in range(len(actions))]
-        self.world.world_step(self.world.agents, actions)
-
+        self.world.world_step(actions)
+        dones, rewards, goals, infos, truncations = self.compute_rewards()
         info = {"t": self.t, "termination_info": self.termination_info}
 
-        dones, rewards, goals, infos = self.compute_rewards()
-        for idx, agent in enumerate(self.agents):
-            self.terminations[agent] = dones[idx]
-            self.rewards[agent] = rewards[idx]
+        self.rewards = {}
+        self.terminations = {}
+        self.truncations = {}
+        self.infos = {}
+
+        offset_idx = 0
+        for idx, agent in enumerate(self.possible_agents[:]):
+            if not (self.world.active_agents[idx] or self.world.status_changed[idx]):
+                offset_idx += 1
+                continue
+
+            self.rewards[agent] = rewards[idx - offset_idx]
+            self.terminations[agent] = dones[idx - offset_idx]
+            self.truncations[agent] = truncations[idx - offset_idx]
             self.infos[agent] = {"goal_vector": self.goal_vectors[agent], **info, **infos[idx]}
+            self._cumulative_rewards[agent] += rewards[idx - offset_idx]
+
+        self.agents = [agent for idx, agent in enumerate(self.possible_agents[:])
+                       if self.world.active_agents[idx] or self.world.status_changed[idx]]
+        self._agent_selector = agent_selector(self.agents)
 
     def observe(self, agent):
         obs_space = self.obs_spaces[self.possible_agents.index(agent)]
@@ -254,10 +290,7 @@ class CookingEnvironment(AECEnv):
         rewards = [0] * len(self.recipes)
         open_goals = [[0]] * len(self.recipes)
         # Done if the episode maxes out
-        if self.t >= self.max_steps and self.max_steps:
-            self.termination_info = f"Terminating because {self.max_steps} timesteps passed"
-            # change every entry in dones to true
-            dones = [True] * len(self.recipes)
+        truncations = self.compute_truncated()
 
         for idx, recipe in enumerate(self.recipe_graphs):
             goals_before = recipe.goals_completed(self.num_goals)
@@ -278,7 +311,26 @@ class CookingEnvironment(AECEnv):
         else:
             recipe_dones = any([recipe.completed() for recipe in self.recipe_graphs])
         dones = [recipe_dones or done for done in dones]
-        return dones, rewards, open_goals, infos
+        return dones, rewards, open_goals, infos, truncations
+
+    def compute_truncated(self):
+        if self.t >= self.max_steps:
+            self.termination_info = f"Terminating because {self.max_steps} timesteps passed"
+            truncated = [True] * len(self.world.relevant_agents)
+            self.world.active_agents = [False] * self.num_agents
+            self.world.status_changed = [True if agent in self.world.relevant_agents else False
+                                         for agent in self.world.agents]
+        else:
+            truncated = [False] * len(self.world.relevant_agents)
+
+        offset_idx = 0
+        for idx, agent in enumerate(self.world.agents):
+            if agent not in self.world.relevant_agents:
+                offset_idx += 1
+                continue
+            if self.world.status_changed[idx] and not self.world.active_agents[idx]:
+                truncated[idx - offset_idx] = True
+        return truncated
 
     def get_feature_vector(self, agent):
         feature_vector = []

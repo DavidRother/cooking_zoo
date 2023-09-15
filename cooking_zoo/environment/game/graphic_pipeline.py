@@ -138,7 +138,7 @@ class GraphicPipeline:
             self.draw_food_stack(dynamic_objects, base_size, base_location)
 
     def draw_agents(self):
-        for idx, agent in enumerate(self.world.agents):
+        for idx, agent in enumerate(self.world.relevant_agents):
             agent_string = self.agent_visualization[idx]
             self.draw(f'{agent_string}-{agent.color}', self.graphics_properties.tile_size,
                       self.scaled_location(agent.location), agent.display_text(), agent.icons())

@@ -138,9 +138,30 @@ def parse_agents(world, level_object, num_agents):
                         raise ValueError(f"Too many {name} objects loaded")
                     world.loaded_object_counter[name] += 1
                     world.agents.append(agent)
+                    world.agent_store.append(agent)
+                    world.agent_grace_period.append(world.grace_period)
+                    world.active_agents.append(True)
+                    world.status_changed.append(False)
+                    world.agent_spawn_locations.append((agent_object["X_POSITION"], agent_object["Y_POSITION"]))
                     static_objects_loc[0].add_content(agent)
                     break
                 else:
                     time_out += 1
                     if time_out > 1000:
                         raise ValueError(f"Can't find valid position for agent: {agent_object} in {time_out} steps")
+
+
+def generate_location(world, x_positions, y_positions):
+    time_out = 0
+    while True:
+        x = random.sample(x_positions, 1)[0]
+        y = random.sample(y_positions, 1)[0]
+        if x < 0 or y < 0 or x > world.width or y > world.height:
+            raise ValueError(f"Position {x} {y} is out of bounds set by the level layout!")
+        static_objects_loc = world.get_objects_at((x, y), Floor)
+        if not any([(x, y) == agent.location for agent in world.agents]) and static_objects_loc:
+            return int(x), int(y)
+        else:
+            time_out += 1
+            if time_out > 1000:
+                raise ValueError(f"Can't find valid position in {time_out} steps")

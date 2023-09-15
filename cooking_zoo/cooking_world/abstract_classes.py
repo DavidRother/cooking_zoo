@@ -10,7 +10,7 @@ class Object(ABC):
     def __init__(self, unique_id, location, movable, walkable):
         super(Object, self).__init__()
         self.unique_id = unique_id
-        self.location = location
+        self._location = location
         self.movable = movable  # you can pick this one up
         self.walkable = walkable  # you can walk on it
 
@@ -19,6 +19,15 @@ class Object(ABC):
 
     def move_to(self, new_location):
         self.location = new_location
+
+    @property
+    def location(self):
+        return self._location
+
+    @location.setter
+    def location(self, new_location):
+        assert new_location is not None
+        self._location = new_location
 
     @property
     def physical_state(self):
