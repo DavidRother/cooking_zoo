@@ -92,6 +92,7 @@ class CookingEnvironment(AECEnv):
                                   grace_period=grace_period, agent_despawn_rate=agent_despawn_rate)
         assert self.num_agents <= self.world.meta_object_information["Agent"], \
             "Too many agents for this level"
+        self.recipe_names = recipes
         self.recipes = recipes
         self.graphic_pipeline = None
         self.game = None
@@ -241,8 +242,9 @@ class CookingEnvironment(AECEnv):
 
     def accumulated_step(self, actions):
         self.t += 1
+        active_agents_start = self.world.active_agents[:]
         self.world.world_step(actions)
-        dones, rewards, goals, infos, truncations = self.compute_rewards()
+        dones, rewards, goals, infos, truncations = self.compute_rewards(active_agents_start, actions)
         info = {"t": self.t, "termination_info": self.termination_info}
 
         self.rewards = {}
@@ -259,7 +261,7 @@ class CookingEnvironment(AECEnv):
             self.rewards[agent] = rewards[idx - offset_idx]
             self.terminations[agent] = dones[idx - offset_idx]
             self.truncations[agent] = truncations[idx - offset_idx]
-            self.infos[agent] = {"goal_vector": self.goal_vectors[agent], **info, **infos[idx]}
+            self.infos[agent] = {"goal_vector": self.goal_vectors[agent], **info, **infos[idx - offset_idx]}
             self._cumulative_rewards[agent] += rewards[idx - offset_idx]
 
         self.agents = [agent for idx, agent in enumerate(self.possible_agents[:])
@@ -285,7 +287,7 @@ class CookingEnvironment(AECEnv):
         returned_observation = observation if not len(observation) == 1 else observation[0]
         return returned_observation
 
-    def compute_rewards(self):
+    def compute_rewards(self, active_agents_start, actions):
         dones = [False] * len(self.recipes)
         rewards = [0] * len(self.recipes)
         open_goals = [[0]] * len(self.recipes)
@@ -304,14 +306,29 @@ class CookingEnvironment(AECEnv):
             rewards[idx] += malus * self.reward_scheme["recipe_penalty"]
             rewards[idx] += (self.reward_scheme["max_time_penalty"] / self.max_steps)
 
-        recipe_evaluations = [recipe.completed() for recipe in self.recipe_graphs]
-        infos = [{f"recipe_done": evaluation} for evaluation in recipe_evaluations]
+        infos = self.compute_infos(active_agents_start, actions)
         if self.end_condition_all_dishes:
             recipe_dones = all([recipe.completed() for recipe in self.recipe_graphs])
         else:
             recipe_dones = any([recipe.completed() for recipe in self.recipe_graphs])
         dones = [recipe_dones or done for done in dones]
         return dones, rewards, open_goals, infos, truncations
+
+    def compute_infos(self, active_agents_start, actions):
+        infos = []
+        offset_idx = 0
+        recipe_evaluations = [recipe.completed() for recipe in self.recipe_graphs]
+        for idx, agent in enumerate(self.possible_agents):
+            world_agent = self.world_agent_mapping[agent]
+            if world_agent not in self.world.relevant_agents:
+                offset_idx += 1
+                continue
+            if not active_agents_start[idx]:
+                offset_idx += 1
+            action = 0 if not active_agents_start[idx] else actions[idx - offset_idx]
+            infos.append({f"recipe_done": recipe_evaluations[idx], "action": action,
+                          "task": self.recipe_names[idx]})
+        return infos
 
     def compute_truncated(self):
         if self.t >= self.max_steps:

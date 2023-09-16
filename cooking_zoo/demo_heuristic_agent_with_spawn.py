@@ -49,4 +49,5 @@ while not all(terminations.values()):
         actions["player_1"] = cooking_agent.step(observations["player_1"])
     # action = {"player_0": manual_policy("player_0"), "player_1": cooking_agent.step(observations["player_1"])}
     observations, rewards, terminations, truncations, infos = env.step(actions)
+    print(infos)
     env.render()
