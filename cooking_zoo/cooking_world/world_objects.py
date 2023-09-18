@@ -423,7 +423,7 @@ class Plate(DynamicObject, ContentObject):
         return 3
 
     def file_name(self) -> str:
-        return "Plate"
+        return "plate"
 
     def icons(self) -> List[str]:
         return []
