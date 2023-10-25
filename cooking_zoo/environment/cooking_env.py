@@ -23,7 +23,7 @@ COLORS = ['blue', 'magenta', 'yellow', 'green']
 FPS = 20
 
 
-def env(level, meta_file, num_agents, max_steps, recipes, agent_visualization=None, obs_spaces=None,
+def env(level, num_agents, max_steps, recipes, agent_visualization=None, obs_spaces=None,
         end_condition_all_dishes=False, action_scheme="scheme1", render=False, reward_scheme=None,
         agent_respawn_rate=0.0, grace_period=20, agent_despawn_rate=0.0):
     """
@@ -33,7 +33,7 @@ def env(level, meta_file, num_agents, max_steps, recipes, agent_visualization=No
     to provide sane error messages. You can find full documentation for these methods
     elsewhere in the developer documentation.
     """
-    env_init = CookingEnvironment(level, meta_file, num_agents, max_steps, recipes, agent_visualization,
+    env_init = CookingEnvironment(level, num_agents, max_steps, recipes, agent_visualization,
                                   obs_spaces, end_condition_all_dishes=end_condition_all_dishes,
                                   action_scheme=action_scheme, render=render, reward_scheme=reward_scheme,
                                   agent_respawn_rate=agent_respawn_rate, grace_period=grace_period,
@@ -59,11 +59,12 @@ class CookingEnvironment(AECEnv):
 
     action_scheme_map = {"scheme1": ActionScheme1, "scheme2": ActionScheme2, "scheme3": ActionScheme3}
 
-    def __init__(self, level, meta_file, num_agents, max_steps, recipes, agent_visualization=None, obs_spaces=None,
+    def __init__(self, level, num_agents, max_steps, recipes, agent_visualization=None, obs_spaces=None,
                  end_condition_all_dishes=False, allowed_objects=None, action_scheme="scheme1", render=False,
-                 reward_scheme=None, agent_respawn_rate=0.0, grace_period=20, agent_despawn_rate=0.0):
+                 reward_scheme=None, agent_respawn_rate=0.0, grace_period=20, agent_despawn_rate=0.0, seed=None):
         super().__init__()
 
+        self.rng = np.random.default_rng(seed)
         obs_spaces = obs_spaces or ["feature_vector"]
         self.allowed_obs_spaces = ["symbolic", "full", "feature_vector"]
         self.action_scheme = action_scheme
@@ -87,11 +88,8 @@ class CookingEnvironment(AECEnv):
         self.t = 0
         self.filename = ""
         self.set_filename()
-        self.meta_file = meta_file
-        self.world = CookingWorld(self.action_scheme_class, meta_file, agent_respawn_rate=agent_respawn_rate,
+        self.world = CookingWorld(self.action_scheme_class, agent_respawn_rate=agent_respawn_rate,
                                   grace_period=grace_period, agent_despawn_rate=agent_despawn_rate)
-        assert self.num_agents <= self.world.meta_object_information["Agent"], \
-            "Too many agents for this level"
         self.recipe_names = recipes
         self.recipes = recipes
         self.graphic_pipeline = None
@@ -106,7 +104,9 @@ class CookingEnvironment(AECEnv):
         self.recipe_graphs = [self.recipes[recipe]() for recipe in recipes]
 
         self.termination_info = ""
-        self.world.load_level(level=self.level, num_agents=num_agents)
+        self.world.load_level(level=self.level, num_agents=num_agents, rng=self.rng)
+        assert self.num_agents <= self.world.meta_object_information["Agent"], \
+            "Too many agents for this level"
         self.graph_representation_length = sum([cls.state_length() for cls in GAME_CLASSES])
         objects = defaultdict(list)
         objects.update(self.world.world_objects)
@@ -189,10 +189,10 @@ class CookingEnvironment(AECEnv):
         
         # Load world & distances.
         if options["full_reset"]:
-            self.world = CookingWorld(self.action_scheme_class, self.meta_file,
+            self.world = CookingWorld(self.action_scheme_class,
                                       agent_respawn_rate=self.agent_respawn_rate, grace_period=self.grace_period,
                                       agent_despawn_rate=self.agent_despawn_rate)
-        self.world.load_level(level=self.level, num_agents=self.num_agents)
+        self.world.load_level(level=self.level, num_agents=self.num_agents, rng=self.rng)
 
         for recipe in self.recipe_graphs:
             recipe.update_recipe_state(self.world)
@@ -243,7 +243,7 @@ class CookingEnvironment(AECEnv):
     def accumulated_step(self, actions):
         self.t += 1
         active_agents_start = self.world.active_agents[:]
-        self.world.world_step(actions)
+        self.world.world_step(actions, self.rng)
         dones, rewards, goals, infos, truncations = self.compute_rewards(active_agents_start, actions)
         info = {"t": self.t, "termination_info": self.termination_info}
 

@@ -59,7 +59,3 @@ class Temperature(Enum):
 ONION_INIT_STATE = ChopFoodStates.FRESH
 TOMATO_INIT_STATE = ChopFoodStates.FRESH
 LETTUCE_INIT_STATE = ChopFoodStates.FRESH
-
-
-
-
