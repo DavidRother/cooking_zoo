@@ -71,7 +71,7 @@ class GraphicPipeline:
         self.font = pygame.font.Font('freesansbold.ttf', 18)
         return True
 
-    def render(self, display):
+    def render(self, render_mode):
         self.screen.fill(Color.FLOOR)
 
         self.draw_static_objects()
@@ -80,7 +80,9 @@ class GraphicPipeline:
 
         self.draw_dynamic_objects()
 
-        if display:
+        if render_mode == "rgb_array":
+            return pygame.surfarray.array3d(self.screen).swapaxes(0,1)
+        if render_mode == "human":
             pygame.display.flip()
             pygame.display.update()
             pygame.event.get()
