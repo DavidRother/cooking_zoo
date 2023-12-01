@@ -20,7 +20,7 @@ class CookingWorld:
 
     COLORS = ['blue', 'magenta', 'yellow', 'green']
 
-    def __init__(self, action_scheme_class=ActionScheme1, meta_file="", recipes=None, agent_respawn_rate=0.0,
+    def __init__(self, action_scheme_class=ActionScheme1, recipes=None, agent_respawn_rate=0.0,
                  grace_period=20, agent_despawn_rate=0.0):
         self.agents = []
         self.agent_store = []
@@ -32,7 +32,6 @@ class CookingWorld:
         self.action_scheme = action_scheme_class
         self.init_world = None
         self.init_agents = []
-        self.meta_object_information = load_level.load_meta_file(meta_file)
         self.loaded_object_counter = defaultdict(int)
         self.recipes = recipes or []
         self.agent_respawn_rate = agent_respawn_rate
@@ -101,14 +100,14 @@ class CookingWorld:
         else:
             raise Exception("No valid Action Scheme Found")
 
-    def world_step(self, actions):
+    def world_step(self, actions, rng):
         agents = self.compute_active_agents()
         self.status_changed = [False] * len(self.agents)
         assert len(agents) == len(actions)
         self.perform_agent_actions(agents, actions)
         self.progress_world()
         self.resolve_linked_interactions()
-        self.handle_agent_spawn()
+        self.handle_agent_spawn(rng)
         self.relevant_agents = self.compute_relevant_agents()
 
     def resolve_primary_interaction(self, agent: Agent):
@@ -260,11 +259,11 @@ class CookingWorld:
                 agent.put_down(target_location)
                 agent.interacts_with.append(static_object)
 
-    def load_level(self, level, num_agents):
+    def load_level(self, level, num_agents, rng):
         reset_world_counter()
-        load_level.load_level(self, level, num_agents)
+        load_level.load_level(self, level, num_agents, rng)
 
-    def handle_agent_spawn(self):
+    def handle_agent_spawn(self, rng):
         for i in range(len(self.active_agents)):
             if self.agent_grace_period[i] > 0:
                 self.agent_grace_period[i] -= 1
@@ -274,7 +273,7 @@ class CookingWorld:
                    and np.random.random() < self.agent_despawn_rate:
                     self.despawn_agent(i)
                 elif not self.active_agents[i] and np.random.random() < self.agent_respawn_rate:
-                    self.respawn_agent(i)
+                    self.respawn_agent(i, rng)
 
     def despawn_agent(self, index):
         if self.agents[index].holding:
@@ -283,11 +282,11 @@ class CookingWorld:
         self.active_agents[index] = False
         self.status_changed[index] = True
 
-    def respawn_agent(self, index):
+    def respawn_agent(self, index, rng):
         self.active_agents[index] = True
         self.status_changed[index] = True
         self.agent_grace_period[index] = self.grace_period
-        self.agents[index].location = parsing.generate_location(self, *self.agent_spawn_locations[index])
+        self.agents[index].location = parsing.generate_location(self, self.agent_spawn_locations[index], rng)
 
     def compute_relevant_agents(self):
         return [agent for idx, agent in enumerate(self.agents) if self.active_agents[idx] or self.status_changed[idx]]

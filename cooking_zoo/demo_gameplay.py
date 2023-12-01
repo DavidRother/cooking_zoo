@@ -3,7 +3,7 @@ from cooking_zoo.environment.cooking_env import parallel_env
 
 num_agents = 1
 max_steps = 400
-render = True
+render_mode = "human"
 obs_spaces = ["feature_vector"]
 action_scheme = "scheme3"
 meta_file = "example"
@@ -15,7 +15,7 @@ reward_scheme = {"recipe_reward": 20, "max_time_penalty": -5, "recipe_penalty": 
 
 env = parallel_env(level=level, meta_file=meta_file, num_agents=num_agents, max_steps=max_steps, recipes=recipes,
                    agent_visualization=agent_visualization, obs_spaces=obs_spaces,
-                   end_condition_all_dishes=end_condition_all_dishes, action_scheme=action_scheme, render=render,
+                   end_condition_all_dishes=end_condition_all_dishes, action_scheme=action_scheme, render_mode=render_mode,
                    reward_scheme=reward_scheme)
 env.reset()
 env.render()

@@ -7,7 +7,7 @@ from cooking_zoo.cooking_agents.cooking_agent import CookingAgent
 
 num_agents = 2
 max_steps = 400
-render = True
+render_mode = "human"
 obs_spaces = ["feature_vector", "symbolic"]
 action_scheme = "scheme3"
 meta_file = "example"
@@ -24,7 +24,7 @@ cooking_agent = CookingAgent(recipes[1], "agent-2")
 
 env = parallel_env(level=level, meta_file=meta_file, num_agents=num_agents, max_steps=max_steps, recipes=recipes,
                    agent_visualization=agent_visualization, obs_spaces=obs_spaces,
-                   end_condition_all_dishes=end_condition_all_dishes, action_scheme=action_scheme, render=render,
+                   end_condition_all_dishes=end_condition_all_dishes, action_scheme=action_scheme, render_mode=render_mode,
                    reward_scheme=reward_scheme, agent_despawn_rate=agent_despawn_rate,
                    agent_respawn_rate=agent_respawn_rate, grace_period=grace_period)
 
