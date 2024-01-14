@@ -33,7 +33,10 @@ class BaseAgent:
 
         self.name = name
         self.recipe = recipe
-        self.recipe_graph = RECIPES[recipe]()
+        if isinstance(recipe, str):
+            self.recipe_graph = RECIPES[recipe]()
+        else:
+            self.recipe_graph = recipe
         self.location = None
         self.agent = None
         self.cache = {}
@@ -187,6 +190,8 @@ class BaseAgent:
                 appliance_locations = [appliance.location for appliance in observation[appliance_name]
                                        if self.reachable(self.location, appliance.location, observation)]
                 closest_appliance_location = self.closest(self.location, appliance_locations, observation)
+                if not closest_appliance_location:
+                    return 0
                 return self.walk_to_location(closest_appliance_location, observation)
 
     @staticmethod

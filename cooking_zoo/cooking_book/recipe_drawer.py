@@ -57,10 +57,14 @@ ChoppedCarrot = RecipeNode(root_type=Carrot, id_num=get_next_default_id(), name=
                            conditions=[("chop_state", ChopFoodStates.CHOPPED)])
 MashedCarrot = RecipeNode(root_type=Carrot, id_num=get_next_default_id(), name="Carrot",
                           conditions=[("blend_state", BlenderFoodStates.MASHED)])
+ChoppedBread = RecipeNode(root_type=Bread, id_num=get_next_default_id(), name="Bread",
+                          conditions=[("chop_state", ChopFoodStates.CHOPPED)])
 
 # Salad Plates
 TomatoSaladPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
                               contains=[ChoppedTomato])
+LettucePlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
+                          contains=[ChoppedLettuce])
 TomatoLettucePlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
                                 contains=[ChoppedTomato, ChoppedLettuce])
 TomatoLettuceOnionPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
@@ -77,6 +81,12 @@ CucumberOnionPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), n
 
 AppleWatermelonPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
                                   contains=[ChoppedApple, ChoppedWatermelon])
+BreadTomatoPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
+                              contains=[ChoppedBread, ChoppedTomato])
+BreadCarrotPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
+                              contains=[ChoppedBread, ChoppedCarrot])
+BreadBananaPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
+                              contains=[ChoppedBread, ChoppedBanana])
 # CarrotPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
 #                          contains=[MashedCarrot])
 
@@ -98,6 +108,12 @@ CucumberOnion = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id()
                            contains=[CucumberOnionPlate])
 AppleWatermelon = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
                              contains=[AppleWatermelonPlate])
+BreadTomato = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
+                         contains=[BreadTomatoPlate])
+BreadCarrot = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
+                         contains=[BreadCarrotPlate])
+BreadBanana = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
+                         contains=[BreadBananaPlate])
 # MashedCarrot = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
 #                           conditions=None, contains=[CarrotPlate])
 
@@ -113,6 +129,9 @@ RECIPES = {"TomatoSalad": lambda: deepcopy(Recipe(TomatoSalad, DEFAULT_NUM_GOALS
            "CucumberOnion": lambda: deepcopy(Recipe(CucumberOnion, DEFAULT_NUM_GOALS)),
            "AppleWatermelon": lambda: deepcopy(Recipe(AppleWatermelon, DEFAULT_NUM_GOALS)),
            "TomatoLettuceOnionSalad": lambda: deepcopy(Recipe(TomatoLettuceOnionSalad, DEFAULT_NUM_GOALS)),
+           "BreadTomato": lambda: deepcopy(Recipe(BreadTomato, DEFAULT_NUM_GOALS)),
+           "BreadCarrot": lambda: deepcopy(Recipe(BreadCarrot, DEFAULT_NUM_GOALS)),
+           "BreadBanana": lambda: deepcopy(Recipe(BreadBanana, DEFAULT_NUM_GOALS)),
            # "MashedCarrot": lambda: deepcopy(Recipe(MashedCarrot)),
            "no_recipe": lambda: deepcopy(Recipe(no_recipe_node, DEFAULT_NUM_GOALS))
            }
