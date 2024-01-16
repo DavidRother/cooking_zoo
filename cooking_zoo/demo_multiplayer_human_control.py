@@ -7,8 +7,8 @@ max_steps = 400
 render = True
 obs_spaces = ["symbolic", "feature_vector"]
 action_scheme = "scheme3"
-meta_file = "example"
-level = "coop_test"
+meta_file = "jaamas"
+level = "jaamas2_room"
 recipes = ["TomatoLettuceSalad", "CarrotBanana"]
 end_condition_all_dishes = True
 agent_visualization = ["robot", "human"]
@@ -28,9 +28,11 @@ action_space = env.action_space("player_0")
 manual_policy = ManualPolicy(env, agent_id="player_0")
 
 terminations = {"player_0": False}
+reward_sum = 0
 
-while not all(terminations.values()):
+while not any(terminations.values()):
     action = {"player_0": manual_policy("player_0"), "player_1": action_space.sample()}
     observations, rewards, terminations, truncations, infos = env.step(action)
+    reward_sum += rewards["player_0"]
     print(rewards)
     env.render()

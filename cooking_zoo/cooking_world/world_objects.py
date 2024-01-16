@@ -604,13 +604,13 @@ class Cucumber(ChopFood):
         return 5
 
     def file_name(self) -> str:
-        return "default_dynamic"
+        return "Cucumber"
 
     def icons(self) -> List[str]:
         return []
 
     def display_text(self) -> str:
-        return "Cu " + str(self.chop_state.value[:3])
+        return ""
 
 
 class Banana(BlenderFood, ChopFood):

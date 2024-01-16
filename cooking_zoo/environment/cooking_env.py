@@ -355,21 +355,28 @@ class CookingEnvironment(AECEnv):
         objects.update(self.world.world_objects)
         objects["Agent"] = self.world.agents
         x, y = self.world_agent_mapping[agent].location
+        agent_features = self.world_agent_mapping[agent].feature_vector_representation()
+        agent_features[0] = agent_features[0] / self.world.width
+        agent_features[1] = agent_features[1] / self.world.height
+        feature_vector.extend(agent_features)
         for name, num in self.world.meta_object_information.items():
             cls = StringToClass[name]
             current_num = 0
             for obj in objects[ClassToString[cls]]:
                 features = list(obj.feature_vector_representation())
                 if features and obj is not self.world_agent_mapping[agent]:
-                    features[0] = (features[0] - x) / self.world.width
-                    features[1] = (features[1] - y) / self.world.height
+                    features[0] = (features[0]) / self.world.width
+                    features[1] = (features[1]) / self.world.height
                 if obj is self.world_agent_mapping[agent]:
-                    features[0] = features[0] / self.world.width
-                    features[1] = features[1] / self.world.height
+                    current_num += 1
+                    continue
+                assert len(features) == cls.feature_vector_length()
                 feature_vector.extend(features)
                 current_num += 1
+            assert current_num <= num
             feature_vector.extend([0] * (num - current_num) * cls.feature_vector_length())
         new_vector = np.array(feature_vector)
+        assert len(new_vector) == self.feature_vector_representation_length
         return new_vector
 
     def get_agent_names(self):
