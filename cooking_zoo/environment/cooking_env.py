@@ -311,8 +311,18 @@ class CookingEnvironment(AECEnv):
             recipe_dones = all([recipe.completed() for recipe in self.recipe_graphs])
         else:
             recipe_dones = any([recipe.completed() for recipe in self.recipe_graphs])
-        dones = [recipe_dones or done for done in dones]
+        dones = []
+        for idx, truncation in enumerate(truncations):
+            dones.append(recipe_dones)
+            self.status_changed[idx] = recipe_dones or truncation
+            self.active_agents[idx] = not (recipe_dones or truncation)
+        self.compute_relevant_agents()
         return dones, rewards, open_goals, infos, truncations
+
+    def compute_relevant_agents(self):
+        self.world.relevant_agents = [agent for idx, agent in enumerate(self.world.agents)
+                                      if self.active_agents[idx] or self.status_changed[idx]]
+
 
     def compute_infos(self, active_agents_start, actions):
         infos = []
@@ -350,6 +360,8 @@ class CookingEnvironment(AECEnv):
         return truncated
 
     def get_feature_vector(self, agent):
+        # start_features = 0
+
         feature_vector = []
         objects = defaultdict(list)
         objects.update(self.world.world_objects)
@@ -359,22 +371,28 @@ class CookingEnvironment(AECEnv):
         agent_features[0] = agent_features[0] / self.world.width
         agent_features[1] = agent_features[1] / self.world.height
         feature_vector.extend(agent_features)
+        # print(f"Agent 1 start: {start_features} end: {len(feature_vector)}")
+        # start_features += len(agent_features)
         for name, num in self.world.meta_object_information.items():
             cls = StringToClass[name]
             current_num = 0
             for obj in objects[ClassToString[cls]]:
+                if obj is self.world_agent_mapping[agent]:
+                    current_num += 1
+                    continue
                 features = list(obj.feature_vector_representation())
                 if features and obj is not self.world_agent_mapping[agent]:
                     features[0] = (features[0]) / self.world.width
                     features[1] = (features[1]) / self.world.height
-                if obj is self.world_agent_mapping[agent]:
-                    current_num += 1
-                    continue
                 assert len(features) == cls.feature_vector_length()
                 feature_vector.extend(features)
                 current_num += 1
+                # print(f"{name} {current_num} start: {start_features} end: {start_features + len(features)}")
+                # start_features += len(features)
             assert current_num <= num
-            feature_vector.extend([0] * (num - current_num) * cls.feature_vector_length())
+            zeroes = [0] * (num - current_num) * cls.feature_vector_length()
+            feature_vector.extend(zeroes)
+            # start_features += len(zeroes)
         new_vector = np.array(feature_vector)
         assert len(new_vector) == self.feature_vector_representation_length
         return new_vector
