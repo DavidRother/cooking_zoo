@@ -314,14 +314,14 @@ class CookingEnvironment(AECEnv):
         dones = []
         for idx, truncation in enumerate(truncations):
             dones.append(recipe_dones)
-            self.status_changed[idx] = recipe_dones or truncation
-            self.active_agents[idx] = not (recipe_dones or truncation)
+            self.world.status_changed[idx] = recipe_dones or truncation
+            self.world.active_agents[idx] = not (recipe_dones or truncation)
         self.compute_relevant_agents()
         return dones, rewards, open_goals, infos, truncations
 
     def compute_relevant_agents(self):
         self.world.relevant_agents = [agent for idx, agent in enumerate(self.world.agents)
-                                      if self.active_agents[idx] or self.status_changed[idx]]
+                                      if self.world.active_agents[idx] or self.world.status_changed[idx]]
 
 
     def compute_infos(self, active_agents_start, actions):
