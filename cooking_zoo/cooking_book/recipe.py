@@ -32,6 +32,7 @@ class Recipe:
         self.root_node = root_node
         self.node_list = [root_node] + self.expand_child_nodes(root_node)
         self.goal_encoding = self.goals_completed(num_goals)
+        self.conditions_fulfilled = 0
 
     def goals_completed(self, num_goals):
         goals = np.zeros(num_goals, dtype=np.int32)
@@ -75,16 +76,22 @@ class Recipe:
         return self.root_node.marked
 
     def update_recipe_state(self, world: CookingWorld):
+        self.conditions_fulfilled = 0
         for node in reversed(self.node_list):
             node.marked = False
             node.world_objects = []
+            markable = True
             if not all((contains.marked for contains in node.contains)):
-                continue
+                markable = False
             for obj in world.world_objects[node.name]:
+                num_fulfilled_conditions, condition_check = self.check_conditions(node, obj)
+                num_fulfilled_contains, contains_check = self.check_contains(node, obj)
                 # check for all conditions
-                if self.check_conditions(node, obj):
-                    node.world_objects.append(obj)
-                    node.marked = True
+                self.conditions_fulfilled += num_fulfilled_conditions + num_fulfilled_contains
+                if condition_check and contains_check:
+                    if markable:
+                        node.world_objects.append(obj)
+                        node.marked = True
 
     def expand_child_nodes(self, node: RecipeNode):
         child_nodes = []
@@ -94,11 +101,17 @@ class Recipe:
 
     @staticmethod
     def check_conditions(node: RecipeNode, world_object):
+        fulfilled_conditions = []
         for condition in node.conditions:
             if getattr(world_object, condition[0]) != condition[1]:
-                return False
-        else:
-            all_contained = []
-            for contains in node.contains:
-                all_contained.append(any([obj.location == world_object.location for obj in contains.world_objects]))
-            return all(all_contained)
+                fulfilled_conditions.append(False)
+            else:
+                fulfilled_conditions.append(True)
+        return sum(fulfilled_conditions), all(fulfilled_conditions)
+
+    @staticmethod
+    def check_contains(node: RecipeNode, world_object):
+        all_contained = []
+        for contains in node.contains:
+            all_contained.append(any([obj.location == world_object.location for obj in contains.world_objects]))
+        return sum(all_contained), all(all_contained)

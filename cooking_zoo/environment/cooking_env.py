@@ -103,7 +103,7 @@ class CookingEnvironment(AECEnv):
         else:
             self.recipes = RECIPES
             self.num_goals = DEFAULT_NUM_GOALS
-        self.recipe_graphs = [self.recipes[recipe]() for recipe in recipes]
+        self.recipe_graphs = [self.recipes[recipe] for recipe in recipes]
 
         self.termination_info = ""
         self.world.load_level(level=self.level, num_agents=num_agents)
@@ -288,20 +288,22 @@ class CookingEnvironment(AECEnv):
         return returned_observation
 
     def compute_rewards(self, active_agents_start, actions):
-        dones = [False] * len(self.recipes)
         rewards = [0] * len(self.recipes)
         open_goals = [[0]] * len(self.recipes)
         # Done if the episode maxes out
         truncations = self.compute_truncated()
 
         for idx, recipe in enumerate(self.recipe_graphs):
-            goals_before = recipe.goals_completed(self.num_goals)
+            # goals_before = recipe.goals_completed(self.num_goals)
             completion_before = recipe.completed()
+            num_fulfilled_before = recipe.conditions_fulfilled
             recipe.update_recipe_state(self.world)
+            num_fulfilled_after = recipe.conditions_fulfilled
             open_goals[idx] = recipe.goals_completed(self.num_goals)
             malus = not recipe.completed() and completion_before
             bonus = recipe.completed() and not completion_before
-            rewards[idx] += (sum(goals_before) - sum(open_goals[idx])) * self.reward_scheme["recipe_node_reward"]
+            # rewards[idx] += (sum(goals_before) - sum(open_goals[idx])) * self.reward_scheme["recipe_node_reward"]
+            rewards[idx] += (num_fulfilled_after - num_fulfilled_before) * self.reward_scheme["recipe_node_reward"]
             rewards[idx] += bonus * self.reward_scheme["recipe_reward"]
             rewards[idx] += malus * self.reward_scheme["recipe_penalty"]
             rewards[idx] += (self.reward_scheme["max_time_penalty"] / self.max_steps)
@@ -322,7 +324,6 @@ class CookingEnvironment(AECEnv):
     def compute_relevant_agents(self):
         self.world.relevant_agents = [agent for idx, agent in enumerate(self.world.agents)
                                       if self.world.active_agents[idx] or self.world.status_changed[idx]]
-
 
     def compute_infos(self, active_agents_start, actions):
         infos = []
@@ -368,8 +369,10 @@ class CookingEnvironment(AECEnv):
         objects["Agent"] = self.world.agents
         x, y = self.world_agent_mapping[agent].location
         agent_features = self.world_agent_mapping[agent].feature_vector_representation()
-        agent_features[0] = agent_features[0] / self.world.width
-        agent_features[1] = agent_features[1] / self.world.height
+        # agent_features[0] = agent_features[0] / self.world.width
+        # agent_features[1] = agent_features[1] / self.world.height
+        agent_features[0] = 0
+        agent_features[1] = 0
         feature_vector.extend(agent_features)
         # print(f"Agent 1 start: {start_features} end: {len(feature_vector)}")
         # start_features += len(agent_features)
@@ -382,8 +385,8 @@ class CookingEnvironment(AECEnv):
                     continue
                 features = list(obj.feature_vector_representation())
                 if features and obj is not self.world_agent_mapping[agent]:
-                    features[0] = (features[0]) / self.world.width
-                    features[1] = (features[1]) / self.world.height
+                    features[0] = (features[0] - x) / self.world.width
+                    features[1] = (features[1] - y) / self.world.height
                 assert len(features) == cls.feature_vector_length()
                 feature_vector.extend(features)
                 current_num += 1

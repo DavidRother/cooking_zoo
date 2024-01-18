@@ -32,7 +32,9 @@ def get_next_default_id():
 
 
 def register_recipe(recipe, name):
-    RECIPE_STORE[name] = lambda: deepcopy(recipe)
+    def get_recipe():
+        return deepcopy(recipe)
+    RECIPE_STORE[name] = get_recipe()
     
 
 #  Basic food Items
@@ -122,16 +124,79 @@ floor = RecipeNode(root_type=Floor, id_num=get_next_default_id(), name="Floor", 
 no_recipe_node = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name='Deliversquare', conditions=None,
                             contains=[floor])
 
-RECIPES = {"TomatoSalad": lambda: deepcopy(Recipe(TomatoSalad, DEFAULT_NUM_GOALS)),
-           "TomatoLettuceSalad": lambda: deepcopy(Recipe(TomatoLettuceSalad, DEFAULT_NUM_GOALS)),
-           "CarrotBanana": lambda: deepcopy(Recipe(CarrotBanana, DEFAULT_NUM_GOALS)),
-           "MashedCarrotBanana": lambda: deepcopy(Recipe(MashedCarrotBanana, DEFAULT_NUM_GOALS)),
-           "CucumberOnion": lambda: deepcopy(Recipe(CucumberOnion, DEFAULT_NUM_GOALS)),
-           "AppleWatermelon": lambda: deepcopy(Recipe(AppleWatermelon, DEFAULT_NUM_GOALS)),
-           "TomatoLettuceOnionSalad": lambda: deepcopy(Recipe(TomatoLettuceOnionSalad, DEFAULT_NUM_GOALS)),
-           "BreadTomato": lambda: deepcopy(Recipe(BreadTomato, DEFAULT_NUM_GOALS)),
-           "BreadCarrot": lambda: deepcopy(Recipe(BreadCarrot, DEFAULT_NUM_GOALS)),
-           "BreadBanana": lambda: deepcopy(Recipe(BreadBanana, DEFAULT_NUM_GOALS)),
-           # "MashedCarrot": lambda: deepcopy(Recipe(MashedCarrot)),
-           "no_recipe": lambda: deepcopy(Recipe(no_recipe_node, DEFAULT_NUM_GOALS))
+# RECIPES2 = {"TomatoSalad": lambda: deepcopy(Recipe(TomatoSalad, DEFAULT_NUM_GOALS)),
+#            "TomatoLettuceSalad": lambda: deepcopy(Recipe(TomatoLettuceSalad, DEFAULT_NUM_GOALS)),
+#            "CarrotBanana": lambda: deepcopy(Recipe(CarrotBanana, DEFAULT_NUM_GOALS)),
+#            "MashedCarrotBanana": lambda: deepcopy(Recipe(MashedCarrotBanana, DEFAULT_NUM_GOALS)),
+#            "CucumberOnion": lambda: deepcopy(Recipe(CucumberOnion, DEFAULT_NUM_GOALS)),
+#            "AppleWatermelon": lambda: deepcopy(Recipe(AppleWatermelon, DEFAULT_NUM_GOALS)),
+#            "TomatoLettuceOnionSalad": lambda: deepcopy(Recipe(TomatoLettuceOnionSalad, DEFAULT_NUM_GOALS)),
+#            "BreadTomato": lambda: deepcopy(Recipe(BreadTomato, DEFAULT_NUM_GOALS)),
+#            "BreadCarrot": lambda: deepcopy(Recipe(BreadCarrot, DEFAULT_NUM_GOALS)),
+#            "BreadBanana": lambda: deepcopy(Recipe(BreadBanana, DEFAULT_NUM_GOALS)),
+#            "MashedCarrot": lambda: deepcopy(Recipe(MashedCarrot)),
+# "no_recipe": lambda: deepcopy(Recipe(no_recipe_node, DEFAULT_NUM_GOALS))
+# }
+
+
+def get_tomato_salad_recipe():
+    return deepcopy(Recipe(TomatoSalad, DEFAULT_NUM_GOALS))
+
+
+def get_tomato_lettuce_salad_recipe():
+    return deepcopy(Recipe(TomatoLettuceSalad, DEFAULT_NUM_GOALS))
+
+
+def get_carrot_banana_recipe():
+    return deepcopy(Recipe(CarrotBanana, DEFAULT_NUM_GOALS))
+
+
+def get_mashed_carrot_banana_recipe():
+    return deepcopy(Recipe(MashedCarrotBanana, DEFAULT_NUM_GOALS))
+
+
+def get_cucumber_onion_recipe():
+    return deepcopy(Recipe(CucumberOnion, DEFAULT_NUM_GOALS))
+
+
+def get_apple_watermelon_recipe():
+    return deepcopy(Recipe(AppleWatermelon, DEFAULT_NUM_GOALS))
+
+
+def get_tomato_lettuce_onion_recipe():
+    return deepcopy(Recipe(TomatoLettuceOnionSalad, DEFAULT_NUM_GOALS))
+
+
+def get_bread_tomato_recipe():
+    return deepcopy(Recipe(BreadTomato, DEFAULT_NUM_GOALS))
+
+
+def get_bread_carrot_recipe():
+    return deepcopy(Recipe(BreadCarrot, DEFAULT_NUM_GOALS))
+
+
+def get_bread_banana_recipe():
+    return deepcopy(Recipe(BreadBanana, DEFAULT_NUM_GOALS))
+
+
+def get_mashed_carrot_recipe():
+    return deepcopy(Recipe(MashedCarrot, DEFAULT_NUM_GOALS))
+
+
+def get_no_recipe():
+    return deepcopy(Recipe(no_recipe_node, DEFAULT_NUM_GOALS))
+
+
+RECIPES = {"TomatoSalad": get_tomato_salad_recipe(),
+           "TomatoLettuceSalad": get_tomato_lettuce_salad_recipe(),
+           "CarrotBanana": get_carrot_banana_recipe(),
+           "MashedCarrotBanana": get_mashed_carrot_banana_recipe(),
+           "CucumberOnion": get_cucumber_onion_recipe(),
+           "AppleWatermelon": get_apple_watermelon_recipe(),
+           "TomatoLettuceOnionSalad": get_tomato_lettuce_onion_recipe(),
+           "BreadTomato": get_bread_tomato_recipe(),
+           "BreadCarrot": get_bread_carrot_recipe(),
+           "BreadBanana": get_bread_banana_recipe(),
+           # "MashedCarrot": get_mashed_carrot_recipe(),
+           "no_recipe": get_no_recipe()
            }

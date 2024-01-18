@@ -34,7 +34,7 @@ class BaseAgent:
         self.name = name
         self.recipe = recipe
         if isinstance(recipe, str):
-            self.recipe_graph = RECIPES[recipe]()
+            self.recipe_graph = RECIPES[recipe]
         else:
             self.recipe_graph = recipe
         self.location = None
