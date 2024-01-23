@@ -206,7 +206,8 @@ class CookingEnvironment(AECEnv):
         self._cumulative_rewards = dict(zip(self.agents, [0 for _ in self.agents]))
         self.terminations = dict(zip(self.agents, [False for _ in self.agents]))
         self.truncations = dict(zip(self.agents, [False for _ in self.agents]))
-        self.infos = dict(zip(self.agents, [{} for _ in self.agents]))
+        infos = self.compute_infos(self.agents, [0] * self.num_agents)
+        self.infos = dict(zip(self.agents, infos))
         self.accumulated_actions = []
 
     def close(self):
@@ -261,7 +262,7 @@ class CookingEnvironment(AECEnv):
             self.rewards[agent] = rewards[idx - offset_idx]
             self.terminations[agent] = dones[idx - offset_idx]
             self.truncations[agent] = truncations[idx - offset_idx]
-            self.infos[agent] = {"goal_vector": self.goal_vectors[agent], **info, **infos[idx - offset_idx]}
+            self.infos[agent] = {**info, **infos[idx - offset_idx]}
             self._cumulative_rewards[agent] += rewards[idx - offset_idx]
 
         self.agents = [agent for idx, agent in enumerate(self.possible_agents[:])
@@ -325,10 +326,15 @@ class CookingEnvironment(AECEnv):
         self.world.relevant_agents = [agent for idx, agent in enumerate(self.world.agents)
                                       if self.world.active_agents[idx] or self.world.status_changed[idx]]
 
+    def compute_goal_vector(self):
+        goal_vector = [recipe.goals_completed(self.num_goals) for recipe in self.recipe_graphs]
+        return goal_vector
+
     def compute_infos(self, active_agents_start, actions):
         infos = []
         offset_idx = 0
         recipe_evaluations = [recipe.completed() for recipe in self.recipe_graphs]
+        goal_vector = self.compute_goal_vector()
         for idx, agent in enumerate(self.possible_agents):
             world_agent = self.world_agent_mapping[agent]
             if world_agent not in self.world.relevant_agents:
@@ -338,7 +344,7 @@ class CookingEnvironment(AECEnv):
                 offset_idx += 1
             action = 0 if not active_agents_start[idx] else actions[idx - offset_idx]
             infos.append({f"recipe_done": recipe_evaluations[idx], "action": action,
-                          "task": self.recipe_names[idx]})
+                          "task": self.recipe_names[idx], "goal_vector": self.goal_vectors[agent]})
         return infos
 
     def compute_truncated(self):

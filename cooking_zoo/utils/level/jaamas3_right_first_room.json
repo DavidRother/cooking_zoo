@@ -1,8 +1,8 @@
 {
   "LEVEL_LAYOUT": "-------\n-  -  -\n-  -  -\n-  -  -\n-  -  -\n-  -  -\n-------",
-  "STATIC_OBJECTS": [{"Cutboard": {"COUNT": 1, "X_POSITION": [6], "Y_POSITION":  [4], "OPTIONAL": 1.0}},
-                     {"Cutboard": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [1], "OPTIONAL": 1.0}},
-                     {"Cutboard": {"COUNT": 1, "X_POSITION": [3], "Y_POSITION":  [3], "OPTIONAL": 1.0}},
+  "STATIC_OBJECTS": [{"Cutboard": {"COUNT": 1, "X_POSITION": [6], "Y_POSITION":  [4], "OPTIONAL": 0.8}},
+                     {"Cutboard": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [1], "OPTIONAL": 0.8}},
+                     {"Cutboard": {"COUNT": 1, "X_POSITION": [3], "Y_POSITION":  [3], "OPTIONAL": 0.8}},
                      {"Blender": {"COUNT": 1, "X_POSITION": [4], "Y_POSITION":  [6]}},
                      {"Deliversquare": {"COUNT": 2, "X_POSITION": [2, 4], "Y_POSITION":  [0]}}],
   "DYNAMIC_OBJECTS": [{"Plate":  {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [3], "OPTIONAL": 1.0}},

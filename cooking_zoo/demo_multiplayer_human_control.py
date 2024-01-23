@@ -8,7 +8,7 @@ render = True
 obs_spaces = ["symbolic", "feature_vector"]
 action_scheme = "scheme3"
 meta_file = "jaamas"
-level = "jaamas3_room"
+level = "jaamas2_room"
 recipes = ["TomatoLettuceSalad", "CarrotBanana"]
 end_condition_all_dishes = True
 agent_visualization = ["robot", "human"]
@@ -19,7 +19,7 @@ env = parallel_env(level=level, meta_file=meta_file, num_agents=num_agents, max_
                    end_condition_all_dishes=end_condition_all_dishes, action_scheme=action_scheme, render=render,
                    reward_scheme=reward_scheme)
 
-obs, info = env.reset()
+obs, infos = env.reset()
 
 env.render()
 
@@ -31,8 +31,8 @@ terminations = {"player_0": False}
 reward_sum = 0
 
 while not any(terminations.values()):
+    print(infos)
     action = {"player_0": manual_policy("player_0"), "player_1": action_space.sample()}
     observations, rewards, terminations, truncations, infos = env.step(action)
     reward_sum += rewards["player_0"]
-    print(rewards)
     env.render()
