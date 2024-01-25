@@ -9,7 +9,7 @@ obs_spaces = ["symbolic", "feature_vector"]
 action_scheme = "scheme3"
 meta_file = "jaamas"
 level = "jaamas2_room"
-recipes = ["TomatoLettuceSalad", "CarrotBanana"]
+recipes = ["CucumberOnion", "CarrotBanana"]
 end_condition_all_dishes = True
 agent_visualization = ["robot", "human"]
 reward_scheme = {"recipe_reward": 0, "max_time_penalty": -5, "recipe_penalty": -40, "recipe_node_reward": 5}
@@ -31,8 +31,8 @@ terminations = {"player_0": False}
 reward_sum = 0
 
 while not any(terminations.values()):
-    print(infos)
     action = {"player_0": manual_policy("player_0"), "player_1": action_space.sample()}
     observations, rewards, terminations, truncations, infos = env.step(action)
     reward_sum += rewards["player_0"]
+    print(rewards)
     env.render()
