@@ -228,7 +228,6 @@ class DynamicObject(Object, ABC):
 
     def __init__(self, unique_id, location):
         super().__init__(unique_id, location, True, False)
-        self.free = True
 
 
 class TemperatureFood(DynamicObject, Food, TemperatureObject, ABC):

@@ -65,10 +65,10 @@ class CookingEnvironment(AECEnv):
         super().__init__()
 
         obs_spaces = obs_spaces or ["feature_vector"]
-        self.allowed_obs_spaces = ["symbolic", "full", "feature_vector"]
+        self.allowed_obs_spaces = ["symbolic", "full", "feature_vector", "tensor"]
         self.action_scheme = action_scheme
         self.action_scheme_class = self.action_scheme_map[self.action_scheme]
-        assert len(set(obs_spaces + self.allowed_obs_spaces)) == 3, \
+        assert len(set(obs_spaces + self.allowed_obs_spaces)) == len(self.allowed_obs_spaces), \
             f"Selected invalid obs spaces. Allowed {self.allowed_obs_spaces}"
         assert len(obs_spaces) != 0, f"Please select an observation space from: {self.allowed_obs_spaces}"
         self.obs_spaces = obs_spaces
@@ -94,7 +94,6 @@ class CookingEnvironment(AECEnv):
             "Too many agents for this level"
         self.recipe_names = recipes
         self.recipes = recipes
-        self.graphic_pipeline = None
         self.game = None
         self.render_flag = render
         if RECIPE_STORE:
@@ -107,7 +106,7 @@ class CookingEnvironment(AECEnv):
 
         self.termination_info = ""
         self.world.load_level(level=self.level, num_agents=num_agents)
-        self.graph_representation_length = sum([cls.state_length() for cls in GAME_CLASSES])
+        self.graph_representation_length = sum([cls.state_length() for cls in GAME_CLASSES]) + Agent.state_length()
         objects = defaultdict(list)
         objects.update(self.world.world_objects)
         objects["Agent"] = self.world.agents
@@ -115,6 +114,8 @@ class CookingEnvironment(AECEnv):
         for name, num in self.world.meta_object_information.items():
             cls = StringToClass[name]
             self.feature_vector_representation_length += cls.feature_vector_length() * num
+        self.tensor_space = gym.spaces.Box(low=0, high=1, shape=(self.world.width, self.world.height,
+                                                                  self.graph_representation_length), dtype=np.int32)
         numeric_obs_space = {'feature_vector': gym.spaces.Box(low=0, high=10,
                                                               shape=(self.world.width, self.world.height,
                                                                      self.graph_representation_length), dtype=np.int32),
@@ -125,7 +126,8 @@ class CookingEnvironment(AECEnv):
                                                 shape=(self.feature_vector_representation_length,))
         obs_space_dict = {"full": numeric_obs_space,
                           "feature_vector": self.feature_obs_space,
-                          "symbolic": {}}
+                          "symbolic": {},
+                          "tensor": self.tensor_space}
         self.observation_spaces = {agent: obs_space_dict[obs_space]
                                    for agent, obs_space in zip(self.possible_agents, self.obs_spaces)}
         self.action_spaces = {agent: gym.spaces.Discrete(len(self.action_scheme_class.ACTIONS))
@@ -159,6 +161,9 @@ class CookingEnvironment(AECEnv):
         idx = [self.loaded_recipes.index(recipe) for recipe in self.recipes]
         # get one hot numpy vector
         self.goal_vectors = dict(zip(self.agents, [np.eye(len(self.loaded_recipes))[i] for i in idx]))
+
+        self.graphic_pipeline = GraphicPipeline(self.world, self.agent_visualization, self.render_flag)
+        self.graphic_pipeline.initialize()
 
     def set_filename(self):
         self.filename = f"{self.level}_agents{self.num_agents}"
@@ -209,6 +214,9 @@ class CookingEnvironment(AECEnv):
         infos = self.compute_infos(self.agents, [0] * self.num_agents)
         self.infos = dict(zip(self.agents, infos))
         self.accumulated_actions = []
+
+        self.graphic_pipeline = GraphicPipeline(self.world, self.agent_visualization, self.render_flag)
+        self.graphic_pipeline.initialize()
 
     def close(self):
         return
@@ -285,6 +293,8 @@ class CookingEnvironment(AECEnv):
             observation.append(sym_observation)
         if "feature_vector" == obs_space:
             observation.append(self.get_feature_vector(agent))
+        if "tensor" == obs_space:
+            observation.append(self.get_tensor_observations(agent))
         returned_observation = observation if not len(observation) == 1 else observation[0]
         return returned_observation
 
@@ -367,8 +377,6 @@ class CookingEnvironment(AECEnv):
         return truncated
 
     def get_feature_vector(self, agent):
-        # start_features = 0
-
         feature_vector = []
         objects = defaultdict(list)
         objects.update(self.world.world_objects)
@@ -380,8 +388,9 @@ class CookingEnvironment(AECEnv):
         agent_features[0] = 0
         agent_features[1] = 0
         feature_vector.extend(agent_features)
-        # print(f"Agent 1 start: {start_features} end: {len(feature_vector)}")
-        # start_features += len(agent_features)
+        start_features = 0
+        print(f"Agent 1 start: {start_features} end: {len(feature_vector)}")
+        start_features += len(agent_features)
         for name, num in self.world.meta_object_information.items():
             cls = StringToClass[name]
             current_num = 0
@@ -396,12 +405,12 @@ class CookingEnvironment(AECEnv):
                 assert len(features) == cls.feature_vector_length()
                 feature_vector.extend(features)
                 current_num += 1
-                # print(f"{name} {current_num} start: {start_features} end: {start_features + len(features)}")
-                # start_features += len(features)
+                print(f"{name} {current_num} start: {start_features} end: {start_features + len(features)}")
+                start_features += len(features)
             assert current_num <= num
             zeroes = [0] * (num - current_num) * cls.feature_vector_length()
             feature_vector.extend(zeroes)
-            # start_features += len(zeroes)
+            start_features += len(zeroes)
         new_vector = np.array(feature_vector)
         assert len(new_vector) == self.feature_vector_representation_length
         return new_vector
@@ -417,3 +426,25 @@ class CookingEnvironment(AECEnv):
 
     def screenshot(self, path="screenshot.png"):
         self.graphic_pipeline.save_image(path)
+
+    def get_tensor_observations(self, agent):
+        objects = defaultdict(list)
+        objects.update(self.world.world_objects)
+        objects["Agent"] = self.world.agents
+        x, y = self.world_agent_mapping[agent].location
+        agent_features = self.world_agent_mapping[agent].numeric_state_representation()
+        world_tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length))
+        current_state_length = 0
+        world_tensor[x, y, current_state_length:current_state_length+Agent.state_length()] = agent_features
+        for name, num in self.world.meta_object_information.items():
+            cls = StringToClass[name]
+            state_length = cls.state_length()
+            for obj in objects[ClassToString[cls]]:
+                if obj is self.world_agent_mapping[agent]:
+                    continue
+                features = list(obj.numeric_state_representation())
+                if features and obj is not self.world_agent_mapping[agent]:
+                    x, y = obj.location
+                    world_tensor[x, y, current_state_length:current_state_length + state_length] = features
+            current_state_length += state_length
+        return world_tensor

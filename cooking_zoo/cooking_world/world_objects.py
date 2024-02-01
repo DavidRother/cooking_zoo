@@ -98,11 +98,30 @@ class Counter(StaticObject, ContentObject):
         return ""
 
 
-class Deliversquare(StaticObject, ContentObject):
+class Deliversquare(StaticObject, ContentObject, ProcessingObject):
 
     def __init__(self, location):
         unique_id = next(world_id_counter)
         super().__init__(unique_id, location, False)
+        self.consume_counter = 1
+
+    def process(self):
+        new_obj_list = []
+        deleted_obj_list = []
+        if self.consume_counter > 0 and self.content:
+            self.consume_counter -= 1
+        elif self.consume_counter > 0 and not self.content:
+            return new_obj_list, deleted_obj_list
+        else:
+            obj_list = []
+            for c in self.content:
+                obj_list.append(c)
+                if isinstance(c, ContentObject):
+                    obj_list += c.content
+            self.content = []
+            self.consume_counter = 1
+            deleted_obj_list = obj_list
+        return new_obj_list, deleted_obj_list
 
     def accepts(self, dynamic_object) -> bool:
         return len(self.content) < self.max_content
@@ -239,6 +258,57 @@ class Block(StaticObject, ContentObject, LinkedObject):
         return ""
 
 
+class PlateDispenser(StaticObject, ContentObject, ActionObject):
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+        self.plate_store = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self) -> Tuple[List, List, bool]:
+        if not self.content and self.plate_store > 0:
+            new_plate = Plate(self.location)
+            new_obj_list = [new_plate]
+            deleted_obj_list = []
+            self.content.append(new_plate)
+            self.plate_store -= 1
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "PlateDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
 class Cutboard(StaticObject, ActionObject, ContentObject):
 
     def __init__(self, location):
@@ -333,6 +403,9 @@ class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
 
                 for cont in self.content:
                     cont.current_progress = cont.min_progress
+        new_obj_list = []
+        deleted_obj_list = []
+        return new_obj_list, deleted_obj_list
 
     def accepts(self, dynamic_object) -> bool:
         return isinstance(dynamic_object, BlenderFood) and (not self.toggle) and len(self.content) + 1 <= self.max_content and dynamic_object.blend_state == BlenderFoodStates.FRESH
@@ -389,6 +462,7 @@ class Plate(DynamicObject, ContentObject):
         unique_id = next(world_id_counter)
         super().__init__(unique_id, location)
         self.max_content = 64
+        self.free = True
 
     def move_to(self, new_location):
         for content in self.content:
@@ -403,7 +477,7 @@ class Plate(DynamicObject, ContentObject):
         self.content.append(content)
         for c in self.content:
             c.free = False
-        self.content[-1].free = True
+        # self.content[-1].free = True
 
     def accepts(self, dynamic_object):
         return isinstance(dynamic_object, Food) and dynamic_object.done() and len(self.content) < self.max_content
@@ -442,7 +516,8 @@ class Onion(ChopFood):
         return self.chop_state == ChopFoodStates.CHOPPED
 
     def numeric_state_representation(self):
-        return 1, int(self.chop_state == ChopFoodStates.CHOPPED)
+        state = int(self.chop_state == ChopFoodStates.CHOPPED)
+        return int(state), int(not state)
 
     def feature_vector_representation(self):
         return list(self.location) + [int(not self.done()), int(self.done())] + [1]
@@ -478,7 +553,8 @@ class Tomato(ChopFood):
         return self.chop_state == ChopFoodStates.CHOPPED
 
     def numeric_state_representation(self):
-        return 1, int(self.chop_state == ChopFoodStates.CHOPPED)
+        state = int(self.chop_state == ChopFoodStates.CHOPPED)
+        return int(state), int(not state)
 
     def feature_vector_representation(self):
         return list(self.location) + [int(not self.done()), int(self.done())] + [1]
@@ -514,7 +590,8 @@ class Lettuce(ChopFood):
         return self.chop_state == ChopFoodStates.CHOPPED
 
     def numeric_state_representation(self):
-        return 1, int(self.chop_state == ChopFoodStates.CHOPPED)
+        state = int(self.chop_state == ChopFoodStates.CHOPPED)
+        return int(state), int(not state)
 
     def feature_vector_representation(self):
         return list(self.location) + [int(not self.done()), int(self.done())] + [1]
@@ -550,7 +627,8 @@ class Carrot(BlenderFood, ChopFood):
         return self.chop_state == ChopFoodStates.CHOPPED or self.blend_state == BlenderFoodStates.MASHED
 
     def numeric_state_representation(self):
-        return 1, int(self.chop_state == ChopFoodStates.CHOPPED)
+        state = int(self.chop_state == ChopFoodStates.CHOPPED or self.blend_state == BlenderFoodStates.MASHED)
+        return int(state), int(self.chop_state == ChopFoodStates.CHOPPED), int(self.blend_state == BlenderFoodStates.MASHED)
 
     def feature_vector_representation(self):
         return list(self.location) + [int(not self.done()), int(self.chop_state == ChopFoodStates.CHOPPED),
@@ -558,7 +636,7 @@ class Carrot(BlenderFood, ChopFood):
 
     @classmethod
     def state_length(cls):
-        return 2
+        return 3
 
     @classmethod
     def feature_vector_length(cls):
@@ -590,7 +668,8 @@ class Cucumber(ChopFood):
         return self.chop_state == ChopFoodStates.CHOPPED
 
     def numeric_state_representation(self):
-        return 1, int(self.chop_state == ChopFoodStates.CHOPPED)
+        state = int(self.chop_state == ChopFoodStates.CHOPPED)
+        return int(state), int(not state)
 
     def feature_vector_representation(self):
         return list(self.location) + [int(not self.done()), int(self.done())] + [1]
@@ -604,7 +683,7 @@ class Cucumber(ChopFood):
         return 5
 
     def file_name(self) -> str:
-        return "Cucumber"
+        return "FreshCucumber" if not self.done() else "ChoppedCucumber"
 
     def icons(self) -> List[str]:
         return []
@@ -613,21 +692,21 @@ class Cucumber(ChopFood):
         return ""
 
 
-class Banana(BlenderFood, ChopFood):
+class Banana(ChopFood):
 
     def __init__(self, location):
         unique_id = next(world_id_counter)
         super().__init__(unique_id, location)
 
     def done(self):
-        return self.chop_state == ChopFoodStates.CHOPPED or self.blend_state == BlenderFoodStates.MASHED
+        return self.chop_state == ChopFoodStates.CHOPPED
 
     def numeric_state_representation(self):
-        return 1, int(self.chop_state == ChopFoodStates.CHOPPED)
+        state = int(self.chop_state == ChopFoodStates.CHOPPED)
+        return int(state), int(not state)
 
     def feature_vector_representation(self):
-        return list(self.location) + [int(not self.done()), int(self.chop_state == ChopFoodStates.CHOPPED),
-                                      int(self.blend_state == BlenderFoodStates.MASHED)] + [1]
+        return list(self.location) + [int(not self.done()), int(self.chop_state == ChopFoodStates.CHOPPED)] + [1]
 
     @classmethod
     def state_length(cls):
@@ -635,14 +714,11 @@ class Banana(BlenderFood, ChopFood):
 
     @classmethod
     def feature_vector_length(cls):
-        return 6
+        return 5
 
     def file_name(self) -> str:
         if self.done():
-            if self.chop_state == ChopFoodStates.CHOPPED:
-                return "ChoppedBanana"
-            elif self.blend_state == BlenderFoodStates.MASHED:
-                return "ChoppedBanana"
+            return "ChoppedBanana"
         else:
             return "FreshBanana"
 
@@ -663,7 +739,8 @@ class Apple(ChopFood):
         return self.chop_state == ChopFoodStates.CHOPPED
 
     def numeric_state_representation(self):
-        return 1, int(self.chop_state == ChopFoodStates.CHOPPED)
+        state = int(self.chop_state == ChopFoodStates.CHOPPED)
+        return int(state), int(not state)
 
     def feature_vector_representation(self):
         return list(self.location) + [int(not self.done()), int(self.chop_state == ChopFoodStates.CHOPPED)] + [1]
@@ -699,7 +776,8 @@ class Watermelon(ChopFood):
         return self.chop_state == ChopFoodStates.CHOPPED
 
     def numeric_state_representation(self):
-        return 1, int(self.chop_state == ChopFoodStates.CHOPPED)
+        state = int(self.chop_state == ChopFoodStates.CHOPPED)
+        return int(state), int(not state)
 
     def feature_vector_representation(self):
         return list(self.location) + [int(not self.done()), int(self.done())] + [1]
@@ -745,11 +823,12 @@ class Bread(ChopFood):
             return [], [], False
 
     def numeric_state_representation(self):
-        return 1, 0, 0
+        state = int(self.chop_state == ChopFoodStates.CHOPPED)
+        return int(state), int(not state)
 
     @classmethod
     def state_length(cls):
-        return 3
+        return 2
 
     def feature_vector_representation(self):
         return list(self.location) + [int(not self.done()), int(self.done())] + [1]
@@ -800,8 +879,7 @@ class Agent(Object):
         self.orientation = new_orientation
 
     def numeric_state_representation(self):
-        return 1, int(self.orientation == 1), int(self.orientation == 2), int(self.orientation == 3), \
-               int(self.orientation == 4)
+        return 1,
 
     def feature_vector_representation(self):
         return list(self.location) + [int(self.orientation == 1), int(self.orientation == 2),
@@ -809,7 +887,7 @@ class Agent(Object):
 
     @classmethod
     def state_length(cls):
-        return 5
+        return 1
 
     @classmethod
     def feature_vector_length(cls):

@@ -1,9 +1,10 @@
 [
   {"Cutboard": 3},
-  {"Counter": 29},
+  {"Counter": 36},
   {"Blender": 1},
-  {"Deliversquare": 2},
-  {"Plate":  3},
+  {"Deliversquare": 5},
+  {"PlateDispenser": 2},
+  {"Plate":  5},
   {"Tomato": 1},
   {"Onion": 1},
   {"Lettuce": 1},

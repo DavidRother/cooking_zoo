@@ -5,14 +5,14 @@ from cooking_zoo.environment.manual_policy import ManualPolicy
 num_agents = 2
 max_steps = 400
 render = True
-obs_spaces = ["symbolic", "feature_vector"]
+obs_spaces = ["tensor", "tensor"]
 action_scheme = "scheme3"
 meta_file = "jaamas"
 level = "jaamas2_room"
 recipes = ["CucumberOnion", "CarrotBanana"]
 end_condition_all_dishes = True
 agent_visualization = ["robot", "human"]
-reward_scheme = {"recipe_reward": 0, "max_time_penalty": -5, "recipe_penalty": -40, "recipe_node_reward": 5}
+reward_scheme = {"recipe_reward": 0, "max_time_penalty": -5, "recipe_penalty": 0, "recipe_node_reward": 5}
 
 env = parallel_env(level=level, meta_file=meta_file, num_agents=num_agents, max_steps=max_steps, recipes=recipes,
                    agent_visualization=agent_visualization, obs_spaces=obs_spaces,

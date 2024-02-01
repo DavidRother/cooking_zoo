@@ -75,10 +75,16 @@ class CookingWorld:
         return object_list
 
     def progress_world(self):
+        obj_list_deleted = []
+        obj_list_created = []
         for obj in self.abstract_index[ProcessingObject]:
-            obj.process()
+            creation, deletion = obj.process()
+            obj_list_deleted.extend(deletion)
+            obj_list_created.extend(creation)
         for obj in self.abstract_index[ProgressingObject]:
-            obj.progress()
+            creation, deletion = obj.progress()
+            obj_list_deleted.extend(deletion)
+            obj_list_created.extend(creation)
         for obj in self.abstract_index[ContentObject]:
             if len(obj.content) > 0:
                 for c in obj.content:
@@ -86,6 +92,9 @@ class CookingWorld:
                         c.free = False
                 if hasattr(obj.content[-1], 'free'):
                     obj.content[-1].free = True
+
+        self.handle_object_deletion(obj_list_deleted)
+        self.handle_object_creation(obj_list_created)
 
     def resolve_linked_interactions(self):
         for obj in self.abstract_index[LinkedObject]:
@@ -124,10 +133,6 @@ class CookingWorld:
             if static_object.releases():
                 # changed, to preserve content order when picking up again (LIFO)
                 object_to_grab = dynamic_objects[-1]
-                for obj in dynamic_objects:
-                    if hasattr(obj, "free") and obj.free:
-                        object_to_grab = obj
-                        break
                 if object_to_grab in static_object.content:
                     agent.grab(object_to_grab)
                     static_object.content.remove(object_to_grab)
@@ -156,18 +161,26 @@ class CookingWorld:
     def resolve_execute_action(self, agent: Agent):
         interaction_location = self.get_target_location(agent, agent.orientation)
         if any([agent.location == interaction_location for agent in self.agents]):
-            return
+            return False
         static_object = self.get_objects_at(interaction_location, StaticObject)[0]
         if isinstance(static_object, ActionObject):
             obj_list_created, obj_list_deleted, action_executed = static_object.action()
             if action_executed:
                 agent.interacts_with = [static_object]
-            for del_obj in obj_list_deleted:
-                self.delete_object(del_obj)
-                self.delete_from_index(del_obj)
-            for new_obj in obj_list_created:
-                self.add_object(new_obj)
-                self.add_to_index(new_obj)
+            self.handle_object_deletion(obj_list_deleted)
+            self.handle_object_creation(obj_list_created)
+            return action_executed
+        return False
+
+    def handle_object_deletion(self, objects_to_delete):
+        for obj in objects_to_delete:
+            self.delete_object(obj)
+            self.delete_from_index(obj)
+
+    def handle_object_creation(self, objects_to_create):
+        for obj in objects_to_create:
+            self.add_object(obj)
+            self.add_to_index(obj)
 
     @staticmethod
     def get_target_location(agent, action):

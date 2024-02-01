@@ -115,6 +115,8 @@ class GraphicPipeline:
         for obj in dynamic_objects:
             dynamic_objects_grouped[obj.location].append(obj)
         for location, obj_list in dynamic_objects_grouped.items():
+            if any([isinstance(obj, Plate) for obj in obj_list]):
+                pass
             if any([agent.location == location for agent in self.world.agents]):
                 self.draw_dynamic_object_stack(obj_list, self.graphics_properties.holding_size,
                                                self.holding_location(location),
@@ -221,3 +223,6 @@ class GraphicPipeline:
 
     def save_image(self, path="screenshot.png"):
         pygame.image.save(self.screen, path)
+
+    def get_screen_as_array(self):
+        return pygame.surfarray.array3d(self.screen)
