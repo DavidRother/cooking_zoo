@@ -61,6 +61,8 @@ MashedCarrot = RecipeNode(root_type=Carrot, id_num=get_next_default_id(), name="
                           conditions=[("blend_state", BlenderFoodStates.MASHED)])
 ChoppedBread = RecipeNode(root_type=Bread, id_num=get_next_default_id(), name="Bread",
                           conditions=[("chop_state", ChopFoodStates.CHOPPED)])
+ChoppedPepper = RecipeNode(root_type=Pepper, id_num=get_next_default_id(), name="Pepper",
+                           conditions=[("chop_state", ChopFoodStates.CHOPPED)])
 
 # Salad Plates
 TomatoSaladPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
@@ -89,33 +91,27 @@ BreadCarrotPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), nam
                               contains=[ChoppedBread, ChoppedCarrot])
 BreadBananaPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
                               contains=[ChoppedBread, ChoppedBanana])
+BreadPepperPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
+                              contains=[ChoppedBread, ChoppedPepper])
 # CarrotPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
 #                          contains=[MashedCarrot])
 
 # Delivered Salads
-TomatoSalad = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
-                         contains=[TomatoSaladPlate], objects_to_seek=[Plate, Deliversquare])
 TomatoLettuceSalad = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
-                                conditions=None, contains=[TomatoLettucePlate])
-TomatoLettuceOnionSalad = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
-                                     conditions=None, contains=[TomatoLettuceOnionPlate])
+                                conditions=[("internal_id", 5)], contains=[TomatoLettucePlate])
 
-CarrotBanana = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
-                          contains=[CarrotBananaPlate])
-
-MashedCarrotBanana = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
-                                conditions=None, contains=[MashedCarrotBananaPlate])
-
-CucumberOnion = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
-                           contains=[CucumberOnionPlate])
-AppleWatermelon = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
-                             contains=[AppleWatermelonPlate])
-BreadTomato = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
-                         contains=[BreadTomatoPlate])
-BreadCarrot = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
-                         contains=[BreadCarrotPlate])
-BreadBanana = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare", conditions=None,
-                         contains=[BreadBananaPlate])
+CucumberOnion = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
+                           conditions=[("internal_id", 5)], contains=[CucumberOnionPlate])
+AppleWatermelon = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
+                             conditions=[("internal_id", 1)], contains=[AppleWatermelonPlate])
+BreadTomato = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
+                         conditions=[("internal_id", 5)], contains=[BreadTomatoPlate])
+BreadCarrot = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
+                         conditions=[("internal_id", 4)], contains=[BreadCarrotPlate])
+BreadBanana = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
+                         conditions=[("internal_id", 2)], contains=[BreadBananaPlate])
+BreadPepper = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
+                         conditions=[("internal_id", 3)], contains=[BreadPepperPlate])
 # MashedCarrot = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
 #                           conditions=None, contains=[CarrotPlate])
 
@@ -139,20 +135,8 @@ no_recipe_node = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(
 # }
 
 
-def get_tomato_salad_recipe():
-    return deepcopy(Recipe(TomatoSalad, DEFAULT_NUM_GOALS))
-
-
 def get_tomato_lettuce_salad_recipe():
     return deepcopy(Recipe(TomatoLettuceSalad, DEFAULT_NUM_GOALS))
-
-
-def get_carrot_banana_recipe():
-    return deepcopy(Recipe(CarrotBanana, DEFAULT_NUM_GOALS))
-
-
-def get_mashed_carrot_banana_recipe():
-    return deepcopy(Recipe(MashedCarrotBanana, DEFAULT_NUM_GOALS))
 
 
 def get_cucumber_onion_recipe():
@@ -161,10 +145,6 @@ def get_cucumber_onion_recipe():
 
 def get_apple_watermelon_recipe():
     return deepcopy(Recipe(AppleWatermelon, DEFAULT_NUM_GOALS))
-
-
-def get_tomato_lettuce_onion_recipe():
-    return deepcopy(Recipe(TomatoLettuceOnionSalad, DEFAULT_NUM_GOALS))
 
 
 def get_bread_tomato_recipe():
@@ -179,24 +159,20 @@ def get_bread_banana_recipe():
     return deepcopy(Recipe(BreadBanana, DEFAULT_NUM_GOALS))
 
 
-def get_mashed_carrot_recipe():
-    return deepcopy(Recipe(MashedCarrot, DEFAULT_NUM_GOALS))
+def get_bread_pepper_recipe():
+    return deepcopy(Recipe(BreadPepper, DEFAULT_NUM_GOALS))
 
 
 def get_no_recipe():
     return deepcopy(Recipe(no_recipe_node, DEFAULT_NUM_GOALS))
 
 
-RECIPES = {"TomatoSalad": get_tomato_salad_recipe(),
-           "TomatoLettuceSalad": get_tomato_lettuce_salad_recipe(),
-           "CarrotBanana": get_carrot_banana_recipe(),
-           "MashedCarrotBanana": get_mashed_carrot_banana_recipe(),
+RECIPES = {"TomatoLettuceSalad": get_tomato_lettuce_salad_recipe(),
            "CucumberOnion": get_cucumber_onion_recipe(),
            "AppleWatermelon": get_apple_watermelon_recipe(),
-           "TomatoLettuceOnionSalad": get_tomato_lettuce_onion_recipe(),
            "BreadTomato": get_bread_tomato_recipe(),
            "BreadCarrot": get_bread_carrot_recipe(),
            "BreadBanana": get_bread_banana_recipe(),
-           # "MashedCarrot": get_mashed_carrot_recipe(),
+           "BreadPepper": get_bread_pepper_recipe(),
            "no_recipe": get_no_recipe()
            }

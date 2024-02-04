@@ -13,6 +13,7 @@ class Object(ABC):
         self._location = location
         self.movable = movable  # you can pick this one up
         self.walkable = walkable  # you can walk on it
+        self.internal_id = None
 
     def name(self) -> str:
         return type(self).__name__

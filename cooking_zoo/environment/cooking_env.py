@@ -162,8 +162,7 @@ class CookingEnvironment(AECEnv):
         # get one hot numpy vector
         self.goal_vectors = dict(zip(self.agents, [np.eye(len(self.loaded_recipes))[i] for i in idx]))
 
-        self.graphic_pipeline = GraphicPipeline(self.world, self.agent_visualization, self.render_flag)
-        self.graphic_pipeline.initialize()
+        self.graphic_pipeline = None
 
     def set_filename(self):
         self.filename = f"{self.level}_agents{self.num_agents}"
@@ -214,9 +213,7 @@ class CookingEnvironment(AECEnv):
         infos = self.compute_infos(self.agents, [0] * self.num_agents)
         self.infos = dict(zip(self.agents, infos))
         self.accumulated_actions = []
-
-        self.graphic_pipeline = GraphicPipeline(self.world, self.agent_visualization, self.render_flag)
-        self.graphic_pipeline.initialize()
+        self.graphic_pipeline = None
 
     def close(self):
         return
@@ -299,8 +296,8 @@ class CookingEnvironment(AECEnv):
         return returned_observation
 
     def compute_rewards(self, active_agents_start, actions):
-        rewards = [0] * len(self.recipes)
-        open_goals = [[0]] * len(self.recipes)
+        rewards = [0] * len(self.recipe_graphs)
+        open_goals = [[0]] * len(self.recipe_graphs)
         # Done if the episode maxes out
         truncations = self.compute_truncated()
 

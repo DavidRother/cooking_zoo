@@ -98,30 +98,12 @@ class Counter(StaticObject, ContentObject):
         return ""
 
 
-class Deliversquare(StaticObject, ContentObject, ProcessingObject):
+class Deliversquare(StaticObject, ContentObject):
 
     def __init__(self, location):
         unique_id = next(world_id_counter)
         super().__init__(unique_id, location, False)
-        self.consume_counter = 1
-
-    def process(self):
-        new_obj_list = []
-        deleted_obj_list = []
-        if self.consume_counter > 0 and self.content:
-            self.consume_counter -= 1
-        elif self.consume_counter > 0 and not self.content:
-            return new_obj_list, deleted_obj_list
-        else:
-            obj_list = []
-            for c in self.content:
-                obj_list.append(c)
-                if isinstance(c, ContentObject):
-                    obj_list += c.content
-            self.content = []
-            self.consume_counter = 1
-            deleted_obj_list = obj_list
-        return new_obj_list, deleted_obj_list
+        self.internal_id = 1
 
     def accepts(self, dynamic_object) -> bool:
         return len(self.content) < self.max_content
@@ -137,7 +119,7 @@ class Deliversquare(StaticObject, ContentObject, ProcessingObject):
         return False
 
     def numeric_state_representation(self):
-        return 1,
+        return self.internal_id,
 
     def feature_vector_representation(self):
         return list(self.location) + [1]
@@ -339,8 +321,7 @@ class Cutboard(StaticObject, ActionObject, ContentObject):
             return [], [], False
 
     def accepts(self, dynamic_object) -> bool:
-        return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content and \
-                dynamic_object.chop_state == ChopFoodStates.FRESH
+        return isinstance(dynamic_object, ChopFood) and len(self.content) < self.max_content and not dynamic_object.done()
 
     def releases(self) -> bool:
         if len(self.content) == 1:
@@ -407,8 +388,8 @@ class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
         deleted_obj_list = []
         return new_obj_list, deleted_obj_list
 
-    def accepts(self, dynamic_object) -> bool:
-        return isinstance(dynamic_object, BlenderFood) and (not self.toggle) and len(self.content) + 1 <= self.max_content and dynamic_object.blend_state == BlenderFoodStates.FRESH
+    def accepts(self, blender_food) -> bool:
+        return isinstance(blender_food, BlenderFood) and (not self.toggle) and len(self.content) + 1 <= self.max_content and not blender_food.done()
 
     def releases(self) -> bool:
         valid = not self.toggle
@@ -609,6 +590,43 @@ class Lettuce(ChopFood):
             return "ChoppedLettuce"
         else:
             return "FreshLettuce"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class Pepper(ChopFood):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location)
+
+    def done(self):
+        return self.chop_state == ChopFoodStates.CHOPPED
+
+    def numeric_state_representation(self):
+        state = int(self.chop_state == ChopFoodStates.CHOPPED)
+        return int(state), int(not state)
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(not self.done()), int(self.done())] + [1]
+
+    @classmethod
+    def state_length(cls):
+        return 2
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 5
+
+    def file_name(self) -> str:
+        if self.done():
+            return "ChoppedPepper"
+        else:
+            return "FreshPepper"
 
     def icons(self) -> List[str]:
         return []

@@ -48,7 +48,7 @@ def parse_static_objects(world, level_object):
                     obj = StringToClass[name](location=(x, y))
                     try:
                         for key in static_object[name]["ATTRIBUTES"].keys():
-                            setattr(obj, key, static_object[name][key])
+                            setattr(obj, key, static_object[name]["ATTRIBUTES"][key])
                     except KeyError:
                         pass
                     world.add_object(obj)
@@ -63,7 +63,7 @@ def parse_static_objects(world, level_object):
                     obj = StringToClass[name](location=(x, y))
                     try:
                         for key in static_object[name]["ATTRIBUTES"].keys():
-                            setattr(obj, key, static_object[name][key])
+                            setattr(obj, key, static_object[name]["ATTRIBUTES"][key])
                     except KeyError:
                         pass
                     world.add_object(obj)

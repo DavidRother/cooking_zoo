@@ -9,10 +9,10 @@ obs_spaces = ["tensor", "tensor"]
 action_scheme = "scheme3"
 meta_file = "jaamas"
 level = "jaamas2_room"
-recipes = ["CucumberOnion", "CarrotBanana"]
+recipes = ["BreadTomato", "BreadPepper"]
 end_condition_all_dishes = True
 agent_visualization = ["robot", "human"]
-reward_scheme = {"recipe_reward": 0, "max_time_penalty": -5, "recipe_penalty": 0, "recipe_node_reward": 5}
+reward_scheme = {"recipe_reward": 20, "max_time_penalty": -20, "recipe_penalty": 0, "recipe_node_reward": 5}
 
 env = parallel_env(level=level, meta_file=meta_file, num_agents=num_agents, max_steps=max_steps, recipes=recipes,
                    agent_visualization=agent_visualization, obs_spaces=obs_spaces,
@@ -31,7 +31,7 @@ terminations = {"player_0": False}
 reward_sum = 0
 
 while not any(terminations.values()):
-    action = {"player_0": manual_policy("player_0"), "player_1": action_space.sample()}
+    action = {"player_0": action_space.sample(), "player_1": manual_policy("player_0")}
     observations, rewards, terminations, truncations, infos = env.step(action)
     reward_sum += rewards["player_0"]
     print(rewards)

@@ -1,7 +1,6 @@
 [
   {"Cutboard": 3},
   {"Counter": 36},
-  {"Blender": 1},
   {"Deliversquare": 5},
   {"PlateDispenser": 2},
   {"Plate":  5},
@@ -12,6 +11,7 @@
   {"Banana": 1},
   {"Apple": 1},
   {"Watermelon": 1},
+  {"Pepper":  1},
   {"Bread": 4},
   {"Cucumber":  1},
   {"Agent": 4}
