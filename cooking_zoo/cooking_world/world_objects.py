@@ -646,7 +646,7 @@ class Carrot(BlenderFood, ChopFood):
 
     def numeric_state_representation(self):
         state = int(self.chop_state == ChopFoodStates.CHOPPED or self.blend_state == BlenderFoodStates.MASHED)
-        return int(state), int(self.chop_state == ChopFoodStates.CHOPPED), int(self.blend_state == BlenderFoodStates.MASHED)
+        return int(not state), int(self.chop_state == ChopFoodStates.CHOPPED), int(self.blend_state == BlenderFoodStates.MASHED)
 
     def feature_vector_representation(self):
         return list(self.location) + [int(not self.done()), int(self.chop_state == ChopFoodStates.CHOPPED),
