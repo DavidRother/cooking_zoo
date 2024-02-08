@@ -1,0 +1,28 @@
+{
+  "LEVEL_LAYOUT": "-----------\n-    -    -\n-    -    -\n-    -    -\n-    -    -\n-    -    -\n-----------",
+  "STATIC_OBJECTS": [{"Cutboard": {"COUNT": 1, "X_POSITION": [10], "Y_POSITION":  [4]}},
+                     {"Cutboard": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [1]}},
+                     {"Cutboard": {"COUNT": 1, "X_POSITION": [5], "Y_POSITION":  [3]}},
+                     {"Deliversquare": {"COUNT": 1, "X_POSITION": [2], "Y_POSITION":  [0], "ATTRIBUTES": {"internal_id": 5}}},
+                     {"Deliversquare": {"COUNT": 1, "X_POSITION": [6], "Y_POSITION":  [0], "ATTRIBUTES": {"internal_id": 1}}},
+                     {"Deliversquare": {"COUNT": 1, "X_POSITION": [9], "Y_POSITION":  [0], "ATTRIBUTES": {"internal_id": 2}}},
+                     {"Deliversquare": {"COUNT": 1, "X_POSITION": [9], "Y_POSITION":  [6], "ATTRIBUTES": {"internal_id": 3}}},
+                     {"Deliversquare": {"COUNT": 1, "X_POSITION": [6], "Y_POSITION":  [6], "ATTRIBUTES": {"internal_id": 4}}},
+                     {"PlateDispenser": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [3], "ATTRIBUTES": {"plate_store": 1}}},
+                     {"PlateDispenser": {"COUNT": 1, "X_POSITION": [10], "Y_POSITION":  [3], "ATTRIBUTES": {"plate_store": 4}}}],
+  "DYNAMIC_OBJECTS": [{"Lettuce": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [4, 5]}},
+                      {"Tomato": {"COUNT": 1, "X_POSITION": [5], "Y_POSITION":  [1, 2]}},
+                      {"Onion": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [1, 2]}},
+                      {"Banana": {"COUNT": 1, "X_POSITION": [6, 7, 8, 9, 10], "Y_POSITION":  [0, 1, 2, 3, 4, 5, 6]}},
+                      {"Apple": {"COUNT": 1, "X_POSITION": [6, 7, 8, 9, 10], "Y_POSITION":  [0, 1, 2, 3, 4, 5, 6]}},
+                      {"Watermelon": {"COUNT": 1, "X_POSITION": [6, 7, 8, 9, 10], "Y_POSITION":  [0, 1, 2, 3, 4, 5, 6]}},
+                      {"Bread": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [3, 4, 5]}},
+                      {"Bread": {"COUNT": 1, "X_POSITION": [6, 7, 8, 9, 10], "Y_POSITION":  [0, 1, 2, 3, 4, 5, 6]}},
+                      {"Pepper": {"COUNT": 1, "X_POSITION": [6, 7, 8, 9, 10], "Y_POSITION":  [0, 1, 2, 3, 4, 5, 6]}},
+                      {"Carrot": {"COUNT": 1, "X_POSITION": [5], "Y_POSITION":  [1, 2, 3, 4, 5]}},
+                      {"Cucumber":  {"COUNT": 1, "X_POSITION": [1, 2], "Y_POSITION":  [6]}}
+  ],
+  "AGENTS": [{"MAX_COUNT": 1, "X_POSITION": [1 ,2 ,3 ,4], "Y_POSITION":  [1 ,2, 3, 4, 5]},
+             {"MAX_COUNT": 3, "X_POSITION": [6, 7, 8, 9], "Y_POSITION":  [1 ,2, 3, 4, 5]}],
+  "DYNAMIC_EXCLUDED_POSITIONS": [[0, 0], [5, 0], [10, 0], [0, 6], [5, 6], [10, 6]]
+}

@@ -164,7 +164,7 @@ class CookingWorld:
             return False
         static_object = self.get_objects_at(interaction_location, StaticObject)[0]
         if isinstance(static_object, ActionObject):
-            obj_list_created, obj_list_deleted, action_executed = static_object.action()
+            obj_list_created, obj_list_deleted, action_executed = static_object.action(agent)
             if action_executed:
                 agent.interacts_with = [static_object]
             self.handle_object_deletion(obj_list_deleted)

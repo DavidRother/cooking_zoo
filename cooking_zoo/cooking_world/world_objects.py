@@ -253,12 +253,12 @@ class PlateDispenser(StaticObject, ContentObject, ActionObject):
     def accepts(self, dynamic_objects) -> bool:
         return False
 
-    def action(self) -> Tuple[List, List, bool]:
-        if not self.content and self.plate_store > 0:
-            new_plate = Plate(self.location)
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and self.plate_store > 0 and actor.holding is None:
+            new_plate = Plate(actor.location)
             new_obj_list = [new_plate]
             deleted_obj_list = []
-            self.content.append(new_plate)
+            actor.holding = new_plate
             self.plate_store -= 1
             return new_obj_list, deleted_obj_list, True
         else:
@@ -299,7 +299,7 @@ class Cutboard(StaticObject, ActionObject, ContentObject):
 
         self.max_content = 1
 
-    def action(self) -> Tuple[List, List, bool]:
+    def action(self, actor) -> Tuple[List, List, bool]:
         valid = self.status == ActionObjectState.READY
         if valid:
             for obj in self.content:
@@ -407,7 +407,7 @@ class Blender(StaticObject, ProcessingObject, ContentObject, ToggleObject, Actio
                 c.free = False
             self.content[-1].free = True
 
-    def action(self) -> Tuple[List, List, bool]:
+    def action(self, action) -> Tuple[List, List, bool]:
         valid = self.status == ActionObjectState.READY
         if valid:
             self.switch_toggle()

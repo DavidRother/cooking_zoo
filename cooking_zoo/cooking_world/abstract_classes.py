@@ -100,7 +100,7 @@ class ActionObject(ABC):
         self.status = ActionObjectState.NOT_USABLE
 
     @abstractmethod
-    def action(self) -> Tuple[List, List, bool]:
+    def action(self, actor) -> Tuple[List, List, bool]:
         pass
 
 
