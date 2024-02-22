@@ -158,8 +158,9 @@ class CookingEnvironment(AECEnv):
         else:
             self.loaded_recipes = list(RECIPE_STORE.keys())
         # get index of recipe in recipe_list
-        idx = [self.loaded_recipes.index(recipe) for recipe in self.recipes]
+        idx = [self.loaded_recipes.index(recipe) for recipe in self.recipe_names]
         # get one hot numpy vector
+        eye_matrix = np.eye(len(self.loaded_recipes))
         self.goal_vectors = dict(zip(self.agents, [np.eye(len(self.loaded_recipes))[i] for i in idx]))
 
         self.graphic_pipeline = None
@@ -314,7 +315,7 @@ class CookingEnvironment(AECEnv):
             rewards[idx] += (num_fulfilled_after - num_fulfilled_before) * self.reward_scheme["recipe_node_reward"]
             rewards[idx] += bonus * self.reward_scheme["recipe_reward"]
             rewards[idx] += malus * self.reward_scheme["recipe_penalty"]
-            rewards[idx] += (self.reward_scheme["max_time_penalty"] / self.max_steps)
+            rewards[idx] += (self.reward_scheme["max_time_penalty"] / self.max_steps) * int(not recipe.completed())
 
         infos = self.compute_infos(active_agents_start, actions)
         if self.end_condition_all_dishes:
@@ -386,7 +387,7 @@ class CookingEnvironment(AECEnv):
         agent_features[1] = 0
         feature_vector.extend(agent_features)
         start_features = 0
-        print(f"Agent 1 start: {start_features} end: {len(feature_vector)}")
+        # print(f"Agent 1 start: {start_features} end: {len(feature_vector)}")
         start_features += len(agent_features)
         for name, num in self.world.meta_object_information.items():
             cls = StringToClass[name]
@@ -402,7 +403,7 @@ class CookingEnvironment(AECEnv):
                 assert len(features) == cls.feature_vector_length()
                 feature_vector.extend(features)
                 current_num += 1
-                print(f"{name} {current_num} start: {start_features} end: {start_features + len(features)}")
+                # print(f"{name} {current_num} start: {start_features} end: {start_features + len(features)}")
                 start_features += len(features)
             assert current_num <= num
             zeroes = [0] * (num - current_num) * cls.feature_vector_length()
