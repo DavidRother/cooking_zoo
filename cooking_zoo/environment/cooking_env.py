@@ -446,3 +446,4 @@ class CookingEnvironment(AECEnv):
                     world_tensor[x, y, current_state_length:current_state_length + state_length] = features
             current_state_length += state_length
         return world_tensor
+
