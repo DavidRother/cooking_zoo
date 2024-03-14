@@ -164,6 +164,7 @@ class CookingEnvironment(AECEnv):
         self.goal_vectors = dict(zip(self.agents, [np.eye(len(self.loaded_recipes))[i] for i in idx]))
 
         self.graphic_pipeline = None
+        self.done_once = [False] * self.num_agents
 
     def set_filename(self):
         self.filename = f"{self.level}_agents{self.num_agents}"
@@ -215,6 +216,7 @@ class CookingEnvironment(AECEnv):
         self.infos = dict(zip(self.agents, infos))
         self.accumulated_actions = []
         self.graphic_pipeline = None
+        self.done_once = [False] * self.num_agents
 
     def close(self):
         return
@@ -304,24 +306,26 @@ class CookingEnvironment(AECEnv):
 
         for idx, recipe in enumerate(self.recipe_graphs):
             # goals_before = recipe.goals_completed(self.num_goals)
-            completion_before = recipe.completed()
             num_fulfilled_before = recipe.conditions_fulfilled
             recipe.update_recipe_state(self.world)
             num_fulfilled_after = recipe.conditions_fulfilled
             open_goals[idx] = recipe.goals_completed(self.num_goals)
-            malus = not recipe.completed() and completion_before
-            bonus = recipe.completed() and not completion_before
+            malus = not recipe.completed() and self.done_once[idx]
+            bonus = recipe.completed() and not self.done_once[idx]
             # rewards[idx] += (sum(goals_before) - sum(open_goals[idx])) * self.reward_scheme["recipe_node_reward"]
             rewards[idx] += (num_fulfilled_after - num_fulfilled_before) * self.reward_scheme["recipe_node_reward"]
             rewards[idx] += bonus * self.reward_scheme["recipe_reward"]
             rewards[idx] += malus * self.reward_scheme["recipe_penalty"]
-            rewards[idx] += (self.reward_scheme["max_time_penalty"] / self.max_steps) * int(not recipe.completed())
+            rewards[idx] += (self.reward_scheme["max_time_penalty"] / self.max_steps)
+            if self.done_once[idx]:
+                rewards[idx] = 0
+            self.done_once[idx] = self.done_once[idx] or recipe.completed()
 
         infos = self.compute_infos(active_agents_start, actions)
         if self.end_condition_all_dishes:
-            recipe_dones = all([recipe.completed() for recipe in self.recipe_graphs])
+            recipe_dones = all(self.done_once)
         else:
-            recipe_dones = any([recipe.completed() for recipe in self.recipe_graphs])
+            recipe_dones = any(self.done_once)
         dones = []
         for idx, truncation in enumerate(truncations):
             dones.append(recipe_dones)
@@ -341,8 +345,6 @@ class CookingEnvironment(AECEnv):
     def compute_infos(self, active_agents_start, actions):
         infos = []
         offset_idx = 0
-        recipe_evaluations = [recipe.completed() for recipe in self.recipe_graphs]
-        goal_vector = self.compute_goal_vector()
         for idx, agent in enumerate(self.possible_agents):
             world_agent = self.world_agent_mapping[agent]
             if world_agent not in self.world.relevant_agents:
@@ -351,7 +353,7 @@ class CookingEnvironment(AECEnv):
             if not active_agents_start[idx]:
                 offset_idx += 1
             action = 0 if not active_agents_start[idx] else actions[idx - offset_idx]
-            infos.append({f"recipe_done": recipe_evaluations[idx], "action": action,
+            infos.append({f"recipe_done": self.done_once[idx], "action": action,
                           "task": self.recipe_names[idx], "goal_vector": self.goal_vectors[agent]})
         return infos
 
