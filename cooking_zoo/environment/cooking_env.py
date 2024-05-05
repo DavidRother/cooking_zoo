@@ -102,7 +102,7 @@ class CookingEnvironment(AECEnv):
         else:
             self.recipes = RECIPES
             self.num_goals = DEFAULT_NUM_GOALS
-        self.recipe_graphs = [self.recipes[recipe] for recipe in recipes]
+        self.recipe_graphs = [copy.deepcopy(self.recipes[recipe]) for recipe in recipes]
 
         self.termination_info = ""
         self.world.load_level(level=self.level, num_agents=num_agents)
