@@ -142,6 +142,67 @@ class Deliversquare(StaticObject, ContentObject):
         return ""
 
 
+class AbsorbingDeliversquare(StaticObject, ContentObject, ProgressingObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.internal_id = 1
+        self.timer = 1
+
+    def accepts(self, dynamic_object) -> bool:
+        return len(self.content) < self.max_content
+
+    def progress(self):
+        if self.content and self.timer > 0:
+            self.timer -= 1
+            deleted_obj_list = []
+        elif self.content and self.timer == 0:
+            self.timer = 1
+            content_objs = []
+            for cont in self.content:
+                content_objs.extend(get_recursive_content_objects(cont))
+            deleted_obj_list = content_objs
+            self.content = []
+        else:
+            deleted_obj_list = []
+        new_obj_list = []
+        return new_obj_list, deleted_obj_list
+
+    def add_content(self, content):
+        if self.accepts(content):
+            self.content.append(content)
+            for c in self.content:
+                c.free = False
+            self.content[-1].free = True
+
+    def releases(self) -> bool:
+        return False
+
+    def numeric_state_representation(self):
+        return self.internal_id,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [1]
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 3
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    def file_name(self) -> str:
+        return "DeliverySquare"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
 class Switch(StaticObject, ContentObject, LinkedObject):
 
     def __init__(self, location):
@@ -241,6 +302,7 @@ class Block(StaticObject, ContentObject, LinkedObject):
 
 
 class PlateDispenser(StaticObject, ContentObject, ActionObject):
+
     def __init__(self, location):
         unique_id = next(world_id_counter)
         super().__init__(unique_id, location, False)
@@ -283,6 +345,506 @@ class PlateDispenser(StaticObject, ContentObject, ActionObject):
 
     def file_name(self) -> str:
         return "PlateDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class OnionDispenser(StaticObject, ContentObject, ActionObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and actor.holding is None:
+            new_onion = Onion(actor.location)
+            new_obj_list = [new_onion]
+            deleted_obj_list = []
+            actor.holding = new_onion
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "OnionDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class TomatoDispenser(StaticObject, ContentObject, ActionObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and actor.holding is None:
+            new_tomato = Tomato(actor.location)
+            new_obj_list = [new_tomato]
+            deleted_obj_list = []
+            actor.holding = new_tomato
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "TomatoDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class BananaDispenser(StaticObject, ContentObject, ActionObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and actor.holding is None:
+            new_banana = Banana(actor.location)
+            new_obj_list = [new_banana]
+            deleted_obj_list = []
+            actor.holding = new_banana
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "BananaDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class PepperDispenser(StaticObject, ContentObject, ActionObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and actor.holding is None:
+            new_pepper = Pepper(actor.location)
+            new_obj_list = [new_pepper]
+            deleted_obj_list = []
+            actor.holding = new_pepper
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "PepperDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class CarrotDispenser(StaticObject, ContentObject, ActionObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and actor.holding is None:
+            new_carrot = Carrot(actor.location)
+            new_obj_list = [new_carrot]
+            deleted_obj_list = []
+            actor.holding = new_carrot
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "CarrotDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class AppleDispenser(StaticObject, ContentObject, ActionObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and actor.holding is None:
+            new_apple = Apple(actor.location)
+            new_obj_list = [new_apple]
+            deleted_obj_list = []
+            actor.holding = new_apple
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "AppleDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class WatermelonDispenser(StaticObject, ContentObject, ActionObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and actor.holding is None:
+            new_watermelon = Watermelon(actor.location)
+            new_obj_list = [new_watermelon]
+            deleted_obj_list = []
+            actor.holding = new_watermelon
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "WatermelonDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class BreadDispenser(StaticObject, ContentObject, ActionObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and actor.holding is None:
+            new_bread = Bread(actor.location)
+            new_obj_list = [new_bread]
+            deleted_obj_list = []
+            actor.holding = new_bread
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "BreadDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class LettuceDispenser(StaticObject, ContentObject, ActionObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and actor.holding is None:
+            new_lettuce = Lettuce(actor.location)
+            new_obj_list = [new_lettuce]
+            deleted_obj_list = []
+            actor.holding = new_lettuce
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "LettuceDispenser"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
+class CucumberDispenser(StaticObject, ContentObject, ActionObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def releases(self) -> bool:
+        return True
+
+    def accepts(self, dynamic_objects) -> bool:
+        return False
+
+    def action(self, actor) -> Tuple[List, List, bool]:
+        if not self.content and actor.holding is None:
+            new_cucumber = Cucumber(actor.location)
+            new_obj_list = [new_cucumber]
+            deleted_obj_list = []
+            actor.holding = new_cucumber
+            return new_obj_list, deleted_obj_list, True
+        else:
+            return [], [], False
+
+    def add_content(self, content):
+        pass
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [int(self.walkable), 1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 4
+
+    def file_name(self) -> str:
+        return "CucumberDispenser"
 
     def icons(self) -> List[str]:
         return []
@@ -926,4 +1488,13 @@ GAME_CLASSES = [m[1] for m in inspect.getmembers(sys.modules[__name__], inspect.
 StringToClass = {game_cls.__name__: game_cls for game_cls in GAME_CLASSES}
 ClassToString = {game_cls: game_cls.__name__ for game_cls in GAME_CLASSES}
 
+
+def get_recursive_content_objects(obj):
+    if isinstance(obj, ContentObject):
+        other_objs = []
+        for cont_obj in obj.content:
+            other_objs.extend(get_recursive_content_objects(cont_obj))
+        return [obj] + other_objs
+    else:
+        return [obj]
 

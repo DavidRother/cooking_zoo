@@ -76,7 +76,7 @@ class CookingEnvironment(AECEnv):
         self.possible_agents = ["player_" + str(r) for r in range(num_agents)]
         self.agents = self.possible_agents[:]
         self.agent_visualization = agent_visualization or ["human"] * num_agents
-        self.reward_scheme = reward_scheme or {"recipe_reward": 20, "max_time_penalty": -5, "recipe_penalty": -40,
+        self.reward_scheme = reward_scheme or {"recipe_reward": 20, "max_time_penalty": -5, "recipe_penalty": 0,
                                                "recipe_node_reward": 0}
         self.agent_respawn_rate = agent_respawn_rate
         self.agent_despawn_rate = agent_despawn_rate
@@ -307,19 +307,26 @@ class CookingEnvironment(AECEnv):
         for idx, recipe in enumerate(self.recipe_graphs):
             # goals_before = recipe.goals_completed(self.num_goals)
             num_fulfilled_before = recipe.conditions_fulfilled
+            completed_before = recipe.completed()
             recipe.update_recipe_state(self.world)
+            completed_after = recipe.completed()
             num_fulfilled_after = recipe.conditions_fulfilled
             open_goals[idx] = recipe.goals_completed(self.num_goals)
-            malus = not recipe.completed() and self.done_once[idx]
+            #  malus = not recipe.completed() and self.done_once[idx]
+            malus = 0
             bonus = recipe.completed() and not self.done_once[idx]
             # rewards[idx] += (sum(goals_before) - sum(open_goals[idx])) * self.reward_scheme["recipe_node_reward"]
+            recipe_done_factor = int(completed_before and not completed_after)
             rewards[idx] += (num_fulfilled_after - num_fulfilled_before) * self.reward_scheme["recipe_node_reward"]
+            if recipe_done_factor:
+                rewards[idx] -= (num_fulfilled_after - num_fulfilled_before) * self.reward_scheme["recipe_node_reward"]
             rewards[idx] += bonus * self.reward_scheme["recipe_reward"]
             rewards[idx] += malus * self.reward_scheme["recipe_penalty"]
             rewards[idx] += (self.reward_scheme["max_time_penalty"] / self.max_steps)
             if self.done_once[idx]:
                 rewards[idx] = 0
-            self.done_once[idx] = self.done_once[idx] or recipe.completed()
+            #  self.done_once[idx] = self.done_once[idx] or recipe.completed()
+            self.done_once[idx] = False
 
         infos = self.compute_infos(active_agents_start, actions)
         if self.end_condition_all_dishes:
@@ -328,7 +335,7 @@ class CookingEnvironment(AECEnv):
             recipe_dones = any(self.done_once)
         dones = []
         for idx, truncation in enumerate(truncations):
-            dones.append(recipe_dones)
+            dones.append(False)
             self.world.status_changed[idx] = recipe_dones or truncation
             self.world.active_agents[idx] = not (recipe_dones or truncation)
         self.compute_relevant_agents()
