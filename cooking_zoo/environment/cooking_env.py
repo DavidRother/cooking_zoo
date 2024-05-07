@@ -353,7 +353,7 @@ class CookingEnvironment(AECEnv):
             if not active_agents_start[idx]:
                 offset_idx += 1
             action = 0 if not active_agents_start[idx] else actions[idx - offset_idx]
-            infos.append({f"recipe_done": self.done_once[idx], "action": action,
+            infos.append({f"task_done": self.done_once[idx], "action": action,
                           "task": self.recipe_names[idx], "goal_vector": self.goal_vectors[agent]})
         return infos
 
