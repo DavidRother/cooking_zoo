@@ -1,5 +1,5 @@
 [
-  {"Cutboard": 3},
+  {"Cutboard": 10},
   {"Counter": 36},
   {"AbsorbingDeliversquare": 5},
   {"Deliversquare": 5},
@@ -13,7 +13,7 @@
   {"BreadDispenser": 5},
   {"LettuceDispenser": 2},
   {"CucumberDispenser": 2},
-  {"PlateDispenser": 2},
+  {"PlateDispenser": 4},
   {"Plate":  5},
   {"Tomato": 10},
   {"Onion": 10},
