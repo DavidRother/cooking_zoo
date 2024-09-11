@@ -142,6 +142,50 @@ class Deliversquare(StaticObject, ContentObject):
         return ""
 
 
+class IntermediateDeliversquare(StaticObject, ContentObject):
+
+    def __init__(self, location):
+        unique_id = next(world_id_counter)
+        super().__init__(unique_id, location, False)
+        self.max_content = 1
+
+    def accepts(self, dynamic_object) -> bool:
+        # return not bool(self.content)
+        return len(self.content) < self.max_content
+
+    def releases(self) -> bool:
+        return True
+
+    def add_content(self, content):
+        self.content.append(content)
+        for c in self.content:
+            c.free = False
+        self.content[-1].free = True
+
+    def numeric_state_representation(self):
+        return 1,
+
+    def feature_vector_representation(self):
+        return list(self.location) + [1]
+
+    @classmethod
+    def state_length(cls):
+        return 1
+
+    @classmethod
+    def feature_vector_length(cls):
+        return 3
+
+    def file_name(self) -> str:
+        return "Counter"
+
+    def icons(self) -> List[str]:
+        return []
+
+    def display_text(self) -> str:
+        return ""
+
+
 class AbsorbingDeliversquare(StaticObject, ContentObject, ProgressingObject):
 
     def __init__(self, location):

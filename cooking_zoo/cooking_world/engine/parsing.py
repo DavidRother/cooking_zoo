@@ -95,7 +95,7 @@ def parse_dynamic_objects(world, level_object):
                 y = random.sample(dynamic_object[name]["Y_POSITION"], 1)[0]
                 if x < 0 or y < 0 or x > world.width or y > world.height:
                     raise ValueError(f"Position {x} {y} of object {name} is out of bounds set by the level layout!")
-                static_objects_loc = world.get_objects_at((x, y), Counter)
+                static_objects_loc = world.get_objects_at((x, y), Counter) + world.get_objects_at((x, y), IntermediateDeliversquare)
                 dynamic_objects_loc = world.get_objects_at((x, y), DynamicObject)
 
                 if len(static_objects_loc) == 1 and not dynamic_objects_loc and [x,

@@ -64,6 +64,11 @@ ChoppedBread = RecipeNode(root_type=Bread, id_num=get_next_default_id(), name="B
 ChoppedPepper = RecipeNode(root_type=Pepper, id_num=get_next_default_id(), name="Pepper",
                            conditions=[("chop_state", ChopFoodStates.CHOPPED)])
 
+NormalBread = RecipeNode(root_type=Bread, id_num=get_next_default_id(), name="Bread", conditions=None)
+NormalLettuce = RecipeNode(root_type=Lettuce, id_num=get_next_default_id(), name="Lettuce", conditions=None)
+NormalCucumber = RecipeNode(root_type=Cucumber, id_num=get_next_default_id(), name="Cucumber", conditions=None)
+NormalApple = RecipeNode(root_type=Apple, id_num=get_next_default_id(), name="Apple", conditions=None)
+
 # Salad Plates
 TomatoSaladPlate = RecipeNode(root_type=Plate, id_num=get_next_default_id(), name="Plate", conditions=None,
                               contains=[ChoppedTomato])
@@ -112,6 +117,15 @@ BreadBanana = RecipeNode(root_type=AbsorbingDeliversquare, id_num=get_next_defau
                          conditions=None, contains=[BreadBananaPlate])
 BreadPepper = RecipeNode(root_type=AbsorbingDeliversquare, id_num=get_next_default_id(), name="AbsorbingDeliversquare",
                          conditions=None, contains=[BreadPepperPlate])
+
+IntermediateBread = RecipeNode(root_type=AbsorbingDeliversquare, id_num=get_next_default_id(),
+                               name="IntermediateDeliversquare", conditions=None, contains=[NormalBread])
+IntermediateApple = RecipeNode(root_type=AbsorbingDeliversquare, id_num=get_next_default_id(),
+                               name="IntermediateDeliversquare", conditions=None, contains=[NormalApple])
+IntermediateCucumber = RecipeNode(root_type=AbsorbingDeliversquare, id_num=get_next_default_id(),
+                                  name="IntermediateDeliversquare", conditions=None, contains=[NormalCucumber])
+IntermediateLettuce = RecipeNode(root_type=AbsorbingDeliversquare, id_num=get_next_default_id(),
+                                 name="IntermediateDeliversquare", conditions=None, contains=[NormalLettuce])
 # MashedCarrot = RecipeNode(root_type=Deliversquare, id_num=get_next_default_id(), name="Deliversquare",
 #                           conditions=None, contains=[CarrotPlate])
 
