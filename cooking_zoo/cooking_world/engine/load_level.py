@@ -91,3 +91,8 @@ def reset_world(world, num_agents):
     world.status_changed = []
     world.relevant_agents = []
     parse_level_object(world, world.level_object, num_agents)
+    world.active_agents = [True] * len(world.agents)
+    world.status_changed = [False] * len(world.agents)
+    world.relevant_agents = world.compute_relevant_agents()
+    world.index_objects()
+    cross_link(world)

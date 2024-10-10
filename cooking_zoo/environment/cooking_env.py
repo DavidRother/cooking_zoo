@@ -165,6 +165,7 @@ class CookingEnvironment(AECEnv):
 
         self.graphic_pipeline = None
         self.done_once = [False] * self.num_agents
+        self.base_num_agents = num_agents
 
     def set_filename(self):
         self.filename = f"{self.level}_agents{self.num_agents}"
@@ -182,7 +183,7 @@ class CookingEnvironment(AECEnv):
         self.np_random, seed = seeding.np_random(seed)
 
     def reset(self, seed=None, return_info=False, options=None):
-        options = options or {"full_reset": False, "num_agents": self.num_agents}
+        options = options or {"full_reset": False, "num_agents": self.base_num_agents}
         # self.world = CookingWorld(self.action_scheme_class)
         self.t = 0
 
