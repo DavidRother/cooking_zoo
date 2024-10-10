@@ -20,6 +20,10 @@ def load_new_style_level(world, level_name, num_agents):
         level_object = json.load(json_file)
         json_file.close()
         world.level_object = level_object
+    parse_level_object(world, level_object, num_agents)
+
+
+def parse_level_object(world, level_object, num_agents):
     parsing.parse_level_layout(world, level_object)
     parsing.parse_static_objects(world, level_object)
     parsing.parse_dynamic_objects(world, level_object)
@@ -69,3 +73,21 @@ def load_level(world, level, num_agents):
     world.relevant_agents = world.compute_relevant_agents()
     world.index_objects()
     cross_link(world)
+
+
+def reset_world(world, num_agents):
+    world.agents = []
+    world.agent_store = []
+    world.agent_spawn_locations = []
+    world.width = 0
+    world.height = 0
+    world.world_objects = defaultdict(list)
+    world.abstract_index = defaultdict(list)
+    world.init_world = None
+    world.init_agents = []
+    world.loaded_object_counter = defaultdict(int)
+    world.agent_grace_period = []
+    world.active_agents = []
+    world.status_changed = []
+    world.relevant_agents = []
+    parse_level_object(world, world.level_object, num_agents)

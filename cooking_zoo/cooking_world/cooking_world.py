@@ -277,6 +277,10 @@ class CookingWorld:
         reset_world_counter()
         load_level.load_level(self, level, num_agents)
 
+    def reset(self, num_agents):
+        reset_world_counter()
+        load_level.reset_world(self, num_agents)
+
     def handle_agent_spawn(self):
         for i in range(len(self.active_agents)):
             if self.agent_grace_period[i] > 0:

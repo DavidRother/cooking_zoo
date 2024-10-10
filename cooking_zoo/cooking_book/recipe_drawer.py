@@ -177,6 +177,22 @@ def get_bread_pepper_recipe():
     return deepcopy(Recipe(BreadPepper, DEFAULT_NUM_GOALS))
 
 
+def get_intermediate_bread_recipe():
+    return deepcopy(Recipe(IntermediateBread, DEFAULT_NUM_GOALS))
+
+
+def get_intermediate_apple_recipe():
+    return deepcopy(Recipe(IntermediateApple, DEFAULT_NUM_GOALS))
+
+
+def get_intermediate_cucumber_recipe():
+    return deepcopy(Recipe(IntermediateCucumber, DEFAULT_NUM_GOALS))
+
+
+def get_intermediate_lettuce_recipe():
+    return deepcopy(Recipe(IntermediateLettuce, DEFAULT_NUM_GOALS))
+
+
 def get_no_recipe():
     return deepcopy(Recipe(no_recipe_node, DEFAULT_NUM_GOALS))
 
@@ -188,5 +204,9 @@ RECIPES = {"TomatoLettuceSalad": get_tomato_lettuce_salad_recipe(),
            "BreadCarrot": get_bread_carrot_recipe(),
            "BreadBanana": get_bread_banana_recipe(),
            "BreadPepper": get_bread_pepper_recipe(),
+           "IntermediateBread": get_intermediate_bread_recipe(),
+           "IntermediateApple": get_intermediate_apple_recipe(),
+           "IntermediateCucumber": get_intermediate_cucumber_recipe(),
+           "IntermediateLettuce": get_intermediate_lettuce_recipe(),
            "no_recipe": get_no_recipe()
            }
