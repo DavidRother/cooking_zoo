@@ -115,7 +115,7 @@ class CookingEnvironment(AECEnv):
             cls = StringToClass[name]
             self.feature_vector_representation_length += cls.feature_vector_length() * num
         self.tensor_space = gym.spaces.Box(low=0, high=1, shape=(self.world.width, self.world.height,
-                                                                  self.graph_representation_length), dtype=np.int32)
+                                                                 self.graph_representation_length))
         numeric_obs_space = {'feature_vector': gym.spaces.Box(low=0, high=10,
                                                               shape=(self.world.width, self.world.height,
                                                                      self.graph_representation_length), dtype=np.int32),
@@ -171,7 +171,7 @@ class CookingEnvironment(AECEnv):
         self.filename = f"{self.level}_agents{self.num_agents}"
 
     def state(self):
-        pass
+        return self.observe("player_0")
 
     def observation_space(self, agent):
         return self.observation_spaces[agent]
@@ -363,8 +363,9 @@ class CookingEnvironment(AECEnv):
             if not active_agents_start[idx]:
                 offset_idx += 1
             action = 0 if not active_agents_start[idx] else actions[idx - offset_idx]
-            infos.append({f"recipe_done": self.done_once[idx], "action": action,
-                          "task": self.recipe_names[idx], "goal_vector": self.goal_vectors[agent]})
+            # infos.append({f"recipe_done": self.done_once[idx], "action": action,
+            #               "task": self.recipe_names[idx], "goal_vector": self.goal_vectors[agent]})
+            infos.append({})
         return infos
 
     def compute_truncated(self):
@@ -443,7 +444,8 @@ class CookingEnvironment(AECEnv):
         objects["Agent"] = self.world.agents
         x, y = self.world_agent_mapping[agent].location
         agent_features = self.world_agent_mapping[agent].numeric_state_representation()
-        world_tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length))
+        world_tensor = np.zeros((self.world.width, self.world.height, self.graph_representation_length),
+                                dtype=np.float32)
         current_state_length = 0
         world_tensor[x, y, current_state_length:current_state_length+Agent.state_length()] = agent_features
         for name, num in self.world.meta_object_information.items():

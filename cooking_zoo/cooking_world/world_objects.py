@@ -119,7 +119,7 @@ class Deliversquare(StaticObject, ContentObject):
         return False
 
     def numeric_state_representation(self):
-        return self.internal_id,
+        return 1,
 
     def feature_vector_representation(self):
         return list(self.location) + [1]
@@ -224,7 +224,7 @@ class AbsorbingDeliversquare(StaticObject, ContentObject, ProgressingObject):
         return False
 
     def numeric_state_representation(self):
-        return self.internal_id,
+        return 1,
 
     def feature_vector_representation(self):
         return list(self.location) + [1]
