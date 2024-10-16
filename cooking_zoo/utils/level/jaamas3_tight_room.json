@@ -1,0 +1,22 @@
+{
+  "LEVEL_LAYOUT": "------\n-    -\n------\n-    -\n-    -\n-    -\n------",
+  "STATIC_OBJECTS": [{"Cutboard": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [3]}},
+                     {"Cutboard": {"COUNT": 1, "X_POSITION": [5], "Y_POSITION":  [3]}},
+                     {"IntermediateDeliversquare": {"COUNT": 4, "X_POSITION": [1, 2, 3, 4], "Y_POSITION":  [2]}},
+                     {"AbsorbingDeliversquare": {"COUNT": 1, "X_POSITION": [5], "Y_POSITION":  [5]}},
+                     {"AbsorbingDeliversquare": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [5]}},
+                     {"PlateDispenser": {"COUNT": 1, "X_POSITION": [0], "Y_POSITION":  [4], "ATTRIBUTES": {"plate_store": 10000}}},
+                     {"PlateDispenser": {"COUNT": 1, "X_POSITION": [5], "Y_POSITION":  [4], "ATTRIBUTES": {"plate_store": 40000}}},
+                     {"TomatoDispenser": {"COUNT": 1, "X_POSITION": [2], "Y_POSITION":  [6]}},
+                     {"OnionDispenser": {"COUNT": 1, "X_POSITION": [3], "Y_POSITION":  [6]}},
+                     {"AppleDispenser": {"COUNT": 1, "X_POSITION": [1], "Y_POSITION":  [6]}},
+                     {"WatermelonDispenser": {"COUNT": 1, "X_POSITION": [1], "Y_POSITION":  [0]}},
+                     {"BreadDispenser": {"COUNT": 1, "X_POSITION": [2], "Y_POSITION":  [0]}},
+                     {"CucumberDispenser":  {"COUNT": 1, "X_POSITION": [3], "Y_POSITION":  [0]}},
+                     {"LettuceDispenser": {"COUNT": 1, "X_POSITION": [4], "Y_POSITION":  [0]}}
+  ],
+  "DYNAMIC_OBJECTS": [],
+  "AGENTS": [{"MAX_COUNT": 4, "X_POSITION": [1, 2, 3, 4], "Y_POSITION":  [3, 4, 5]},
+             {"MAX_COUNT": 1, "X_POSITION": [1, 2, 3, 4], "Y_POSITION":  [1]}],
+  "DYNAMIC_EXCLUDED_POSITIONS": [[0, 0], [5, 0], [0, 6], [5, 6]]
+}
