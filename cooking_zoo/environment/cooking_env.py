@@ -9,7 +9,7 @@ from cooking_zoo.cooking_book.recipe_drawer import RECIPES, NUM_GOALS, RECIPE_ST
 import numpy as np
 from collections import namedtuple, defaultdict
 from pettingzoo import AECEnv
-from pettingzoo.utils import agent_selector
+from pettingzoo.utils import AgentSelector
 from pettingzoo.utils import wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 from gymnasium.utils import seeding
@@ -138,7 +138,7 @@ class CookingEnvironment(AECEnv):
         self.world_agent_mapping = dict(zip(self.possible_agents, self.world.agents))
         self.world_agent_to_env_agent_mapping = dict(zip(self.world.agents, self.possible_agents))
         self.agent_selection = None
-        self._agent_selector = agent_selector(self.agents)
+        self._agent_selector = AgentSelector(self.agents)
         self.done = False
         self.rewards = dict(zip(self.agents, [0 for _ in self.agents]))
         self._cumulative_rewards = dict(zip(self.agents, [0 for _ in self.agents]))
@@ -217,7 +217,7 @@ class CookingEnvironment(AECEnv):
             if any(self.world.status_changed):
                 self.agents = [agent for idx, agent in enumerate(self.possible_agents[:])
                                if self.world.active_agents[idx]]
-                self._agent_selector = agent_selector(self.agents)
+                self._agent_selector = AgentSelector(self.agents)
                 if not self.agents:
                     return
                 self.agent_selection = self._agent_selector.next()
@@ -266,7 +266,7 @@ class CookingEnvironment(AECEnv):
 
         self.agents = [agent for idx, agent in enumerate(self.possible_agents[:])
                        if self.world.active_agents[idx] or self.world.status_changed[idx]]
-        self._agent_selector = agent_selector(self.agents)
+        self._agent_selector = AgentSelector(self.agents)
 
     def observe(self, agent):
         obs_space = self.obs_spaces[self.possible_agents.index(agent)]
